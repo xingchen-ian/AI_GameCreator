@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="从一句话到设计结构:AI 游戏创作行为研究调研与引擎设计论点｜From One Prompt to Design Structure" />
+    <title>从「一句话」到「设计结构」｜AI 游戏创作调研 · From One Prompt to Design Structure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./research-survey.css" />
+  </head>
+  <body data-language="zh">
+    <div class="scroll-progress" aria-hidden="true"><span id="scrollProgressBar"></span></div>
+
+    <header class="topbar">
+      <a class="wordmark" href="#hero">
+        <span class="wordmark-mark">R–S</span>
+        <span class="wordmark-text">
+          <span class="lang-zh">AI 游戏创作调研</span><span class="lang-en">AI Game Creation Survey</span>
+        </span>
+      </a>
+      <nav class="topnav" aria-label="sections">
+        <a href="#s1"><span class="mono">§1</span> <span class="lang-zh">问题</span><span class="lang-en">Question</span></a>
+        <a href="#s2"><span class="mono">§2</span> <span class="lang-zh">进度</span><span class="lang-en">Landscape</span></a>
+        <a href="#s3"><span class="mono">§3</span> <span class="lang-zh">缺口</span><span class="lang-en">Gaps</span></a>
+        <a href="#s4"><span class="mono">§4</span> <span class="lang-zh">方案</span><span class="lang-en">Theses</span></a>
+        <a href="#s5"><span class="mono">§5</span> <span class="lang-zh">产出</span><span class="lang-en">Output</span></a>
+        <a href="#refs"><span class="mono">§6</span> <span class="lang-zh">来源</span><span class="lang-en">Sources</span></a>
+      </nav>
+      <div class="language-switch" role="group" aria-label="语言切换 / Language">
+        <button class="is-active" type="button" data-set-language="zh" aria-pressed="true">中文</button>
+        <button type="button" data-set-language="en" aria-pressed="false">EN</button>
+      </div>
+    </header>
+
+    <div class="page-shell">
+      <aside class="rail" aria-label="table of contents">
+        <p class="rail-label mono">CONTENTS</p>
+        <ol class="rail-list">
+          <li><a href="#s1" data-spy="s1"><span class="mono">01</span><span class="lang-zh">我们要研究什么、设计什么</span><span class="lang-en">What we study &amp; design</span></a></li>
+          <li><a href="#s2" data-spy="s2"><span class="mono">02</span><span class="lang-zh">科研与产品进度</span><span class="lang-en">Research &amp; product landscape</span></a></li>
+          <li><a href="#s3" data-spy="s3"><span class="mono">03</span><span class="lang-zh">空白与缺口</span><span class="lang-en">Gaps &amp; openings</span></a></li>
+          <li><a href="#s4" data-spy="s4"><span class="mono">04</span><span class="lang-zh">我们的方案:设计论点</span><span class="lang-en">Our proposal: design theses</span></a></li>
+          <li><a href="#s5" data-spy="s5"><span class="mono">05</span><span class="lang-zh">产出方向:CHI PLAY 2027</span><span class="lang-en">Output: CHI PLAY 2027</span></a></li>
+          <li><a href="#refs" data-spy="refs"><span class="mono">06</span><span class="lang-zh">来源</span><span class="lang-en">Sources</span></a></li>
+        </ol>
+        <p class="rail-foot mono">RESEARCH MEMO<br />2026-08-07 · NYU</p>
+      </aside>
+
+      <main class="content">
+        <!-- ================= HERO ================= -->
+        <section class="hero" id="hero">
+          <p class="kicker mono">RESEARCH SURVEY · 调研综述 · 2026-08-07</p>
+          <h1>
+            <span class="lang-zh">从「一句话」<br />到「设计结构」</span>
+            <span class="lang-en">From One Prompt<br />to Design Structure</span>
+          </h1>
+          <p class="hero-sub">
+            <span class="lang-zh">「用 AI 一句话做游戏」的行为研究调研:观点、证据、缺口,<br />以及一个结构化、引导式 AI Agent 游戏制作引擎的设计论点。</span>
+            <span class="lang-en">A survey of one-prompt AI game creation — positions, evidence, and gaps — culminating in design theses for a structured, guided agentic game-making engine.</span>
+          </p>
+          <div class="thesis-strip">
+            <div class="thesis-item">
+              <span class="thesis-num mono">H1</span>
+              <span class="lang-zh">一句话生成存在本质缺陷</span><span class="lang-en">One-prompt generation is fundamentally flawed</span>
+            </div>
+            <div class="thesis-item">
+              <span class="thesis-num mono">H2</span>
+              <span class="lang-zh">从游戏结构与系统入手</span><span class="lang-en">Start from game structure &amp; systems</span>
+            </div>
+            <div class="thesis-item">
+              <span class="thesis-num mono">H3</span>
+              <span class="lang-zh">通用 AI IDE 并非最佳形态</span><span class="lang-en">General AI IDEs are not the right form</span>
+            </div>
+          </div>
+          <a class="scroll-hint mono" href="#s1"><span class="lang-zh">向下阅读</span><span class="lang-en">Read on</span> ↓</a>
+        </section>
+
+        <!-- ================= §1 ================= -->
+        <section class="chapter" id="s1">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§1</span>
+            <h2><span class="lang-zh">我们要研究什么?设计什么?</span><span class="lang-en">What do we study? What do we design?</span></h2>
+            <p class="chapter-lede">
+              <span class="lang-zh">核心命题:AI 会写代码,为什么仍做不好游戏?——因为游戏的质量不住在代码里,而住在玩法里("quality lives in play, not in code");一句话生成跳过了游戏作为「机制 → 动态 → 体验」系统的整条设计因果链。</span>
+              <span class="lang-en">Core question: AI can write code — why can't it make good games? Because a game's quality "lives in play, not in code"; one-prompt generation skips the entire causal design chain of Mechanics → Dynamics → Aesthetics.</span>
+            </p>
+          </header>
+
+          <div class="rq-card">
+            <p class="card-tag mono">RQ · <span class="lang-zh">研究问题</span><span class="lang-en">RESEARCH QUESTION</span></p>
+            <p class="rq-text">
+              <span class="lang-zh">当 AI Agent 参与游戏创作时,<strong>什么样的交互结构与领域知识表征</strong>,能让人类设计者保持设计主导权,同时系统性地避免「结构空洞」的生成结果?</span>
+              <span class="lang-en">When AI agents participate in game creation, <strong>what interaction structures and domain-knowledge representations</strong> let human designers retain authorial control while systematically avoiding structurally vacuous output?</span>
+            </p>
+          </div>
+
+          <h3 class="sub-head"><span class="lang-zh">三个假说,以及调研给出的裁决</span><span class="lang-en">Three hypotheses, and the survey's verdicts</span></h3>
+          <div class="hypo-grid">
+            <article class="hypo-card">
+              <div class="hypo-top"><span class="hypo-id mono">H1</span><span class="verdict verdict-strong mono"><span class="lang-zh">强支持</span><span class="lang-en">STRONGLY SUPPORTED</span></span></div>
+              <h4><span class="lang-zh">「一句话 / 凭感觉」做游戏存在本质缺陷</span><span class="lang-en">One-prompt / vibe-based game making is fundamentally flawed</span></h4>
+              <p><span class="lang-zh">实证给出机制性诊断:编译通过率与功能正确性<b>反相关</b>;单趟生成 10,400 次零编译成功;项目规模一大即现能力悬崖。失败在结构与架构,不在语法。</span>
+              <span class="lang-en">Empirical work gives a mechanistic diagnosis: compile-pass rate is <b>anti-correlated</b> with functional correctness; 0 of 10,400 single-pass generations compiled; a capability cliff appears at project scale. Failure lives in structure and architecture, not syntax.</span></p>
+            </article>
+            <article class="hypo-card">
+              <div class="hypo-top"><span class="hypo-id mono">H2</span><span class="verdict verdict-strong mono"><span class="lang-zh">支持 · 已成趋势</span><span class="lang-en">SUPPORTED · NOW MAINSTREAM</span></span></div>
+              <h4><span class="lang-zh">应从游戏结构与系统入手构建 AI Agent</span><span class="lang-en">Agents should start from game structure &amp; systems</span></h4>
+              <p><span class="lang-zh">2025–26 学界已向「结构化中间表示 + 专门化角色 + 验证回路」收敛。问题不再是"有没有价值",而是"如何差异化"。</span>
+              <span class="lang-en">Research converged in 2025–26 on structured intermediate representations + specialized roles + verification loops. The question shifts from "is it valuable" to "how to differentiate".</span></p>
+            </article>
+            <article class="hypo-card">
+              <div class="hypo-top"><span class="hypo-id mono">H3</span><span class="verdict verdict-partial mono"><span class="lang-zh">部分支持 · 需精确化</span><span class="lang-en">PARTIALLY · NEEDS PRECISION</span></span></div>
+              <h4><span class="lang-zh">通用 AI IDE 不是游戏设计的最佳形态</span><span class="lang-en">General AI IDEs are not the best form for game design</span></h4>
+              <p><span class="lang-zh">通用 coding agent 在<b>完整游戏</b>任务上确有天花板(&lt;42%),但原型层尚可。精确论点:通用 IDE 缺三样东西——设计意图表征、领域知识 grounding、playtest 回路。</span>
+              <span class="lang-en">General coding agents hit a ceiling on <b>complete games</b> (&lt;42%), yet suffice for prototypes. The precise claim: general IDEs lack design-intent representation, domain grounding, and a playtest loop.</span></p>
+            </article>
+          </div>
+
+          <h3 class="sub-head"><span class="lang-zh">因此,我们要设计的是——</span><span class="lang-en">What we therefore design —</span></h3>
+          <div class="vision-card">
+            <p>
+              <span class="lang-zh">一个<strong>结构化、引导式的 AI Agent 游戏制作引擎</strong>:以「设计蓝图」为全链路单一事实源,以 MDA 框架为人机共同语言,内建自动 playtest 与多维评估;Agent 定位为知识型协作者,而非替代者。它不替你"生成一个游戏",它引导你<b>做出一个设计</strong>。</span>
+              <span class="lang-en">A <strong>structured, guided agentic engine for game making</strong>: a design blueprint as single source of truth, MDA as the shared human-AI language, built-in automated playtesting and multi-axis evaluation. The agent is a knowledgeable collaborator, not a replacement — it does not "generate a game" for you; it guides you to <b>produce a design</b>.</span>
+            </p>
+            <p class="vision-align mono"><span class="lang-zh">技术栈对齐课程:Web 优先(p5.js / Phaser 运行时),后续可扩 Unity 轨道</span><span class="lang-en">Stack aligned with the course: web-first (p5.js / Phaser runtime), Unity track extensible</span></p>
+          </div>
+        </section>
+
+        <!-- ================= §2 ================= -->
+        <section class="chapter" id="s2">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§2</span>
+            <h2><span class="lang-zh">当前的科研与产品进度</span><span class="lang-en">The current research &amp; product landscape</span></h2>
+            <p class="chapter-lede">
+              <span class="lang-zh">学术侧呈两条谱系:2010 年代的 mixed-initiative 共创工具,与 2023 年后的 LLM 结构化 pipeline——后者正在复刻前者的架构思想。2026 年,「评估层」集中爆发,给一句话生成下了定量诊断。产品侧则呈现"原型可用、完整游戏不可得"的清晰分层。</span>
+              <span class="lang-en">Research shows two lineages: 2010s mixed-initiative co-creation tools, and post-2023 LLM structured pipelines — the latter now replaying the former's architectural ideas. In 2026 an "evaluation layer" erupted, quantifying one-prompt failure. On the product side: prototypes attainable, complete games not.</span>
+            </p>
+          </header>
+
+          <h3 class="sub-head"><span class="lang-zh">2.1 学术谱系 · 2003 → 2026</span><span class="lang-en">2.1 Academic lineage · 2003 → 2026</span></h3>
+          <ol class="timeline">
+            <li class="tl-item">
+              <span class="tl-year mono">2003–04</span>
+              <div class="tl-body"><strong><span class="lang-zh">理论奠基</span><span class="lang-en">Foundations</span></strong>
+              <p><span class="lang-zh">Game Design Patterns(Björk &amp; Holopainen):200+ 可复用交互模式,游戏设计知识的可检索词汇表;MDA 框架(Hunicke, LeBlanc &amp; Zubek):机制→动态→体验,设计师只能直接控制机制。</span>
+              <span class="lang-en">Game Design Patterns (Björk &amp; Holopainen): 200+ reusable interaction patterns; the MDA framework (Hunicke, LeBlanc &amp; Zubek): mechanics → dynamics → aesthetics — designers can only control mechanics directly.</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2010–13</span>
+              <div class="tl-body"><strong><span class="lang-zh">Mixed-initiative 谱系</span><span class="lang-en">Mixed-initiative lineage</span></strong>
+              <p><span class="lang-zh">Tanagra、Ropossum、<b>Sentient Sketchbook</b>:实时可玩性评估 + 演化搜索生成"保证可玩"的替代方案——哲学是"建议而非替代"。天花板:只能做内容/关卡,做不了系统与规则。</span>
+              <span class="lang-en">Tanagra, Ropossum, <b>Sentient Sketchbook</b>: real-time playability feedback + evolutionary alternatives guaranteed playable — "suggest, don't replace". Ceiling: content and levels, not systems or rules.</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2016</span>
+              <div class="tl-body"><strong><span class="lang-zh">谱系总结与低潮</span><span class="lang-en">Consolidation, then quiet</span></strong>
+              <p><span class="lang-zh">《Procedural Content Generation in Games》专章系统总结 mixed-initiative 创作(Liapis, Smith &amp; Shaker);此后该线进入低潮,直到 LLM 时代。</span>
+              <span class="lang-en">The PCG-in-Games chapter (Liapis, Smith &amp; Shaker) consolidates mixed-initiative creation; the line goes quiet until the LLM era.</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2023</span>
+              <div class="tl-body"><strong><span class="lang-zh">LLM 多智能体登场</span><span class="lang-en">LLM multi-agent systems arrive</span></strong>
+              <p><span class="lang-zh">GameGPT:设计师/经理/审核/工程师/测试多角色分工,以"执行–审查"双协作抑制幻觉与冗余。</span>
+              <span class="lang-en">GameGPT: designer/manager/reviewer/engineer/tester roles, with execution–review dual collaboration to suppress hallucination and redundancy.</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2024–25</span>
+              <div class="tl-body"><strong><span class="lang-zh">引导式交互复兴</span><span class="lang-en">Guided interaction revives</span></strong>
+              <p><span class="lang-zh"><b>DreamGarden</b>(CHI '25 最佳论文,NYU × Microsoft):单 prompt 分解为层级计划树,用户以"播种/修剪/反馈"介入;<b>ChatGE</b>(ACL '25):每轮强制"脚本→代码→引导"三步,用模板把闲聊约束成设计;AIIDE '25:人机用 MDA 词汇共同建构设计语言。</span>
+              <span class="lang-en"><b>DreamGarden</b> (CHI '25 Best Paper, NYU × Microsoft): one prompt unfolds into a hierarchical plan tree users seed/prune/feedback; <b>ChatGE</b> (ACL '25): script→code→guidance each turn, templates constrain chat into design; AIIDE '25: human-AI co-construction of a design language in MDA vocabulary.</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2025–26</span>
+              <div class="tl-body"><strong><span class="lang-zh">结构化 pipeline 收敛</span><span class="lang-en">Structured pipelines converge</span></strong>
+              <p><span class="lang-zh">UniGen(JSON 蓝图作全链路单一事实源)、GDD→Unity 模板、G-KMS(schema 治理 + 修复)、Generative Ontology(Pydantic 本体 + 带"职业焦虑"的角色)、AutoUE(RAG 防工具幻觉 + 自动 playtest agent)。</span>
+              <span class="lang-en">UniGen (JSON blueprint as single source of truth), GDD→Unity templates, G-KMS (schema-governed generation + repair), Generative Ontology (Pydantic schemas + roles carrying professional "anxieties"), AutoUE (RAG against tool hallucination + automated playtest agent).</span></p></div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-year mono">2026</span>
+              <div class="tl-body"><strong><span class="lang-zh">评估层爆发</span><span class="lang-en">The evaluation layer erupts</span></strong>
+              <p><span class="lang-zh">Mage(四轴评估)、JAMER(项目级基准)、GameCraft-Bench(端到端)、PlaytestArena / Play2Code(playtest 回路)、OpenGame(三轴);CHI '26 游戏开发 genAI 定性研究综述(agency / authorship / craft accountability)。</span>
+              <span class="lang-en">Mage (four axes), JAMER (project-level), GameCraft-Bench (end-to-end), PlaytestArena / Play2Code (playtest loops), OpenGame (three axes); CHI '26 qualitative synthesis on GenAI in game development (agency / authorship / craft accountability).</span></p></div>
+            </li>
+          </ol>
+
+          <h3 class="sub-head"><span class="lang-zh">2.2 实证证据 · 一句话生成的定量诊断</span><span class="lang-en">2.2 Empirical evidence · one-prompt generation, quantified</span></h3>
+          <div class="stat-grid">
+            <div class="stat-card"><span class="stat-num mono">F1≈0.12</span><p><span class="lang-zh">一句话 NL→C# 生成的机制保真度,<b>与"什么都不做"的基线无异</b>——语法正确、行为空洞的场景换取了最高的运行通过率(43%)。编译率与正确性反相关。</span><span class="lang-en">Mechanism fidelity of direct NL→C# generation — <b>indistinguishable from a do-nothing baseline</b>. Vacuous scenes earn the highest runtime pass rate (43%). Compile rate is anti-correlated with correctness.</span></p><span class="stat-src mono">Mage · arXiv:2605.07342</span></div>
+            <div class="stat-card"><span class="stat-num mono">0 / 10,400</span><p><span class="lang-zh">单趟生成(无修复循环)编译成功数。错误分两类:Grounding(编造引擎 API)与 Hygiene(纯语法)——瓶颈是引擎与项目知识,不是语法。</span><span class="lang-en">Single-pass generations that compiled, out of 10,400. Errors split into Grounding (invented engine APIs) vs Hygiene (plain C#) — the bottleneck is engine/project knowledge, not syntax.</span></p><span class="stat-src mono">arXiv:2607.10187</span></div>
+            <div class="stat-card"><span class="stat-num mono">80.4→5.7%</span><p><span class="lang-zh">运行时通过率从小项目到大项目的悬崖。Code Agent 只修语法、不修架构——"瓶颈在架构设计,而非语法正确性"。</span><span class="lang-en">Runtime pass-rate cliff from small to large projects. Code agents fix syntax, not architecture — "the bottleneck lies in architectural design, not syntactic correctness".</span></p><span class="stat-src mono">JAMER · arXiv:2606.19830</span></div>
+            <div class="stat-card"><span class="stat-num mono">41.46%</span><p><span class="lang-zh">最强 coding agent 在端到端游戏生成基准上的得分。"能实现可辨认的机制,但做不出内容充足、反馈完整、呈现连贯的完整游戏。"</span><span class="lang-en">Best coding agent on an end-to-end game-generation benchmark. "Agents implement recognizable mechanics, but struggle to deliver complete games with sufficient content, functional feedback, coherent presentation."</span></p><span class="stat-src mono">GameCraft-Bench · arXiv:2606.17861</span></div>
+            <div class="stat-card"><span class="stat-num mono">+37.1pt</span><p><span class="lang-zh">把 GUI agent 当 playtester 接进生成回路后 rubric 通过率的提升(达 66.8%)——"Generating a game is not the same as making one that can be played."</span><span class="lang-en">Rubric pass-rate gain from putting a GUI-agent playtester inside the generation loop (to 66.8%) — "Generating a game is not the same as making one that can be played."</span></p><span class="stat-src mono">Play2Code · arXiv:2605.28258</span></div>
+            <div class="stat-card"><span class="stat-num mono">52% / 5%</span><p><span class="lang-zh">GDC 2026:公司 genAI 采用率 vs 用于<b>玩家向内容</b>的比例(81% 用于研究/头脑风暴)。52% 开发者认为 genAI 对行业影响为负面(2025 年为 30%)。</span><span class="lang-en">GDC 2026: company GenAI adoption vs use for <b>player-facing content</b> (81% is research/brainstorming). 52% of developers say GenAI's impact is negative (30% in 2025).</span></p><span class="stat-src mono">GDC State of Industry 2026</span></div>
+          </div>
+
+          <h3 class="sub-head"><span class="lang-zh">2.3 产品快照 · 2026-08</span><span class="lang-en">2.3 Product snapshot · 2026-08</span></h3>
+          <div class="product-grid">
+            <article class="product-card">
+              <p class="card-tag mono"><span class="lang-zh">一句话平台</span><span class="lang-en">ONE-PROMPT PLATFORM</span></p>
+              <h4>Rosebud AI</h4>
+              <p><span class="lang-zh">浏览器内 vibe coding:AI 助手写 JavaScript/Three.js、生成资产、即时分享 URL。<b>约 2,500 行代码上限;无 Steam/桌面导出;无可携带的项目文件。</b>定位清晰:原型、教学、爱好者——"产品不可得"。</span>
+              <span class="lang-en">In-browser vibe coding: an assistant writes JS/Three.js, generates assets, deploys to a URL. <b>~2,500-line code ceiling; no Steam/desktop export; no portable project files.</b> Squarely for prototypes, classrooms, hobbyists — "shippable product unattainable".</span></p>
+            </article>
+            <article class="product-card">
+              <p class="card-tag mono"><span class="lang-zh">新锐回应</span><span class="lang-en">EMERGING ANSWER</span></p>
+              <h4>Summer Engine 等</h4>
+              <p><span class="lang-zh">chat 描述 → 输出 <b>Godot 4 兼容的真实项目文件</b>,可导出 Steam/桌面/移动——直接回应 Rosebud 的所有权与导出缺口。结构化项目文件开始成为产品卖点。</span>
+              <span class="lang-en">Chat in, <b>real Godot 4-compatible project files</b> out, exportable to Steam/desktop/mobile — answering Rosebud's ownership/export gap. Structured project artifacts are becoming a selling point.</span></p>
+            </article>
+            <article class="product-card">
+              <p class="card-tag mono"><span class="lang-zh">通用 IDE + 引擎桥</span><span class="lang-en">GENERAL IDE + ENGINE BRIDGE</span></p>
+              <h4>Cursor + MCP</h4>
+              <p><span class="lang-zh">Cursor + Unity MCP / EngineLink 成为主流栈。但行业观察点出本质障碍:<b>"引擎是高度可视化的,agent 看不见游戏内部,闭环验证难"</b>——正是 playtest 回路缺失。</span>
+              <span class="lang-en">Cursor + Unity MCP / EngineLink is the mainstream stack. Practitioners name the core obstacle: <b>"engines are highly visual; agents can't see into the game, so closing the loop is hard"</b> — the missing playtest loop.</span></p>
+            </article>
+            <article class="product-card">
+              <p class="card-tag mono"><span class="lang-zh">引擎厂商入场</span><span class="lang-en">ENGINE VENDORS ENTER</span></p>
+              <h4>Unreal · Unity</h4>
+              <p><span class="lang-zh">UE 5.8 引入实验性 MCP(UE6 将核心化);Unity 7(2027)将内建 coding-agent 支持。Unity 2026 报告:73% 工作室称 AI 提升效率,主要用于后端/规划而非创意核心。</span>
+              <span class="lang-en">UE 5.8 ships experimental MCP (core in UE6); Unity 7 (2027) will natively support coding agents. Unity's 2026 report: 73% of studios cite efficiency gains, mostly back-end/planning — not the creative core.</span></p>
+            </article>
+          </div>
+          <p class="footnote mono"><span class="lang-zh">产品信息为 2026-08 公开资料快照,细节以各官方页面为准。</span><span class="lang-en">Product facts are a public-information snapshot as of 2026-08; see official pages for current details.</span></p>
+        </section>
+
+        <!-- ================= §3 ================= -->
+        <section class="chapter" id="s3">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§3</span>
+            <h2><span class="lang-zh">当前研究与产品的空白与缺口</span><span class="lang-en">Gaps &amp; openings</span></h2>
+            <p class="chapter-lede">
+              <span class="lang-zh">一句话生成的失败遵循一条可定位的链条;而三个结构性空白,恰是这条链条上无人把守的关口。</span>
+              <span class="lang-en">One-prompt failure follows a locatable chain; three structural gaps sit exactly at its unguarded passes.</span>
+            </p>
+          </header>
+
+          <div class="failure-chain" role="img" aria-label="failure chain">
+            <div class="fc-node fc-ok"><span class="fc-label mono">STEP 0</span><span class="lang-zh">一句话 Prompt</span><span class="lang-en">One prompt</span></div>
+            <span class="fc-arrow">→</span>
+            <div class="fc-node fc-ok"><span class="fc-label mono">SYNTAX ✓</span><span class="lang-zh">语法正确</span><span class="lang-en">Compiles</span></div>
+            <span class="fc-arrow">→</span>
+            <div class="fc-node fc-warn"><span class="fc-label mono">RUNTIME △</span><span class="lang-zh">勉强运行</span><span class="lang-en">Runs, barely</span></div>
+            <span class="fc-arrow">→</span>
+            <div class="fc-node fc-bad"><span class="fc-label mono">STRUCTURE ✗</span><span class="lang-zh">结构空洞</span><span class="lang-en">Vacuous structure</span></div>
+            <span class="fc-arrow">→</span>
+            <div class="fc-node fc-bad"><span class="fc-label mono">MECHANISM ✗</span><span class="lang-zh">机制缺失</span><span class="lang-en">Mechanisms missing</span></div>
+            <span class="fc-arrow">→</span>
+            <div class="fc-node fc-bad"><span class="fc-label mono">PLAY ✗</span><span class="lang-zh">可玩性未验证</span><span class="lang-en">Playability unverified</span></div>
+          </div>
+
+          <div class="gap-grid">
+            <article class="gap-card">
+              <span class="gap-id mono">G1</span>
+              <h4><span class="lang-zh">引导深度缺口</span><span class="lang-en">The guidance-depth gap</span></h4>
+              <p><span class="lang-zh">结构化 pipeline 已收敛,但结构几乎总被当作<b>机器的工程产物</b>(blueprint 给机器看),极少被当作<b>人的决策与教学支架</b>(帮人成为更好的设计者)。ChatGE 的模板引导与 DreamGarden 的计划树触及了,但"引导"未被系统化为一等设计目标。</span>
+              <span class="lang-en">Structured pipelines have converged, yet structure is treated as <b>engineering artifact for machines</b>, rarely as <b>a decision &amp; teaching scaffold for humans</b>. ChatGE's templates and DreamGarden's plan tree touch this, but "guidance" is not systematized as a first-class design goal.</span></p>
+            </article>
+            <article class="gap-card">
+              <span class="gap-id mono">G2</span>
+              <h4><span class="lang-zh">验证与评估缺口</span><span class="lang-en">The verification gap</span></h4>
+              <p><span class="lang-zh">业界痛点是"agent 看不见游戏内部";学界 2026 刚建起评估层(Mage 四轴、GameCraft-Bench、PlaytestArena),但<b>评估从未被整合进创作工具本身</b>。"评估即设计功能"是明确空白。</span>
+              <span class="lang-en">Industry aches over agents that "can't see into the game"; academia built an evaluation layer only in 2026 (Mage, GameCraft-Bench, PlaytestArena), yet <b>evaluation is never integrated into the creation tool itself</b>. "Evaluation as a design feature" is an open slot.</span></p>
+            </article>
+            <article class="gap-card">
+              <span class="gap-id mono">G3</span>
+              <h4><span class="lang-zh">设计主导权缺口</span><span class="lang-en">The authorial-leverage gap</span></h4>
+              <p><span class="lang-zh">创意核心是行业的被回避区(仅 5% 用于玩家向内容);CHI '26 综述把争议归为 agency / authorship / craft accountability。mixed-initiative 时代"建议而非替代"的传统,在 LLM 时代中断了——<b>没有人把主导权当作系统设计的中心约束</b>。</span>
+              <span class="lang-en">The creative core is the industry's avoided zone (only 5% player-facing use); CHI '26 frames the dispute as agency / authorship / craft accountability. The mixed-initiative tradition of "suggest, don't replace" broke in the LLM era — <b>no system centers authorial control as a design constraint</b>.</span></p>
+            </article>
+          </div>
+          <p class="gap-synthesis">
+            <span class="lang-zh">三个缺口指向同一个位置:<strong>设计意图的表征与协商层</strong>——介于"一句话"与"代码"之间、目前无人占据的那一层。</span>
+            <span class="lang-en">All three gaps point to one locus: <strong>a representation-and-negotiation layer for design intent</strong> — the unoccupied stratum between "one prompt" and "code".</span>
+          </p>
+        </section>
+
+        <!-- ================= §4 ================= -->
+        <section class="chapter" id="s4">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§4</span>
+            <h2><span class="lang-zh">我们的方案:设计论点种子</span><span class="lang-en">Our proposal: six design theses</span></h2>
+            <p class="chapter-lede">
+              <span class="lang-zh">六条论点,每条都有文献或实证依据;合在一起构成引擎的最小架构:<b>蓝图(SSOT)× MDA 对话骨架 × playtest 回路 × 评估面板</b>。</span>
+              <span class="lang-en">Six theses, each grounded in literature or evidence; together they form the engine's minimal architecture: <b>blueprint (SSOT) × MDA dialogue spine × playtest loop × evaluation panel</b>.</span>
+            </p>
+          </header>
+
+          <div class="thesis-grid">
+            <article class="d-card">
+              <span class="d-id mono">D1</span>
+              <h4><span class="lang-zh">蓝图即单一事实源</span><span class="lang-en">Blueprint as single source of truth</span></h4>
+              <p><span class="lang-zh">确立一份<b>人可读写、机器可验证</b>的设计蓝图 schema,全链路生成与修改都锚定它——结构不在对话里流失,意图有处可查。</span>
+              <span class="lang-en">A design blueprint schema that <b>humans can read/write and machines can validate</b>; all generation and edits anchor to it — structure never evaporates into chat history, intent stays inspectable.</span></p>
+              <p class="d-src mono">UniGen · G-KMS · Generative Ontology</p>
+            </article>
+            <article class="d-card">
+              <span class="d-id mono">D2</span>
+              <h4><span class="lang-zh">MDA 即共同语言</span><span class="lang-en">MDA as shared language</span></h4>
+              <p><span class="lang-zh">对话按「体验目标 → 动态 → 机制」分层推进:先问"想要什么体验",再反推机制选择。给 Agent 装上游戏设计理论,而不是只装引擎 API。</span>
+              <span class="lang-en">Dialogue proceeds through "aesthetic goal → dynamics → mechanics": ask what experience is wanted, then reason backward to mechanics. Equip the agent with design theory, not just engine APIs.</span></p>
+              <p class="d-src mono">Hunicke et al. 2004 · AIIDE '25 语言共同建构</p>
+            </article>
+            <article class="d-card">
+              <span class="d-id mono">D3</span>
+              <h4><span class="lang-zh">Playtest-in-the-loop 做一等功能</span><span class="lang-en">Playtest-in-the-loop as a first-class feature</span></h4>
+              <p><span class="lang-zh">自动 playtest agent + 可玩性 rubric 内建于引擎:每次改动都被"真的玩一遍"。已实证的最大单一增益(+37.1pt),也是行业公认的闭环痛点。</span>
+              <span class="lang-en">An automated playtest agent with playability rubrics built in: every change is actually played. The largest single empirically-demonstrated gain (+37.1pt), and the industry's acknowledged missing loop.</span></p>
+              <p class="d-src mono">Play2Code · AutoUE · GDC 2026 观察</p>
+            </article>
+            <article class="d-card">
+              <span class="d-id mono">D4</span>
+              <h4><span class="lang-zh">评估即设计</span><span class="lang-en">Evaluation as design</span></h4>
+              <p><span class="lang-zh">把编译/运行/结构/机制四轴做成<b>用户可见的面板</b>:"哪里空洞"一眼可见,评估从评审工具变成设计工具。</span>
+              <span class="lang-en">Turn the compile/runtime/structure/mechanism axes into a <b>user-facing panel</b>: vacuity becomes visible at a glance — evaluation becomes a design instrument, not just a review tool.</span></p>
+              <p class="d-src mono">Mage · OpenGame</p>
+            </article>
+            <article class="d-card">
+              <span class="d-id mono">D5</span>
+              <h4><span class="lang-zh">可协商的脚手架</span><span class="lang-en">Negotiable scaffolding</span></h4>
+              <p><span class="lang-zh">结构必须可绕过、可解释、可协商——实证记录过设计师对"方法论"的抗拒(怕损害创造力)。引导是邀请,不是模具;这是接受度的硬约束。</span>
+              <span class="lang-en">Structure must be bypassable, explainable, negotiable — designers' documented resistance to "methodology" (fear for creativity) makes this a hard acceptance constraint. Guidance as invitation, not mold.</span></p>
+              <p class="d-src mono">RMDA 2021 · Sentient Sketchbook</p>
+            </article>
+            <article class="d-card">
+              <span class="d-id mono">D6</span>
+              <h4><span class="lang-zh">人类作者性优先</span><span class="lang-en">Human authorship first</span></h4>
+              <p><span class="lang-zh">人做设计决策,Agent 提供知识、选项与验证。这既是态度实证支持的接受度最优定位,也直接回应 authorship 争议——引擎放大设计者,而非取代。</span>
+              <span class="lang-en">Humans make design decisions; agents supply knowledge, options, verification. This is the acceptance-optimal position per attitude studies, and answers the authorship dispute — the engine amplifies designers, never replaces them.</span></p>
+              <p class="d-src mono">CHI '26 综述 · GDC 2026 · Fowler</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================= §5 ================= -->
+        <section class="chapter" id="s5">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§5</span>
+            <h2><span class="lang-zh">产出方向:以 CHI PLAY 2027 为锚</span><span class="lang-en">Output plan: anchored on CHI PLAY 2027</span></h2>
+            <p class="chapter-lede">
+              <span class="lang-zh">主锚点:<b>CHI PLAY 2027 Work-in-Progress</b>。WiP 明确欢迎"进行中的原创工作 + 能引发社区讨论的开放问题"——「引擎原型 + 形成性用户研究」正是其典型贡献形态。</span>
+              <span class="lang-en">Primary anchor: <b>CHI PLAY 2027 Work-in-Progress</b>. WiP explicitly welcomes original in-progress work that raises open questions for the community — "engine prototype + formative user study" is its canonical contribution shape.</span>
+            </p>
+          </header>
+
+          <div class="anchor-card">
+            <div class="anchor-left">
+              <p class="card-tag mono"><span class="lang-zh">主锚点</span><span class="lang-en">PRIMARY ANCHOR</span></p>
+              <h3>CHI PLAY 2027 · Work-in-Progress</h3>
+              <ul class="anchor-facts">
+                <li><span class="lang-zh">推算截止:<b>2027 年 6 月初</b>(历史:2024-06-05 / 2025-06-04 / 2026-06-03,均为 6 月首个周三);通知约 7 月中,camera-ready 约 8 月初,会议秋季</span><span class="lang-en">Projected deadline: <b>early June 2027</b> (history: 2024-06-05 / 2025-06-04 / 2026-06-03, first Wednesday of June); notification ~mid-July, camera-ready ~early August, conference in fall</span></li>
+                <li><span class="lang-zh">格式:≤8 页 ACM 单栏(不含参考文献)· <b>匿名评审</b> · 需在 PCS 填 "Relevance as a Work-in-Progress" 说明 · 3 分钟预录视频 + 现场海报</span><span class="lang-en">Format: ≤8 pages ACM single-column (excl. references) · <b>anonymous review</b> · PCS field "Relevance as a Work-in-Progress" · 3-minute video + poster</span></li>
+                <li><span class="lang-zh">2027 确切日期未公布——按三年规律推算,以官网 CfP 为准</span><span class="lang-en">2027 dates not yet announced — extrapolated from three-year pattern; confirm with the official CfP</span></li>
+              </ul>
+            </div>
+            <div class="anchor-right mono">
+              <span class="anchor-days">~10</span>
+              <span class="anchor-days-label"><span class="lang-zh">个月准备期<br />(自 2026-08)</span><span class="lang-en">months of runway<br />(from 2026-08)</span></span>
+            </div>
+          </div>
+
+          <h3 class="sub-head"><span class="lang-zh">轨道对比</span><span class="lang-en">Venue comparison</span></h3>
+          <div class="table-wrap">
+            <table class="venue-table">
+              <thead>
+                <tr>
+                  <th><span class="lang-zh">轨道</span><span class="lang-en">Venue</span></th>
+                  <th><span class="lang-zh">截止(推算)</span><span class="lang-en">Deadline (est.)</span></th>
+                  <th><span class="lang-zh">形态</span><span class="lang-en">Form</span></th>
+                  <th><span class="lang-zh">适配度</span><span class="lang-en">Fit</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-primary">
+                  <td>CHI PLAY 2027 <b>WiP</b></td>
+                  <td class="mono">2027-06 初</td>
+                  <td><span class="lang-zh">8 页 + 海报 + 3′ 视频</span><span class="lang-en">8pp + poster + 3′ video</span></td>
+                  <td><span class="lang-zh">★ 主锚点:原型 + 形成性研究恰好达标</span><span class="lang-en">★ Anchor: prototype + formative study fits exactly</span></td>
+                </tr>
+                <tr>
+                  <td>CHI PLAY <b>Full Paper</b></td>
+                  <td class="mono"><span class="lang-zh">通常早于 WiP 数月</span><span class="lang-en">Usually months before WiP</span></td>
+                  <td><span class="lang-zh">完整评估的长文</span><span class="lang-en">Full study, archival</span></td>
+                  <td><span class="lang-zh">2027 来不及 → 目标 <b>2028</b>(完整对照实验)</span><span class="lang-en">Too soon for 2027 → target <b>2028</b> with a full controlled study</span></td>
+                </tr>
+                <tr>
+                  <td>CHI PLAY <b>Interactivity</b></td>
+                  <td class="mono">2027-06 初</td>
+                  <td><span class="lang-zh">现场演示</span><span class="lang-en">Live demo</span></td>
+                  <td><span class="lang-zh">可与论文线互补(注意:同一工作不可同年多轨)</span><span class="lang-en">Complementary in later years (no concurrent same-work tracks)</span></td>
+                </tr>
+                <tr>
+                  <td>AIIDE / FDG 2027</td>
+                  <td class="mono"><span class="lang-zh">多为 2027 春–夏</span><span class="lang-en">Mostly spring–summer 2027</span></td>
+                  <td><span class="lang-zh">游戏 AI / 设计社区</span><span class="lang-en">Game-AI / design community</span></td>
+                  <td><span class="lang-zh">强备选,主题契合度高</span><span class="lang-en">Strong fallback, high topical fit</span></td>
+                </tr>
+                <tr>
+                  <td>CHI 2027 主会</td>
+                  <td class="mono">~2026-09</td>
+                  <td><span class="lang-zh">仅 full paper,不收 WiP 类稿件</span><span class="lang-en">Full papers only; desk-rejects WiP-type work</span></td>
+                  <td><span class="lang-zh">不现实 → 目标 CHI 2028</span><span class="lang-en">Not realistic → target CHI 2028</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-head"><span class="lang-zh">十个月路线 · 2026-09 → 2027-06</span><span class="lang-en">Ten-month runway · 2026-09 → 2027-06</span></h3>
+          <ol class="roadmap">
+            <li class="rm-item">
+              <span class="rm-when mono">2026.09–12</span>
+              <div class="rm-body"><strong><span class="lang-zh">引擎 v0 + 形成性研究</span><span class="lang-en">Engine v0 + formative study</span></strong>
+              <p><span class="lang-zh">蓝图 schema + MDA 对话骨架 + Web 运行时(p5.js/Phaser);6–10 名设计者对照:一句话 vs 引导式,采集失败模式语料。</span>
+              <span class="lang-en">Blueprint schema + MDA dialogue spine + web runtime (p5.js/Phaser); 6–10 designers, one-prompt vs guided contrast, collecting a failure-mode corpus.</span></p></div>
+            </li>
+            <li class="rm-item">
+              <span class="rm-when mono">2027.01–03</span>
+              <div class="rm-body"><strong><span class="lang-zh">引擎 v1 + 用户研究</span><span class="lang-en">Engine v1 + user study</span></strong>
+              <p><span class="lang-zh">接入 playtest agent 与评估面板;正式用户研究:任务完成、交互日志、半结构访谈(设计主导权感受量表)。</span>
+              <span class="lang-en">Playtest agent + evaluation panel integrated; formal user study: task completion, interaction logs, semi-structured interviews (perceived authorial control).</span></p></div>
+            </li>
+            <li class="rm-item">
+              <span class="rm-when mono">2027.04–05</span>
+              <div class="rm-body"><strong><span class="lang-zh">分析与写作</span><span class="lang-en">Analysis &amp; writing</span></strong>
+              <p><span class="lang-zh">8 页成稿(匿名),写好 "Relevance as WiP" 与 future work;同步产出 3 分钟视频与海报素材。</span>
+              <span class="lang-en">8-page anonymized manuscript, with the "Relevance as WiP" statement and future work; produce the 3-minute video and poster assets in parallel.</span></p></div>
+            </li>
+            <li class="rm-item">
+              <span class="rm-when mono">2027.06 初</span>
+              <div class="rm-body"><strong><span class="lang-zh">投稿</span><span class="lang-en">Submission</span></strong>
+              <p><span class="lang-zh">CHI PLAY 2027 WiP 截稿(预计 6 月首个周三,AoE)。</span>
+              <span class="lang-en">CHI PLAY 2027 WiP deadline (projected first Wednesday of June, AoE).</span></p></div>
+            </li>
+            <li class="rm-item">
+              <span class="rm-when mono">2027 夏–秋</span>
+              <div class="rm-body"><strong><span class="lang-zh">会后与下一步</span><span class="lang-en">Aftermath &amp; next step</span></strong>
+              <p><span class="lang-zh">7 月通知 → 8 月 camera-ready + 视频;秋季海报展示。完整对照实验版瞄准 CHI PLAY 2028 / CHI 2028 full paper。</span>
+              <span class="lang-en">July notification → August camera-ready + video; fall poster. The full controlled-study version targets CHI PLAY 2028 / CHI 2028.</span></p></div>
+            </li>
+          </ol>
+        </section>
+
+        <!-- ================= §6 REFS ================= -->
+        <section class="chapter" id="refs">
+          <header class="chapter-head">
+            <span class="chapter-num mono">§6</span>
+            <h2><span class="lang-zh">代表性来源</span><span class="lang-en">Key sources</span></h2>
+          </header>
+          <div class="refs-grid">
+            <div class="refs-group">
+              <h4 class="mono"><span class="lang-zh">实证评估(2026)</span><span class="lang-en">EMPIRICAL EVALUATION (2026)</span></h4>
+              <ul>
+                <li><a href="https://arxiv.org/abs/2605.07342" target="_blank" rel="noopener">Mage: Multi-Axis Evaluation of LLM-Generated Executable Game Scenes</a></li>
+                <li><a href="https://arxiv.org/html/2607.10187v1" target="_blank" rel="noopener">Knowledge-Conditioned, Single-Pass LLM Synthesis of Unity Game Scenes</a></li>
+                <li><a href="https://doi.org/10.48550/arxiv.2606.19830" target="_blank" rel="noopener">JAMER: Project-Level Code Framework Benchmark on Professional Game Engines</a></li>
+                <li><a href="https://arxiv.org/html/2606.17861v1" target="_blank" rel="noopener">GameCraft-Bench: Can Agents Build Playable Games End-to-End?</a></li>
+                <li><a href="https://arxiv.org/html/2605.28258" target="_blank" rel="noopener">GUI Agents for Continual Game Generation (PlaytestArena / Play2Code)</a></li>
+                <li><a href="https://arxiv.org/html/2604.18394" target="_blank" rel="noopener">OpenGame: Open Agentic Coding for Games</a></li>
+              </ul>
+            </div>
+            <div class="refs-group">
+              <h4 class="mono"><span class="lang-zh">设计理论与共创谱系</span><span class="lang-en">DESIGN THEORY &amp; CO-CREATION</span></h4>
+              <ul>
+                <li><a href="https://users.cs.northwestern.edu/~hunicke/pubs/MDA.pdf" target="_blank" rel="noopener">Hunicke, LeBlanc &amp; Zubek (2004). MDA: A Formal Approach to Game Design</a></li>
+                <li><a href="https://doi.org/10.3390/info12100395" target="_blank" rel="noopener">Redefining the MDA Framework (RMDA, 2021)</a></li>
+                <li><a href="https://doi.org/10.26503/dl.v2003i1.60" target="_blank" rel="noopener">Björk &amp; Holopainen (2003). Game Design Patterns</a></li>
+                <li><a href="https://www.pcgbook.com/chapter11.pdf" target="_blank" rel="noopener">Liapis, Smith &amp; Shaker (2016). Mixed-Initiative Content Creation</a></li>
+                <li><a href="https://yannakakis.net/wp-content/uploads/2013/08/ALiapis_SentientSketchbook.pdf" target="_blank" rel="noopener">Liapis et al. (2013). Sentient Sketchbook</a></li>
+                <li><a href="https://cdv.dei.uc.pt/wp-content/uploads/publications-cdv/margarido2025tutorial.pdf" target="_blank" rel="noopener">Boosting Mixed-Initiative Co-Creativity in Game Design (ACM CSUR 2025)</a></li>
+              </ul>
+            </div>
+            <div class="refs-group">
+              <h4 class="mono"><span class="lang-zh">LLM 时代系统先例</span><span class="lang-en">LLM-ERA SYSTEMS</span></h4>
+              <ul>
+                <li><a href="https://arxiv.org/html/2310.08067v2" target="_blank" rel="noopener">GameGPT: Multi-agent Collaborative Framework for Game Development (2023)</a></li>
+                <li><a href="https://aclanthology.org/2025.acl-long.218.pdf" target="_blank" rel="noopener">ChatGE: Game Development as Human-LLM Interaction (ACL 2025)</a></li>
+                <li><a href="https://arxiv.org/html/2410.01791v2" target="_blank" rel="noopener">DreamGarden: Growing Games from a Single Prompt (CHI 2025 Best Paper, NYU × Microsoft)</a></li>
+                <li><a href="https://doi.org/10.1609/aiide.v21i1.36859" target="_blank" rel="noopener">Design as Language Co-Construction (AIIDE 2025)</a></li>
+                <li><a href="https://arxiv.org/pdf/2509.26161" target="_blank" rel="noopener">UniGen: MLLM-Driven Zero-Code 3D Game Development</a></li>
+                <li><a href="https://arxiv.org/pdf/2509.08847" target="_blank" rel="noopener">Automated Unity Game Template Generation from GDDs</a></li>
+                <li><a href="https://www.mdpi.com/2079-8954/14/2/175" target="_blank" rel="noopener">G-KMS: Schema-Governed LLM Pipeline for RPG Narrative (2026)</a></li>
+                <li><a href="https://arxiv.org/html/2602.05636v2" target="_blank" rel="noopener">Generative Ontology: When Structured Knowledge Learns to Create</a></li>
+                <li><a href="https://aclanthology.org/2026.findings-acl.111.pdf" target="_blank" rel="noopener">AutoUE: Automated 3D Game Generation in Unreal (ACL 2026 Findings)</a></li>
+              </ul>
+            </div>
+            <div class="refs-group">
+              <h4 class="mono"><span class="lang-zh">态度、批评与行业数据</span><span class="lang-en">ATTITUDES, CRITIQUE &amp; INDUSTRY DATA</span></h4>
+              <ul>
+                <li><a href="https://martinfowler.com/bliki/VibeCoding.html" target="_blank" rel="noopener">Fowler. Vibe Coding</a></li>
+                <li><a href="https://arxiv.org/html/2509.12491v1" target="_blank" rel="noopener">Good Vibrations? A Qualitative Study of Vibe Coding</a></li>
+                <li><a href="https://dl.acm.org/doi/10.1145/3772318.3791206" target="_blank" rel="noopener">Generative AI in Game Development: A Qualitative Research Synthesis (CHI 2026)</a></li>
+                <li><a href="https://his.diva-portal.org/smash/get/diva2:1897143/FULLTEXT02.pdf" target="_blank" rel="noopener">Generative AI in the Gaming Realm: A Developer Survey</a></li>
+                <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12193870/" target="_blank" rel="noopener">Generative AI in Game Design: Enhancing Creativity or Constraining Innovation?</a></li>
+                <li><a href="https://aisel.aisnet.org/amcis2026/sigadit/sigadit/1" target="_blank" rel="noopener">Adoption Attitudes toward Generative AI in Game Development (AMCIS 2026)</a></li>
+                <li><a href="https://app.cinevva.com/news/2026-03-13-gdc-2026-by-the-numbers" target="_blank" rel="noopener">GDC 2026 State of the Industry(数据解读)</a></li>
+                <li><a href="https://ziva.sh/blogs/gdc-2026-generative-ai-game-development-data" target="_blank" rel="noopener">GDC 2024–26 GenAI 数据三年对比</a></li>
+                <li><a href="https://unity.com/resources/gaming-report" target="_blank" rel="noopener">Unity 2026 Game Development Report</a></li>
+                <li><a href="https://chiplay.acm.org/2026/work-in-progress/" target="_blank" rel="noopener">CHI PLAY 2026 · Work-in-Progress CfP(2027 日期以官网为准)</a></li>
+              </ul>
+            </div>
+          </div>
+          <p class="footnote mono"><span class="lang-zh">置信度说明:实证评估与系统先例证据强(多独立来源互证);态度调查样本量偏小(21–175 人),方向性结论可靠、数值不宜外推。Mage 系列三篇疑出自同一团队,引用时建议注意。</span><span class="lang-en">Confidence: empirical evaluation &amp; system precedents are strong (multiple independent sources); attitude surveys have small samples (21–175) — directional conclusions reliable, figures not for extrapolation. The Mage-series papers appear to share one team; cite with care.</span></p>
+        </section>
+
+        <footer class="page-foot">
+          <p class="mono">RESEARCH MEMO · <span class="lang-zh">「用 AI 一句话做游戏」行为研究调研</span><span class="lang-en">Survey on One-Prompt AI Game Creation</span> · 2026-08-07</p>
+          <p class="mono dim"><span class="lang-zh">配套文件:course-plan-draft.md · index.html(课程导论)</span><span class="lang-en">Companion files: course-plan-draft.md · index.html (course intro)</span></p>
+        </footer>
+      </main>
+    </div>
+
+    <script src="./research-survey.js"></script>
+  </body>
+</html>
