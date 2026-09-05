@@ -41,12 +41,13 @@ window.WEEKS_DATA = [
       "If these pipelines become a tool, which steps must stay visible rather than automated?"
     ],
     assignment: {
-      summary: "Annotate the two pipelines: question → system description → minimum demo.",
+      summary: "Two tasks after class. The reflection happens in Class 02.",
       deliverables: [
-        "One annotated diagram or outline per pipeline",
-        "A short note (150–250 words) on what the engine must make explicit"
+        "A playable game made with one summer pipeline (emotion path or domain-learning path)",
+        "A written reflection on that making process — we will write and discuss it in Class 02",
+        "A short report surveying related research and products (AI-assisted game-making tools, papers, and what they do / don’t cover)"
       ],
-      criteria: "Both paths are traced; human vs agent contributions are marked."
+      criteria: "The game is playable and the pipeline used is identifiable. The report names specific systems or papers, not a generic list."
     }
   },
   {
@@ -55,8 +56,8 @@ window.WEEKS_DATA = [
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "8:30–9:15 · Discuss Chapter 3 with the research questions below",
-      "9:15–10:15 · Map one summer game onto M / D / A",
+      "8:30–9:15 · Reflection on the pipeline game made after Class 01",
+      "9:15–10:15 · Discuss Chapter 3; map play onto M / D / A",
       "10:15–11:00 · Decide what “meaningful” means for a designer-user of the engine"
     ],
     readings: [
