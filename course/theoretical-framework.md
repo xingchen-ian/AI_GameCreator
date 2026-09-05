@@ -3,7 +3,7 @@
 > **版本**：v0.2（蓝图字段已操作化）  
 > **日期**：2026-08-23  
 > **定位**：引擎设计与 CHI PLAY 2027 WiP 的理论底座  
-> **关联**：调研页 `research-survey.html`（问题/缺口/论点）；教学实践「来自生活的游戏设计」（引导问题 → 系统描述 → 最小 demo）；操作化词汇 [`blueprint-schema-v0.md`](blueprint-schema-v0.md)；样本 [`blueprint-samples/sailing-ian-v0.md`](blueprint-samples/sailing-ian-v0.md)  
+> **关联**：调研页 `research-survey.html`（问题/缺口/论点，instructor 本地，不在本仓库）；教学实践「来自生活的游戏设计」（引导问题 → 系统描述 → 最小 demo）；操作化词汇 [`blueprint-schema-v0.md`](blueprint-schema-v0.md)；样本 [`blueprint-samples/sailing-ian-v0.md`](blueprint-samples/sailing-ian-v0.md)  
 > **状态**：先定框架，不上网站；确认后再同步到 Pages
 
 ---
@@ -291,6 +291,6 @@ WiP 建议主打 **C1–C5**，C6 放相关工作/动机。
 
 1. 你批注：哪些主张要升格/降级/改措辞。  
 2. ~~冻结最小蓝图字段表 v0~~ → 已写入 [`blueprint-schema-v0.md`](blueprint-schema-v0.md)；样本 [`blueprint-samples/sailing-ian-v0.md`](blueprint-samples/sailing-ian-v0.md)。  
-3. 再决定是否写入 `research-survey.html` 新章节并推 Pages。  
+3. 再决定是否写入本地 `research-survey.html` 新章节（该页不进本仓库）。  
 4. 对照 CHI PLAY WiP 大纲：Related Work 按 L1–L4 写，System 按 §5 映射写。  
 5. Sprint 1 实现对照：起步图 8 节点 / 4 边；画布只做 schema 的视图。

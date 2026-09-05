@@ -21,7 +21,7 @@ Local preview from the repo root: `npx serve .` then open `/course/syllabus.html
 
 Do not mix instructor teaching assets into `student/`, and do not put engine/report work into `course/`. Details: [NOTICE.md](NOTICE.md).
 
-The public intro deck and research survey at the repo root (`index.html`, `research-survey.html`) are earlier instructor materials. They stay where they are.
+The only HTML site in this repository is `course/`. The earlier intro deck and research survey live on the instructor’s machine only.
 
 ## How we work
 

@@ -1,3 +1,11 @@
 .DS_Store
 .cursor/
 *.log
+
+# Instructor-only local sites (not shared in this repo)
+/index.html
+/styles.css
+/script.js
+/research-survey.html
+/research-survey.css
+/research-survey.js
