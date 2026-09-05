@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Research syllabus for the AI-Assisted Game Design Engine independent study." />
+  <title>AI-Assisted Game Design Engine · Research Syllabus</title>
+  <style>
+    :root {
+      --paper: #f4f0e7;
+      --paper-light: #fbf9f4;
+      --ink: #17202a;
+      --muted: #647078;
+      --line: #cbc5b9;
+      --indigo: #293e6a;
+      --indigo-soft: #dfe5f0;
+      --coral: #db654d;
+      --coral-soft: #f3ded8;
+      --sage: #4e715e;
+      --sage-soft: #dce8df;
+      --gold: #9c6b20;
+      --gold-soft: #eee1c9;
+      --shadow: 0 16px 45px rgba(23, 32, 42, 0.08);
+      --radius: 18px;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "Noto Serif SC", serif;
+      --sans: Inter, "SF Pro Text", "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(41, 62, 106, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(41, 62, 106, 0.028) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    a { color: inherit; }
+    button { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(203, 197, 185, 0.82);
+      background: rgba(244, 240, 231, 0.9);
+      backdrop-filter: blur(16px);
+    }
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--indigo);
+      font-family: var(--serif);
+      font-size: 14px;
+    }
+    .nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .nav a, .nav-drop > summary {
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      list-style: none;
+    }
+    .nav a:hover, .nav a.active,
+    .nav-drop[open] > summary,
+    .nav-drop > summary:hover {
+      color: var(--indigo);
+      background: var(--indigo-soft);
+    }
+    .nav-drop { position: relative; }
+    .nav-drop > summary {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-drop > summary::-webkit-details-marker { display: none; }
+    .nav-drop > summary::after {
+      content: "";
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid currentColor;
+      opacity: 0.7;
+    }
+    .nav-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: min(320px, calc(100vw - 32px));
+      max-height: min(70vh, 520px);
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper-light);
+      box-shadow: var(--shadow);
+    }
+    .nav-menu a {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .nav-menu a:hover {
+      background: var(--indigo-soft);
+      color: var(--indigo);
+    }
+    .nav-menu .w-no {
+      color: var(--muted);
+      font: 700 11px/1 var(--mono);
+    }
+    .nav-menu .w-phase {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .session-link {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--week-color);
+      font-size: 13px;
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .session-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 92px 0 70px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-light);
+    }
+    .hero::after {
+      content: "14";
+      position: absolute;
+      right: max(3vw, calc((100vw - 1180px) / 2));
+      bottom: -76px;
+      color: rgba(41, 62, 106, 0.055);
+      font: 700 320px/1 var(--serif);
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      color: var(--coral);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 38px; height: 2px; background: currentColor; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 880px;
+      margin-bottom: 26px;
+      font: 650 clamp(48px, 7.2vw, 92px)/0.98 var(--serif);
+      letter-spacing: -0.045em;
+    }
+    h1 em { color: var(--indigo); font-style: italic; font-weight: 500; }
+    .hero-lead {
+      max-width: 770px;
+      margin-bottom: 40px;
+      color: #3d4850;
+      font: 400 clamp(18px, 2.1vw, 23px)/1.55 var(--serif);
+    }
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .meta-chip {
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: #39434a;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    main section { padding: 84px 0; border-bottom: 1px solid var(--line); }
+    .section-head {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 38px;
+      margin-bottom: 44px;
+    }
+    .section-no {
+      color: var(--coral);
+      font: 650 13px/1 var(--mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .section-title {
+      margin-bottom: 13px;
+      font: 600 clamp(34px, 4.2vw, 56px)/1.05 var(--serif);
+      letter-spacing: -0.03em;
+    }
+    .section-intro { max-width: 780px; color: var(--muted); font-size: 17px; }
+
+    .research-question {
+      position: relative;
+      padding: 36px 40px 34px 54px;
+      border-left: 5px solid var(--coral);
+      background: var(--paper-light);
+      box-shadow: var(--shadow);
+      font: 500 clamp(24px, 3.1vw, 38px)/1.35 var(--serif);
+    }
+    .research-question::before {
+      content: "RQ";
+      position: absolute;
+      top: 15px;
+      left: 17px;
+      color: var(--coral);
+      font: 800 10px/1 var(--mono);
+      letter-spacing: 0.1em;
+    }
+    .foundation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 30px;
+    }
+    .foundation-card {
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.48);
+    }
+    .foundation-card small {
+      color: var(--coral);
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .foundation-card h3 { margin: 8px 0 8px; font: 600 24px/1.2 var(--serif); }
+    .foundation-card p { margin: 0; color: var(--muted); }
+
+    .layers {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      padding-bottom: 92px;
+    }
+    .layer {
+      min-height: 470px;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--layer-color);
+      border-radius: 4px 4px var(--radius) var(--radius);
+      background: var(--paper-light);
+    }
+    .layer-code { color: var(--layer-color); font: 800 13px/1 var(--mono); }
+    .layer h3 { margin: 25px 0 10px; font: 600 24px/1.15 var(--serif); }
+    .layer p { color: var(--muted); font-size: 14px; }
+    .layer strong { display: block; margin-top: 20px; font-size: 13px; }
+    .layer-readings {
+      margin-top: auto;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+    .layer-readings-label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--layer-color);
+      font: 800 10px/1 var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .layer-reading {
+      margin-top: 9px;
+      font: 600 12px/1.32 var(--serif);
+    }
+    .reading-link {
+      color: inherit;
+      text-decoration-color: color-mix(in srgb, var(--layer-color) 45%, transparent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .reading-link:hover { color: var(--layer-color); }
+    .access {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 2px 5px;
+      border: 1px solid color-mix(in srgb, var(--layer-color) 32%, transparent);
+      border-radius: 999px;
+      color: var(--layer-color);
+      font: 700 7px/1 var(--sans);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      vertical-align: 2px;
+    }
+    .layer-reading span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font: 400 10px/1.35 var(--sans);
+    }
+    .scaffold {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 15px 20px;
+      border: 1px dashed var(--gold);
+      border-radius: 12px;
+      background: var(--gold-soft);
+      color: #5e451e;
+      font-size: 14px;
+    }
+    .scaffold b { white-space: nowrap; font-family: var(--mono); }
+    .scaffold-reading {
+      margin-left: auto;
+      padding-left: 20px;
+      border-left: 1px solid rgba(156, 107, 32, .35);
+      color: #765827;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .scaffold-reading a {
+      color: inherit;
+      font-weight: 750;
+      text-underline-offset: 3px;
+    }
+    .week-body a {
+      color: var(--week-color);
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      align-items: center;
+      gap: 9px;
+      margin-top: 28px;
+    }
+    .loop-step {
+      position: relative;
+      padding: 17px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-light);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .loop-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      z-index: 2;
+      right: -16px;
+      color: var(--coral);
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: 3fr 4fr 3fr 2fr 1fr 1fr;
+      gap: 5px;
+      margin: 38px 0 18px;
+    }
+    .phase {
+      min-height: 116px;
+      padding: 18px 14px;
+      color: var(--phase-text, var(--ink));
+      background: var(--phase-bg);
+    }
+    .phase:first-child { border-radius: 14px 4px 4px 14px; }
+    .phase:last-child { border-radius: 4px 14px 14px 4px; }
+    .phase .weeks { font: 700 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+    .phase h3 { margin: 12px 0 5px; font: 600 19px/1.12 var(--serif); }
+    .phase p { margin: 0; font-size: 12px; line-height: 1.4; opacity: .8; }
+    .roadmap-note { color: var(--muted); font-size: 13px; }
+
+    .sprints { display: grid; gap: 20px; }
+    .sprint {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) 270px;
+      gap: 28px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-light);
+    }
+    .sprint-id { color: var(--sprint-color); font: 800 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .sprint-duration { margin-top: 13px; font: 600 34px/1 var(--serif); }
+    .sprint-main h3 { margin-bottom: 8px; font: 600 27px/1.2 var(--serif); }
+    .sprint-main p { margin-bottom: 14px; color: var(--muted); }
+    .feature-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .feature {
+      padding: 6px 9px;
+      border-radius: 7px;
+      background: var(--sprint-soft);
+      color: #354046;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .test-box {
+      align-self: stretch;
+      padding: 17px;
+      border-left: 3px solid var(--sprint-color);
+      background: var(--sprint-soft);
+    }
+    .test-box b { display: block; margin-bottom: 7px; font: 750 12px/1 var(--mono); text-transform: uppercase; }
+    .test-box p { margin: 0; color: #354046; font-size: 13px; }
+
+    .schedule-tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .filter {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .filter:hover, .filter.active { color: white; border-color: var(--indigo); background: var(--indigo); }
+    .expand {
+      border: 0;
+      border-bottom: 1px solid currentColor;
+      color: var(--indigo);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .weeks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .week {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper-light);
+      overflow: hidden;
+    }
+    .week[hidden] { display: none; }
+    .week summary {
+      display: grid;
+      grid-template-columns: 57px 1fr auto;
+      align-items: center;
+      gap: 15px;
+      padding: 18px;
+      cursor: pointer;
+      list-style: none;
+    }
+    .week summary::-webkit-details-marker { display: none; }
+    .week-no {
+      width: 49px;
+      height: 49px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--week-color);
+      font: 800 12px/1 var(--mono);
+    }
+    .week-title { font: 600 19px/1.2 var(--serif); }
+    .week-phase { margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    .chevron { color: var(--muted); transition: transform .2s; }
+    .week[open] .chevron { transform: rotate(45deg); }
+    .week-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 0 18px 20px 90px;
+    }
+    .week-body h4 { margin: 0 0 5px; color: var(--week-color); font-size: 11px; text-transform: uppercase; letter-spacing: .09em; }
+    .week-body p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .deliverables {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .deliverable {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-light);
+    }
+    .deliverable .num { color: var(--coral); font: 800 12px/1 var(--mono); }
+    .deliverable h3 { margin: 28px 0 10px; font: 600 25px/1.17 var(--serif); }
+    .deliverable p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .workshop {
+      padding: 48px;
+      border-radius: 24px;
+      color: white;
+      background: var(--indigo);
+      box-shadow: var(--shadow);
+    }
+    .workshop h2 { max-width: 790px; margin-bottom: 16px; font: 600 clamp(38px, 5vw, 64px)/1.02 var(--serif); letter-spacing: -.03em; }
+    .workshop > p { max-width: 790px; color: #dce4f3; }
+    .audiences { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 32px; }
+    .audience { padding: 18px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; background: rgba(255,255,255,.06); }
+    .audience b { display: block; margin-bottom: 5px; color: #ffd8ce; font-family: var(--serif); font-size: 19px; }
+    .audience span { color: #dce4f3; font-size: 12px; }
+
+    footer { padding: 34px 0 50px; color: var(--muted); font-size: 12px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
+    .to-top { text-decoration: none; color: var(--indigo); font-weight: 750; }
+
+    @media (max-width: 900px) {
+      .nav { display: none; }
+      .section-head { grid-template-columns: 1fr; gap: 12px; }
+      .layers { grid-template-columns: repeat(2, 1fr); }
+      .sprint { grid-template-columns: 110px 1fr; }
+      .test-box { grid-column: 1 / -1; }
+      .roadmap { grid-template-columns: repeat(2, 1fr); }
+      .phase, .phase:first-child, .phase:last-child { border-radius: 8px; }
+      .weeks-grid { grid-template-columns: 1fr; }
+      .deliverables { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 1180px); }
+      .hero { padding: 68px 0 50px; }
+      .hero::after { display: none; }
+      main section { padding: 60px 0; }
+      .foundation-grid, .layers, .audiences { grid-template-columns: 1fr; }
+      .layers { padding-bottom: 154px; }
+      .layer { min-height: 0; }
+      .scaffold { align-items: flex-start; gap: 7px; flex-direction: column; }
+      .scaffold-reading {
+        margin-left: 0;
+        padding: 7px 0 0;
+        border-top: 1px solid rgba(156, 107, 32, .35);
+        border-left: 0;
+        white-space: normal;
+      }
+      .loop { grid-template-columns: repeat(2, 1fr); }
+      .loop-step::after { display: none; }
+      .roadmap { grid-template-columns: 1fr; }
+      .sprint { grid-template-columns: 1fr; }
+      .week-body { grid-template-columns: 1fr; padding-left: 18px; }
+      .workshop { padding: 30px 24px; }
+      .footer-inner { flex-direction: column; }
+    }
+    @media print {
+      body { background: white; color: black; }
+      .topbar, .schedule-tools, .to-top { display: none !important; }
+      .hero, main section { padding: 28px 0; }
+      .hero::after { display: none; }
+      .week { break-inside: avoid; }
+      .week-body { display: grid !important; }
+      .workshop { color: black; background: white; border: 1px solid #888; box-shadow: none; }
+      .workshop > p, .audience span { color: #333; }
+    }
+  </style>
+</head>
+<body id="top">
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark">AI</span><span>Research Syllabus · Fall 2026</span></a>
+      <nav class="nav" aria-label="Page sections">
+        <a href="#question">Question</a>
+        <a href="#framework">Framework</a>
+        <a href="#sprints">Sprints</a>
+        <a href="#schedule">14 Weeks</a>
+        <a href="#outputs">Outputs</a>
+        <a href="#workshop">Workshop</a>
+        <details class="nav-drop" id="sessions-drop">
+          <summary>Sessions</summary>
+          <div class="nav-menu" role="menu">
+            <a href="studio/week-01.html"><span class="w-no">01</span><span>Two summer pipelines<span class="w-phase">Frame</span></span></a>
+            <a href="studio/week-02.html"><span class="w-no">02</span><span>Meaningful play and translation<span class="w-phase">Frame</span></span></a>
+            <a href="studio/week-03.html"><span class="w-no">03</span><span>Pipeline autopsy and scope freeze<span class="w-phase">Frame</span></span></a>
+            <a href="studio/week-04.html"><span class="w-no">04</span><span>Blueprint as SSOT<span class="w-phase">Sprint 1</span></span></a>
+            <a href="studio/week-05.html"><span class="w-no">05</span><span>Variables, feedback, challenge space<span class="w-phase">Sprint 1</span></span></a>
+            <a href="studio/week-06.html"><span class="w-no">06</span><span>Visible gaps and the first protocol<span class="w-phase">Sprint 1</span></span></a>
+            <a href="studio/week-07.html"><span class="w-no">07</span><span>Sprint 1 review + Test 1<span class="w-phase">Sprint 1 · Gate</span></span></a>
+            <a href="studio/week-08.html"><span class="w-no">08</span><span>Mixed initiative<span class="w-phase">Sprint 2</span></span></a>
+            <a href="studio/week-09.html"><span class="w-no">09</span><span>Provenance, confirmation, undo<span class="w-phase">Sprint 2</span></span></a>
+            <a href="studio/week-10.html"><span class="w-no">10</span><span>Sprint 2 review + Test 2<span class="w-phase">Sprint 2 · Gate</span></span></a>
+            <a href="studio/week-11.html"><span class="w-no">11</span><span>Evaluation as design feedback<span class="w-phase">Sprint 3</span></span></a>
+            <a href="studio/week-12.html"><span class="w-no">12</span><span>Sprint 3 review and evidence<span class="w-phase">Sprint 3 · Gate</span></span></a>
+            <a href="studio/week-13.html"><span class="w-no">13</span><span>Write the three-test comparison<span class="w-phase">Writing</span></span></a>
+            <a href="studio/week-14.html"><span class="w-no">14</span><span>Public research workshop<span class="w-phase">Share</span></span></a>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="shell">
+      <div class="eyebrow">Independent Study · Interactive Media Arts</div>
+      <h1>AI-Assisted <em>Game Design</em> Engine</h1>
+      <p class="hero-lead">
+        A fourteen-week research studio for turning guided design thinking into a structured blueprint,
+        a minimum playable demo, and an evidence-driven design loop—without handing authorship to the agent.
+      </p>
+      <div class="hero-meta">
+        <span class="meta-chip">Monday · 8:30–11:00</span>
+        <span class="meta-chip">14 weeks</span>
+        <span class="meta-chip">10–12 hours / week</span>
+        <span class="meta-chip">3 testable sprints</span>
+        <span class="meta-chip">Browser-based engine</span>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section id="question">
+      <div class="shell">
+        <header class="section-head">
+          <div class="section-no">01 · Starting point</div>
+          <div>
+            <h2 class="section-title">From teaching pipelines to a design engine</h2>
+            <p class="section-intro">
+              The study grows from two summer teaching designs in <em>Game Design from Life</em>.
+              Both use guiding questions to produce an AI-agent-ready development outline and then a minimum playable demo.
+              This semester asks what must become explicit in the tool itself.
+            </p>
+          </div>
+        </header>
+
+        <div class="research-question">
+          When an AI agent joins game creation, what interaction structure and design language let a novice complete
+          <em>guide → structure → playable verification</em> while retaining design authorship?
+        </div>
+
+        <div class="foundation-grid">
+          <article class="foundation-card">
+            <small>Summer path A</small>
+            <h3>Emotion Experience</h3>
+            <p>Lived event → emotional structure → variables and challenge space → playable mechanics.</p>
+          </article>
+          <article class="foundation-card">
+            <small>Summer path B</small>
+            <h3>Domain Learning</h3>
+            <p>Novice/expert gap → skill loop and feedback → challenge space → playable system.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="framework">
+      <div class="shell">
+        <header class="section-head">
+          <div class="section-no">02 · Theory</div>
+          <div>
+            <h2 class="section-title">Four lenses, one negotiable scaffold</h2>
+            <p class="section-intro">
+              The layers are critique lenses, not four sequential products. L1–L3 become progressively visible across
+              the sprints; L4 and P-Scaffold are observed and protected throughout.
+            </p>
+          </div>
+        </header>
+
+        <div class="layers">
+          <article class="layer" style="--layer-color: var(--indigo)">
+            <span class="layer-code">L1</span>
+            <h3>Game Design Structure</h3>
+            <p>MDA and design patterns provide vocabulary without becoming a forced linear method.</p>
+            <strong>Structure is the basic language.</strong>
+            <div class="layer-readings">
+              <span class="layer-readings-label">Read for this lens</span>
+              <div class="layer-reading"><a class="reading-link" href="https://users.cs.northwestern.edu/~hunicke/MDA.pdf" target="_blank" rel="noopener">Hunicke, LeBlanc & Zubek · <em>MDA</em> ↗</a><b class="access">Open PDF</b><span>Mechanics, dynamics, and aesthetics as a bidirectional lens.</span></div>
+              <div class="layer-reading"><a class="reading-link" href="https://books.google.com/books?id=UM-xyczrZuQC&amp;printsec=frontcover" target="_blank" rel="noopener">Salen & Zimmerman · <em>Rules of Play</em> ↗</a><b class="access">Preview</b><span>Meaningful play, systems, and rules. Full chapters via NYU Library.</span></div>
+              <div class="layer-reading"><a class="reading-link" href="https://books.google.com/books?id=JSgOSP1qklUC&amp;printsec=frontcover" target="_blank" rel="noopener">Meadows · <em>Thinking in Systems</em> ↗</a><b class="access">Preview</b><span>Stocks, flows, feedback, and leverage. Full chapters via NYU Library.</span></div>
+            </div>
+          </article>
+          <article class="layer" style="--layer-color: var(--coral)">
+            <span class="layer-code">L2</span>
+            <h3>Human–AI Co-Creation</h3>
+            <p>Mixed initiative, agency, authorship, and boundary objects define who proposes and who decides.</p>
+            <strong>The agent suggests; the human commits.</strong>
+            <div class="layer-readings">
+              <span class="layer-readings-label">Read for this lens</span>
+              <div class="layer-reading"><a class="reading-link" href="https://www.um.edu.mt/library/oar/bitstream/123456789/29459/1/Mixed-initiative_co-creativity.pdf" target="_blank" rel="noopener">Yannakakis, Liapis & Alexopoulos · <em>Mixed-Initiative Co-Creativity</em> ↗</a><b class="access">Open PDF</b><span>Both sides act without collapsing human agency.</span></div>
+              <div class="layer-reading"><a class="reading-link" href="https://www.microsoft.com/en-us/research/wp-content/uploads/2019/01/Guidelines-for-Human-AI-Interaction-camera-ready.pdf" target="_blank" rel="noopener">Amershi et al. · <em>Guidelines for Human–AI Interaction</em> ↗</a><b class="access">Open PDF</b><span>Guidelines that constrain suggestion, confirmation, and control.</span></div>
+            </div>
+          </article>
+          <article class="layer" style="--layer-color: var(--sage)">
+            <span class="layer-code">L3</span>
+            <h3>Design Verification Loop</h3>
+            <p>Evaluation is part of making: visible gaps, run health, and lightweight intent-alignment probes.</p>
+            <strong>“It runs” is not “the design holds.”</strong>
+            <div class="layer-readings">
+              <span class="layer-readings-label">Read for this lens</span>
+              <div class="layer-reading"><a class="reading-link" href="https://www.gamedeveloper.com/design/book-excerpt-game-design-workshop" target="_blank" rel="noopener">Fullerton · <em>Game Design Workshop</em> ↗</a><b class="access">Open excerpt</b><span>Playcentric process, playtesting, observation, and iteration.</span></div>
+              <div class="layer-reading"><a class="reading-link" href="https://xingchen-ian.github.io/game-design-from-life/domain-learning.html" target="_blank" rel="noopener">Summer test materials · <em>Alignment Questions</em> ↗</a><b class="access">Course material</b><span>Emotion equivalence, domain judgment, feedback, and challenge progression.</span></div>
+            </div>
+          </article>
+          <article class="layer" style="--layer-color: var(--gold)">
+            <span class="layer-code">L4</span>
+            <h3>Learning-through-Design</h3>
+            <p>Using the system is how a novice acquires a transferable structural language and epistemic agency.</p>
+            <strong>Designing and learning are one process.</strong>
+            <div class="layer-readings">
+              <span class="layer-readings-label">Read for this lens</span>
+              <div class="layer-reading"><a class="reading-link" href="https://openlibrary.org/works/OL7140277W/The_Reflective_Practitioner" target="_blank" rel="noopener">Schön · <em>The Reflective Practitioner</em> ↗</a><b class="access">Preview / borrow</b><span>Reflection-in-action and reflection-on-action.</span></div>
+              <div class="layer-reading"><a class="reading-link" href="https://doi.org/10.1080/15710882.2026.2655696" target="_blank" rel="noopener">Lee-Remond et al. · <em>Designing Together</em> ↗</a><b class="access">Article</b><span>Student game co-design and epistemic agency.</span></div>
+            </div>
+          </article>
+          <div class="scaffold">
+            <b>P-SCAFFOLD</b>
+            <span>Any entry · missing structure stays visible · prompts are offers, not commands · guidance may fade</span>
+            <span class="scaffold-reading">Reading: <a href="theoretical-framework.md" target="_blank">negotiable scaffolds and anti-wizard design ↗</a></span>
+          </div>
+        </div>
+
+        <div class="loop" aria-label="Design loop">
+          <div class="loop-step">Guide</div>
+          <div class="loop-step">Blueprint</div>
+          <div class="loop-step">Commit</div>
+          <div class="loop-step">Demo</div>
+          <div class="loop-step">Evaluate</div>
+          <div class="loop-step">Revise</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sprints">
+      <div class="shell">
+        <header class="section-head">
+          <div class="section-no">03 · Development</div>
+          <div>
+            <h2 class="section-title">A 4–3–2 sprint architecture</h2>
+            <p class="section-intro">
+              The nine build weeks are intentionally unequal. The structural substrate receives four weeks;
+              the working contract receives three; closure and evidence use a focused two-week sprint.
+              Every sprint ends with an external designer-user test.
+            </p>
+          </div>
+        </header>
+
+        <div class="roadmap" aria-label="Fourteen-week roadmap">
+          <article class="phase" style="--phase-bg: var(--gold-soft)">
+            <span class="weeks">W01–03</span><h3>Frame</h3><p>Read, dissect, freeze scope.</p>
+          </article>
+          <article class="phase" style="--phase-bg: var(--indigo); --phase-text: white">
+            <span class="weeks">W04–07</span><h3>Sprint 1</h3><p>Blueprint substrate.</p>
+          </article>
+          <article class="phase" style="--phase-bg: var(--coral); --phase-text: white">
+            <span class="weeks">W08–10</span><h3>Sprint 2</h3><p>Working contract.</p>
+          </article>
+          <article class="phase" style="--phase-bg: var(--sage); --phase-text: white">
+            <span class="weeks">W11–12</span><h3>Sprint 3</h3><p>Close the loop.</p>
+          </article>
+          <article class="phase" style="--phase-bg: #d9d3c8">
+            <span class="weeks">W13</span><h3>Write</h3><p>Compare.</p>
+          </article>
+          <article class="phase" style="--phase-bg: var(--ink); --phase-text: white">
+            <span class="weeks">W14</span><h3>Share</h3><p>Public.</p>
+          </article>
+        </div>
+        <p class="roadmap-note">The product becomes thicker across sprints; the designer-user task remains comparable.</p>
+
+        <div class="sprints">
+          <article class="sprint" style="--sprint-color: var(--indigo); --sprint-soft: var(--indigo-soft)">
+            <div><div class="sprint-id">Sprint 01</div><div class="sprint-duration">4 weeks</div></div>
+            <div class="sprint-main">
+              <h3>Structure as language</h3>
+              <p>A designer-user can enter anywhere, complete a shared blueprint, see unresolved structure, and compile a minimum demo. AI may compile; it may not silently redesign.</p>
+              <div class="feature-list">
+                <span class="feature">Blueprint SSOT</span><span class="feature">Any entry</span>
+                <span class="feature">Visible open slots</span><span class="feature">Minimum demo</span>
+              </div>
+            </div>
+            <aside class="test-box"><b>Test 1 · Week 7 · n=1–2</b><p>Can a stranger read and fill the blueprint? Does the resulting demo still express their structure?</p></aside>
+          </article>
+
+          <article class="sprint" style="--sprint-color: var(--coral); --sprint-soft: var(--coral-soft)">
+            <div><div class="sprint-id">Sprint 02</div><div class="sprint-duration">3 weeks</div></div>
+            <div class="sprint-main">
+              <h3>The human–AI working contract</h3>
+              <p>The blueprint remains authoritative while the agent becomes an active proposer. Suggestions, committed decisions, provenance, and undo must be legible in the interface.</p>
+              <div class="feature-list">
+                <span class="feature">Suggestion rail</span><span class="feature">Confirm to write</span>
+                <span class="feature">Provenance</span><span class="feature">Undo</span>
+              </div>
+            </div>
+            <aside class="test-box"><b>Test 2 · Week 10 · n=2–3</b><p>Can users tell suggestion from decision? Can they point to what they—not the model—committed?</p></aside>
+          </article>
+
+          <article class="sprint" style="--sprint-color: var(--sage); --sprint-soft: var(--sage-soft)">
+            <div><div class="sprint-id">Sprint 03</div><div class="sprint-duration">2 weeks</div></div>
+            <div class="sprint-main">
+              <h3>Verification closes the loop</h3>
+              <p>Evaluation returns to the blueprint as design feedback. This sprint is closure and evidence, not a new platform: reuse the summer questions for gaps, run health, and intent alignment.</p>
+              <div class="feature-list">
+                <span class="feature">Structure check</span><span class="feature">Run health</span>
+                <span class="feature">Intent probe</span><span class="feature">Evidence-led revision</span>
+              </div>
+            </div>
+            <aside class="test-box"><b>Test 3 · Weeks 11–12 · n=5–8</b><p>Does evaluation reveal what is missing or off? At least one engine change must trace to evidence.</p></aside>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="schedule">
+      <div class="shell">
+        <header class="section-head">
+          <div class="section-no">04 · Weekly plan</div>
+          <div>
+            <h2 class="section-title">Fourteen Mondays, fourteen due items</h2>
+            <p class="section-intro">
+              Each week turns reading into a system decision or makes a testable increment.
+              Open a week for a summary, or use <strong>Sessions</strong> / <em>Open session</em> for the full studio page (readings, guided questions, assignment, submit links).
+            </p>
+          </div>
+        </header>
+
+        <div class="schedule-tools">
+          <div class="filter-row" role="group" aria-label="Filter weeks">
+            <button class="filter active" data-filter="all">All</button>
+            <button class="filter" data-filter="frame">Frame</button>
+            <button class="filter" data-filter="s1">Sprint 1</button>
+            <button class="filter" data-filter="s2">Sprint 2</button>
+            <button class="filter" data-filter="s3">Sprint 3</button>
+            <button class="filter" data-filter="final">Write + Share</button>
+          </div>
+          <button class="expand" id="expandAll">Expand all</button>
+        </div>
+
+        <div class="weeks-grid">
+          <details class="week" data-phase="frame" open style="--week-color: var(--gold)">
+            <summary><span class="week-no">01</span><div><div class="week-title">Two summer pipelines</div><div class="week-phase">Frame</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://users.cs.northwestern.edu/~hunicke/MDA.pdf" target="_blank" rel="noopener">MDA (open PDF) ↗</a>; <a href="https://xingchen-ian.github.io/game-design-from-life/summer-camp.html" target="_blank" rel="noopener">play three summer demos ↗</a>; walk the <a href="https://xingchen-ian.github.io/game-design-from-life/practice.html" target="_blank" rel="noopener">emotion path ↗</a> and <a href="https://xingchen-ian.github.io/game-design-from-life/domain-learning.html" target="_blank" rel="noopener">domain-learning path ↗</a>.</p><a class="session-link" href="studio/week-01.html">Open session →</a></div><div><h4>Assignment</h4><p>Annotate the two pipelines: question → system description → minimum demo.</p></div></div>
+          </details>
+          <details class="week" data-phase="frame" style="--week-color: var(--gold)">
+            <summary><span class="week-no">02</span><div><div class="week-title">Meaningful play and translation</div><div class="week-phase">Frame</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://books.google.com/books?id=UM-xyczrZuQC&amp;printsec=frontcover" target="_blank" rel="noopener"><em>Rules of Play</em> preview ↗</a>: meaningful play. Assigned full chapter via NYU Library.</p><a class="session-link" href="studio/week-02.html">Open session →</a></div><div><h4>Assignment</h4><p>Map one summer game onto M/D/A; note where generated rules do or do not produce meaningful play.</p></div></div>
+          </details>
+          <details class="week" data-phase="frame" style="--week-color: var(--gold)">
+            <summary><span class="week-no">03</span><div><div class="week-title">Pipeline autopsy and scope freeze</div><div class="week-phase">Frame</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://books.google.com/books?id=UM-xyczrZuQC&amp;printsec=frontcover" target="_blank" rel="noopener"><em>Rules of Play</em> preview ↗</a>: systems and rules. Assigned full chapter via NYU Library.</p><a class="session-link" href="studio/week-03.html">Open session →</a></div><div><h4>Assignment</h4><p>Trace one project end to end; mark what the human authored, what the agent filled, and what was lost. Freeze blueprint v0 and sprint doors.</p></div></div>
+          </details>
+          <details class="week" data-phase="s1" style="--week-color: var(--indigo)">
+            <summary><span class="week-no">04</span><div><div class="week-title">Blueprint as SSOT</div><div class="week-phase">Sprint 1</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://www.gamedeveloper.com/design/book-excerpt-game-design-workshop" target="_blank" rel="noopener">Fullerton: playcentric-process excerpt ↗</a>.</p><a class="session-link" href="studio/week-04.html">Open session →</a></div><div><h4>Assignment</h4><p>Design document v0: intent, verbs, entities, constraints, out-of-scope. Answer: whose experience is this engine for?</p></div></div>
+          </details>
+          <details class="week" data-phase="s1" style="--week-color: var(--indigo)">
+            <summary><span class="week-no">05</span><div><div class="week-title">Variables, feedback, challenge space</div><div class="week-phase">Sprint 1</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://books.google.com/books?id=JSgOSP1qklUC&amp;printsec=frontcover" target="_blank" rel="noopener">Meadows: <em>Thinking in Systems</em> preview ↗</a>; <a href="https://xingchen-ian.github.io/game-design-from-life/domain-learning.html" target="_blank" rel="noopener">summer challenge-space method ↗</a>.</p><a class="session-link" href="studio/week-05.html">Open session →</a></div><div><h4>Assignment</h4><p>Working editor: create and edit the sample blueprint inside the tool. Submit iteration log.</p></div></div>
+          </details>
+          <details class="week" data-phase="s1" style="--week-color: var(--indigo)">
+            <summary><span class="week-no">06</span><div><div class="week-title">Visible gaps and the first protocol</div><div class="week-phase">Sprint 1</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="theoretical-framework.md" target="_blank">Instructor note: negotiable scaffolds and anti-wizard design ↗</a>.</p><a class="session-link" href="studio/week-06.html">Open session →</a></div><div><h4>Assignment</h4><p>Playable blueprint → demo path; Test 1 protocol; recruit 1–2 designer-users.</p></div></div>
+          </details>
+          <details class="week" data-phase="s1" style="--week-color: var(--indigo)">
+            <summary><span class="week-no">07</span><div><div class="week-title">Sprint 1 review + Test 1</div><div class="week-phase">Sprint 1 · Gate</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / research</h4><p><a href="https://openlibrary.org/works/OL7140277W/The_Reflective_Practitioner" target="_blank" rel="noopener">Schön: <em>The Reflective Practitioner</em> preview / borrow ↗</a>; external test focused on structural readability and any-entry behavior.</p><a class="session-link" href="studio/week-07.html">Open session →</a></div><div><h4>Assignment</h4><p>Playable increment + two-page memo against the L1 door + anonymized test notes.</p></div></div>
+          </details>
+          <details class="week" data-phase="s2" style="--week-color: var(--coral)">
+            <summary><span class="week-no">08</span><div><div class="week-title">Mixed initiative</div><div class="week-phase">Sprint 2</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://www.um.edu.mt/library/oar/bitstream/123456789/29459/1/Mixed-initiative_co-creativity.pdf" target="_blank" rel="noopener">Yannakakis, Liapis & Alexopoulos: <em>Mixed-Initiative Co-Creativity</em> PDF ↗</a>.</p><a class="session-link" href="studio/week-08.html">Open session →</a></div><div><h4>Assignment</h4><p>Define where the agent may act in this UI. Build a suggestion-rail spike.</p></div></div>
+          </details>
+          <details class="week" data-phase="s2" style="--week-color: var(--coral)">
+            <summary><span class="week-no">09</span><div><div class="week-title">Provenance, confirmation, undo</div><div class="week-phase">Sprint 2</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2019/01/Guidelines-for-Human-AI-Interaction-camera-ready.pdf" target="_blank" rel="noopener">Amershi et al.: <em>Guidelines for Human–AI Interaction</em> PDF ↗</a>.</p><a class="session-link" href="studio/week-09.html">Open session →</a></div><div><h4>Assignment</h4><p>Confirm-to-write on the live path; coupling section of design doc v2; recruit Test 2 and begin Test 3 recruitment.</p></div></div>
+          </details>
+          <details class="week" data-phase="s2" style="--week-color: var(--coral)">
+            <summary><span class="week-no">10</span><div><div class="week-title">Sprint 2 review + Test 2</div><div class="week-phase">Sprint 2 · Gate</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://www.gamedeveloper.com/design/book-excerpt-game-design-workshop" target="_blank" rel="noopener">Fullerton: playtesting excerpt ↗</a>.</p><a class="session-link" href="studio/week-10.html">Open session →</a></div><div><h4>Assignment</h4><p>Playable increment + L2 memo + Test 2 notes + Test 3 protocol v1.</p></div></div>
+          </details>
+          <details class="week" data-phase="s3" style="--week-color: var(--sage)">
+            <summary><span class="week-no">11</span><div><div class="week-title">Evaluation as design feedback</div><div class="week-phase">Sprint 3</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / study</h4><p><a href="https://www.gamedeveloper.com/design/book-excerpt-game-design-workshop" target="_blank" rel="noopener">Fullerton: playtesting excerpt ↗</a>; revisit <a href="https://xingchen-ian.github.io/game-design-from-life/domain-learning.html" target="_blank" rel="noopener">summer alignment questions ↗</a>.</p><a class="session-link" href="studio/week-11.html">Open session →</a></div><div><h4>Assignment</h4><p>Lightweight evaluation returns to blueprint. Run Test 3 sessions; collect raw notes, not conclusions.</p></div></div>
+          </details>
+          <details class="week" data-phase="s3" style="--week-color: var(--sage)">
+            <summary><span class="week-no">12</span><div><div class="week-title">Sprint 3 review and evidence</div><div class="week-phase">Sprint 3 · Gate</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Read / research</h4><p><a href="https://doi.org/10.1080/15710882.2026.2655696" target="_blank" rel="noopener">Lee-Remond et al.: student co-design and epistemic agency ↗</a>; compare observed breakdowns with the intended verification loop.</p><a class="session-link" href="studio/week-12.html">Open session →</a></div><div><h4>Assignment</h4><p>Increment + L3 memo; one engine change traced to Test 3; lock the public demo path as a checklist.</p></div></div>
+          </details>
+          <details class="week" data-phase="final" style="--week-color: #6a6257">
+            <summary><span class="week-no">13</span><div><div class="week-title">Write the three-test comparison</div><div class="week-phase">Writing</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Studio</h4><p>Findings, implications, limitations; dry-run the public talk.</p><a class="session-link" href="studio/week-13.html">Open session →</a></div><div><h4>Assignment</h4><p>Testing-report draft; talk script; three genuine questions each for CS, IMA, and sociology guests.</p></div></div>
+          </details>
+          <details class="week" data-phase="final" style="--week-color: var(--ink)">
+            <summary><span class="week-no">14</span><div><div class="week-title">Public research workshop</div><div class="week-phase">Share</div></div><span class="chevron">+</span></summary>
+            <div class="week-body"><div><h4>Event</h4><p>Public presentation, live demonstration, optional hands-on task, and cross-disciplinary discussion.</p><a class="session-link" href="studio/week-14.html">Open session →</a></div><div><h4>Final delivery</h4><p>Engine URL/repository; final testing report; slides; stable in-room demo.</p></div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="outputs">
+      <div class="shell">
+        <header class="section-head">
+          <div class="section-no">05 · Evidence</div>
+          <div>
+            <h2 class="section-title">What the study leaves behind</h2>
+            <p class="section-intro">
+              The engine is the central artifact. Documentation and testing make its decisions inspectable rather than ornamental.
+            </p>
+          </div>
+        </header>
+        <div class="deliverables">
+          <article class="deliverable"><span class="num">01</span><h3>Deployed engine</h3><p>Browser-accessible tool, repository, and a short rationale explaining blueprint, working contract, and verification loop.</p></article>
+          <article class="deliverable"><span class="num">02</span><h3>Research trail</h3><p>Living design document, weekly iteration logs, three protocols, and anonymized observations showing accept / modify / reject decisions.</p></article>
+          <article class="deliverable"><span class="num">03</span><h3>Testing report</h3><p>A 2,500–4,000 word comparison: question, method, findings across three increments, design implications, and limitations.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="workshop">
+      <div class="shell">
+        <div class="workshop">
+          <div class="eyebrow" style="color:#ffd8ce">Week 14 · NYU Shanghai</div>
+          <h2>A public research release, not just a final presentation</h2>
+          <p>
+            A concise research talk, a stable live demo, an optional hands-on design task, and an open discussion.
+            The goal is not to claim completion; it is to expose the engine’s assumptions to people who see systems,
+            interaction, and lived experience differently.
+          </p>
+          <div class="audiences">
+            <div class="audience"><b>Computer Science</b><span>Can the blueprint serve as a reliable SSOT? Where should agent permissions stop?</span></div>
+            <div class="audience"><b>Interactive Media</b><span>Does the scaffold support creativity, or quietly become a template?</span></div>
+            <div class="audience"><b>Sociology</b><span>Whose lived experience becomes legitimate design material, and who retains authorship?</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>AI-Assisted Game Design Engine · Research Syllabus · Fall 2026</span>
+      <a class="to-top" href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    const filters = [...document.querySelectorAll(".filter")];
+    const weeks = [...document.querySelectorAll(".week")];
+    const expandButton = document.getElementById("expandAll");
+    let expanded = false;
+
+    filters.forEach((button) => {
+      button.addEventListener("click", () => {
+        filters.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        const target = button.dataset.filter;
+        weeks.forEach((week) => {
+          week.hidden = target !== "all" && week.dataset.phase !== target;
+        });
+      });
+    });
+
+    expandButton.addEventListener("click", () => {
+      expanded = !expanded;
+      weeks.filter((week) => !week.hidden).forEach((week) => { week.open = expanded; });
+      expandButton.textContent = expanded ? "Collapse all" : "Expand all";
+    });
+
+    const sectionLinks = [...document.querySelectorAll(".nav > a")];
+    const observed = sectionLinks
+      .map((link) => document.querySelector(link.getAttribute("href")))
+      .filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      sectionLinks.forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+      });
+    }, { rootMargin: "-25% 0px -60% 0px", threshold: [0.05, 0.25, 0.6] });
+    observed.forEach((section) => observer.observe(section));
+
+    const sessionsDrop = document.getElementById("sessions-drop");
+    if (sessionsDrop) {
+      document.addEventListener("click", (event) => {
+        if (!sessionsDrop.open) return;
+        if (!sessionsDrop.contains(event.target)) sessionsDrop.open = false;
+      });
+    }
+  </script>
+</body>
+</html>

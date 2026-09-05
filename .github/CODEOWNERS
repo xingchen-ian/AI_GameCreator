@@ -1,0 +1,7 @@
+# Review routing. Josie needs write access before GitHub will request her review.
+* @xingchen-ian
+
+/course/ @xingchen-ian
+/student/ @JosieGong
+/shared/ @xingchen-ian @JosieGong
+STATUS.md @xingchen-ian @JosieGong

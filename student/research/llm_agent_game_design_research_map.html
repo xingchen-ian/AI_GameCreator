@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LLM / Agent × Game Design：相关研究地图</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#17191d; --muted:#68707d;
+    --line:#e5e8ec; --accent:#4657d7; --accent-soft:#eef0ff;
+    --green:#257a5b; --green-soft:#eaf7f1; --orange:#9a5b16; --orange-soft:#fff3e2;
+    --red:#a94141; --red-soft:#fff0f0; --blue:#236d9e; --blue-soft:#eaf5fb;
+    --purple:#7453a6; --purple-soft:#f3edfb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",
+      "PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
+    line-height:1.7;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:54px 24px 90px}
+  .hero{padding:42px 42px 34px;background:linear-gradient(135deg,#fff 0%,#f3f4ff 100%);
+    border:1px solid var(--line);border-radius:24px;box-shadow:0 10px 30px rgba(25,34,71,.05)}
+  h1{font-size:38px;line-height:1.18;margin:0 0 14px;letter-spacing:-.7px}
+  .subtitle{font-size:17px;color:var(--muted);max-width:900px;margin:0}
+  .takeaway{
+    margin-top:26px;padding:18px 20px;border-radius:14px;background:#fff;border:1px solid #dfe3ff;
+    font-size:16px
+  }
+  .takeaway b{color:var(--accent)}
+  h2{font-size:27px;margin:52px 0 18px;letter-spacing:-.3px}
+  h3{font-size:21px;margin:0}
+  p{margin:8px 0 0}
+  .muted{color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tag,.pill{
+    display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;
+    font-size:12px;font-weight:650;border:1px solid transparent;white-space:nowrap
+  }
+  .t-auto{background:var(--accent-soft);color:var(--accent)}
+  .t-test{background:var(--green-soft);color:var(--green)}
+  .t-human{background:var(--orange-soft);color:var(--orange)}
+  .t-intent{background:var(--purple-soft);color:var(--purple)}
+  .t-rule{background:var(--blue-soft);color:var(--blue)}
+  .t-gap{background:var(--red-soft);color:var(--red)}
+  .flow{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px
+  }
+  .stage{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px 16px;min-height:125px
+  }
+  .stage .n{font-size:12px;color:var(--accent);font-weight:800;letter-spacing:.4px}
+  .stage b{display:block;margin:4px 0 5px}
+  .stage span{font-size:13px;color:var(--muted)}
+  .matrix-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+  table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}
+  th{position:sticky;top:0;background:#f8f9fb;text-align:left;color:#4f5662;font-size:12px}
+  th,td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:750;width:210px}
+  .group-title{
+    margin:34px 0 14px;padding:10px 14px;border-left:4px solid var(--accent);
+    background:#f0f2ff;border-radius:0 10px 10px 0;font-weight:800
+  }
+  .paper{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;margin:14px 0;
+    overflow:hidden;box-shadow:0 5px 18px rgba(20,25,45,.03)
+  }
+  .paper-head{padding:22px 22px 16px}
+  .paper-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+  .year{font-weight:800;color:var(--accent);font-size:13px}
+  .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .one-line{margin-top:13px;font-size:15px}
+  .paper-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+  .cell{padding:20px 22px;border-right:1px solid var(--line)}
+  .cell:nth-child(2n){border-right:0}
+  .cell:nth-child(n+3){border-top:1px solid var(--line)}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:800;margin-bottom:6px}
+  .cell ul{padding-left:18px;margin:6px 0 0}
+  .cell li{margin:4px 0}
+  .gap{background:#fffafa}
+  .gap .label{color:var(--red)}
+  .source{padding:13px 22px;background:#fafbfc;border-top:1px solid var(--line);font-size:13px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .synthesis{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:14px
+  }
+  .s-card{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:19px
+  }
+  .s-card b{display:block;margin-bottom:5px}
+  .position{
+    background:#151927;color:#f7f8ff;border-radius:22px;padding:30px;margin-top:20px
+  }
+  .position h3{font-size:23px}
+  .position .muted{color:#b9c0d1}
+  .position-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:18px}
+  .position-item{background:#202638;border:1px solid #30384e;border-radius:14px;padding:16px}
+  .position-item span{display:block;font-size:12px;color:#adb6cb;margin-bottom:4px}
+  .foot{margin-top:42px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  @media(max-width:820px){
+    .wrap{padding:28px 14px 60px}.hero{padding:28px 22px}h1{font-size:31px}
+    .flow,.synthesis,.position-grid{grid-template-columns:1fr}
+    .paper-grid{grid-template-columns:1fr}.cell{border-right:0!important;border-top:1px solid var(--line)}
+    .cell:first-child{border-top:0}.paper-top{display:block}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="hero">
+  <div class="year">RESEARCH MAP · updated Aug 2026</div>
+  <h1>LLM / Agent × Game Design：相关研究地图</h1>
+  <p class="subtitle">
+    这份整理聚焦一个具体问题：如果我们想做“AI 与人一起设计并实现游戏的 Agent”，现有工作分别已经解决了什么？
+    它们的核心机制是什么？又有哪些问题仍然没有被真正解决？
+  </p>
+  <div class="takeaway">
+    <b>一句话结论：</b>
+    研究已经从“LLM 能不能生成游戏”推进到“Agent 能不能反复实现—试玩—修复游戏”；
+    2026 年开始明显出现更强的 human-AI co-design 工作。但
+    <b>设计意图如何长期保留、AI 什么时候该自己做/什么时候该问人、以及如何评价“玩家实际体验是否符合设计者意图”</b>，
+    仍然是相对空缺的交叉区域。
+  </div>
+  <div class="legend">
+    <span class="tag t-rule">规则 / Mechanics</span>
+    <span class="tag t-auto">自动开发</span>
+    <span class="tag t-test">Playtest 闭环</span>
+    <span class="tag t-human">Human-AI 协作</span>
+    <span class="tag t-intent">Design Intent</span>
+    <span class="tag t-gap">值得继续做的 Gap</span>
+  </div>
+</section>
+
+<h2>先看整体演进</h2>
+<div class="flow">
+  <div class="stage">
+    <div class="n">01 · GENERATE</div>
+    <b>把自然语言变成游戏</b>
+    <span>从生成 level，扩展到规则、代码和完整游戏。核心问题是“能不能生成出来”。</span>
+  </div>
+  <div class="stage">
+    <div class="n">02 · ORCHESTRATE</div>
+    <b>让多个 Agent 分工开发</b>
+    <span>规划、写代码、审查、执行分开做，重点解决 hallucination、冗余和工程可靠性。</span>
+  </div>
+  <div class="stage">
+    <div class="n">03 · CLOSE THE LOOP</div>
+    <b>生成后真的去试玩</b>
+    <span>不只看代码能不能跑，而是让 solver / GUI Agent 玩游戏，用实际行为反馈继续修。</span>
+  </div>
+  <div class="stage">
+    <div class="n">04 · CO-DESIGN</div>
+    <b>AI 不只是自动做，而是和人一起设计</b>
+    <span>开始关注 ideation、设计支柱、用户反馈、创作控制权，以及 AI 应该扮演什么角色。</span>
+  </div>
+</div>
+
+<h2>一张表看每篇工作“占了哪块”</h2>
+<div class="matrix-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Research</th><th>主要设计对象</th><th>核心机制</th><th>Human 的角色</th>
+      <th>反馈 / 验证</th><th>最强侧重</th><th>主要不足 / 边界</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Game Generation via LLMs (2024)</td>
+      <td>规则 + Level</td><td>LLM 直接生成 VGDL 表示</td><td>给 prompt / context</td>
+      <td>主要看生成结果与可执行性</td><td>从 level generation 扩到“完整规则 + level”</td>
+      <td>复杂游戏仍需人介入；hallucination 和 self-correction 弱</td>
+    </tr>
+    <tr>
+      <td>GameGPT (2023/2025)</td>
+      <td>游戏开发流程</td><td>多角色 Agent + reviewer + expert model</td><td>主要给需求</td>
+      <td>阶段性 reviewer / testing</td><td>自动化 game development orchestration</td>
+      <td>更像工程流水线；没有深入处理共同创作与玩家体验</td>
+    </tr>
+    <tr>
+      <td>ScriptDoctor (2025)</td>
+      <td>PuzzleScript 完整小游戏</td><td>LLM + compiler feedback + BFS playtester</td><td>几乎不介入</td>
+      <td>编译、可解性、solution complexity</td><td>自动生成—测试—修复闭环</td>
+      <td>“可解”不等于“机制正确/好玩”；受限于 PuzzleScript</td>
+    </tr>
+    <tr>
+      <td>Agentic PCG (2026)</td>
+      <td>已有规则下的 Level</td><td>Perceive → Reason → Plan → Tool Edit</td><td>给约束 / 自然语言目标</td>
+      <td>结构指标 + 模拟 gameplay</td><td>工具调用 + 环境反馈优化 PCG</td>
+      <td>主要还是 level optimizer；规则和设计意图多是外部给定</td>
+    </tr>
+    <tr>
+      <td>Play2Code (2026)</td>
+      <td>Browser Game</td><td>Game Agent ↔ GUI Playtester + 3 层 memory</td><td>实验中不是主要协作者</td>
+      <td>GUI Agent 真正操作游戏</td><td>把 playtest 放进 coding loop</td>
+      <td>GUI tester 仍弱于人；主要优化实现是否符合 prompt，而非复杂设计意图</td>
+    </tr>
+    <tr>
+      <td>Interactive Evolution + LLM (2023)</td>
+      <td>Game concepts</td><td>用户评分 + genetic selection/recombine/mutate</td><td>持续做选择和反馈</td>
+      <td>人的偏好作为 fitness</td><td>早期 Human-AI collaborative ideation</td>
+      <td>协作主要发生在“候选方案选择”；离可执行游戏仍较远</td>
+    </tr>
+    <tr>
+      <td>Ink Splotch Effect (2024)</td>
+      <td>Features / Game feel / Unity implementation</td><td>ChatGPT 提建议 + 人照着实现</td><td>实际执行与调试者</td>
+      <td>最终玩家 user study</td><td>观察 LLM 作为 co-creative designer 的真实优缺点</td>
+      <td>AI 缺上下文、game feel 与 playtest reasoning；系统本身不是 agent</td>
+    </tr>
+    <tr>
+      <td>SPINE (2026)</td>
+      <td>Game Design Pillars</td><td>结构化 pillars + LLM 检查/改写/feature alignment</td><td>设计者持续决策</td>
+      <td>设计 pillar 的一致性 / 冲突 / coverage</td><td>把“设计意图”变成显式文档对象</td>
+      <td>主要停留在早期设计文档；还没贯穿到 code/playtest 闭环</td>
+    </tr>
+    <tr>
+      <td>AutoBG (2026)</td>
+      <td>桌游从 idea 到 rulebook</td><td>Ideator + Realizer + Critic + Persona</td><td>多轮 ideation / revision</td>
+      <td>Critic + 模拟玩家 Persona</td><td>端到端 Human-AI design workflow</td>
+      <td>仍是文本规则评估，没有真实 play；只做 board game，视觉/交互未覆盖</td>
+    </tr>
+    <tr>
+      <td>Mortar (2026)</td>
+      <td>游戏 mechanics + level</td><td>LLM 生成 Python mechanics + evolutionary search</td><td>不是重点</td>
+      <td>自动 gameplay / mechanic importance</td><td>自动“发明并进化 mechanics”</td>
+      <td>偏 automatic game design；视觉表现与人类创作控制不是重点</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>详细拆解</h2>
+
+<div class="group-title">A. 从“生成内容”到“生成完整游戏”</div>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>Game Generation via Large Language Models</h3><div class="small">Hu, Zhao & Liu · IEEE CoG 2024</div></div>
+      <div class="year">2024</div>
+    </div>
+    <div class="meta"><span class="tag t-rule">规则 + Level</span><span class="tag t-auto">LLM Generation</span></div>
+    <p class="one-line"><b>它解决的问题：</b>不再只问“LLM 能不能生成 Mario/Zelda 的关卡”，而是尝试让 LLM <b>同时生成游戏规则和关卡</b>。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>作者用 VGDL（Video Game Description Language）作为中间表示，让 LLM 根据不同数量和类型的上下文 prompt 生成规则描述与 level。可以把它理解为：把“一个小游戏”压缩成较结构化的文本程序，再让 LLM 一次性写出来。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>重点是扩大 PCG 的生成对象：<b>从 content generation 走向 game generation</b>。它证明“游戏规则本身”也可以成为 LLM 的生成对象，而不只是固定规则下的地图。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>作者明确指出 hallucination 和 self-correction 仍是问题，复杂、多样游戏仍需要 human intervention。</li>
+        <li>本质上还比较接近 prompt → artifact，没有形成“实际运行 / 试玩 → 定向修改”的强闭环。</li>
+        <li>它回答的是“能不能生成规则”，没有回答“这些规则是否真正形成了设计者想要的体验”。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">对我们的启发</div>
+      <p>如果现在只把创新点写成“我们的 Agent 还能生成 mechanics / rules”，已经不够；规则生成至少从 2024 年开始就已经是明确 research topic。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2404.08706" target="_blank">arXiv:2404.08706</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>GameGPT: Multi-agent Collaborative Framework for Game Development</h3><div class="small">Chen et al. · arXiv 2023, revised 2025</div></div>
+      <div class="year">2023 / 2025</div>
+    </div>
+    <div class="meta"><span class="tag t-auto">Multi-Agent</span><span class="tag t-rule">Full Development Pipeline</span></div>
+    <p class="one-line"><b>它解决的问题：</b>一个 LLM 从头做到尾容易 hallucinate、重复做无用任务，因此把 game development 拆成多个专业 Agent。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>流程被拆成 planning → task classification → code generation → execution → summarization。系统里有 manager、engineer、reviewer、tester 等不同角色；同时用小型 expert models、review agents、模板和 code decoupling 去降低错误和重复。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>它更像“<b>AI 软件开发团队</b>”，核心 contribution 是 orchestration：如何让多个 Agent 按角色协作，把一段游戏需求转成开发任务并执行。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>它主要优化工程可靠性、hallucination 和 redundancy，而不是研究 human-AI creative partnership。</li>
+        <li>Human 多数时候是需求提供者，而不是持续参与设计决策的人。</li>
+        <li>“Reviewer 说代码对不对”与“玩家玩起来是不是设计者要的感觉”仍是两件不同的事。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">对我们的启发</div>
+      <p>“多 Agent 分工”本身也很难成为主要创新。Agent 数量不是关键，关键应该是 <b>为什么要分这些角色，以及它们解决了什么此前未解决的设计问题</b>。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2310.08067" target="_blank">arXiv:2310.08067</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>Mortar: Evolving Mechanics for Automatic Game Design</h3><div class="small">2026 preprint</div></div>
+      <div class="year">2026</div>
+    </div>
+    <div class="meta"><span class="tag t-rule">Mechanics</span><span class="tag t-auto">Evolutionary Search</span></div>
+    <p class="one-line"><b>它解决的问题：</b>把自动游戏设计再往前推一步：不是只拼已有机制，而是让系统通过代码生成与搜索去<b>产生、修改、进化 game mechanics</b>。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>LLM 直接生成/修改 Python 游戏代码，再把 mechanic generation 放进 evolutionary / quality-diversity search。系统通过 gameplay trace 和 mechanic importance 等信号评价候选游戏。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>重点是 Automatic Game Design：扩大可搜索的 mechanic space，让“规则创新”本身也成为算法可以探索的对象。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>更偏 autonomy：系统自己探索什么 mechanics 值得保留，人类共同创作不是主问题。</li>
+        <li>作者也指出视觉丰富度有限，例如 rendering 修改不包含动画。</li>
+        <li>自动评价一个 mechanic“有差异/有作用”不等于它和某个设计者的创作意图一致。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">对我们的启发</div>
+      <p>如果你的系统未来也能改 mechanics，创新不能只是“Agent 会改规则”，而可以是“<b>Agent 为什么改、这次改动对应哪条 human intent、什么时候需要人批准</b>”。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2601.00105" target="_blank">arXiv:2601.00105</a></div>
+</article>
+
+<div class="group-title">B. 从“生成完就结束”到“生成—试玩—再修改”</div>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>ScriptDoctor: Automatic Generation of PuzzleScript Games via LLMs and Tree Search</h3><div class="small">Earle et al. · 2025</div></div>
+      <div class="year">2025</div>
+    </div>
+    <div class="meta"><span class="tag t-test">Automatic Playtest</span><span class="tag t-auto">Closed Loop</span></div>
+    <p class="one-line"><b>它解决的问题：</b>LLM 不应该写完游戏就交卷；生成的游戏应该能自动被编译、试玩，再根据失败信息继续修。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>LLM 生成 PuzzleScript 游戏；编译器把 error / warning 返回给 LLM。如果编译成功，就用 BFS 搜索玩家去尝试解关卡，并把 solvability、solution length、search complexity 再反馈给 LLM。Prompt 里还加入 human-authored games 作为 few-shot grounding。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>真正重要的是 <b>verifiable closed loop</b>：代码合法性由 compiler 检，游戏是否能过由 automated player 检。它是“自动游戏设计 Agent”很典型的一条路线。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>作者自己指出：solvability 并不足以判断 mechanic 是否“坏掉”或是否符合原本 intent。</li>
+        <li>有些复杂游戏恰恰因为 broken mechanic 才变得“难解”，指标会被骗。</li>
+        <li>受 PuzzleScript 的 2D grid puzzle 表示限制；真实玩家体验、视觉和 feel 很难覆盖。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">关键 gap</div>
+      <p><b>Verifier 选什么，决定 Agent 最后会优化成什么。</b>“能编译 / 能通关”很好验证，但“紧张感、惊喜、叙事揭示时机”很难写成一个简单 solver metric。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2506.06524" target="_blank">arXiv:2506.06524</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>Agentic PCG: Procedural Content Generation via Tool-using LLMs</h3><div class="small">Jiang, Earle, Khalifa & Togelius · 2026</div></div>
+      <div class="year">2026</div>
+    </div>
+    <div class="meta"><span class="tag t-test">Environment Feedback</span><span class="tag t-auto">Tool Use</span><span class="tag t-rule">Level Design</span></div>
+    <p class="one-line"><b>它解决的问题：</b>与其让 LLM 一次性吐出一个 level，不如让它像 Agent 一样持续观察环境、选工具编辑、看指标变化，再继续优化。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>游戏被包装成类似 RL environment。Agent 循环执行 Perceive → Reason → Plan → Edit；可以调用低层工具（放 tile、画线、patch），也能调用 BSP / digger 这类经典 PCG 算法。Environment 提供 tile count、connectivity、solvability，动态游戏还可提供 simulated gameplay feedback。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>最强的点是 <b>agentic optimization + tools + explicit feedback</b>。它把 PCG 从“生成器”变成了“会反复调工具的 level designer / optimizer”。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界（相对我们的方向）</div>
+      <ul>
+        <li>主要研究的是已有游戏规则下的 level/content，而不是从零决定“应该是什么游戏”。</li>
+        <li>自然语言目标主要作为 objective；没有重点研究用户在中间什么时候介入、AI 什么时候应该 defer。</li>
+        <li>容易计算的 functional constraints 很强，但较难表达“我希望玩家产生什么情绪/理解”。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">最重要的借鉴</div>
+      <p>它的 loop 非常值得借：<b>设计 Agent 不能只有生成，必须有可观察环境 + 可执行工具 + feedback。</b>我们真正要换掉的是 feedback 的含义和 human 的位置。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://zehua-jiang.github.io/AgenticPCG/" target="_blank">Project page</a> · <a href="https://ssrn.com/abstract=6499021" target="_blank">SSRN preprint</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>GUI Agents for Continual Game Generation / Play2Code</h3><div class="small">Huang et al. · 2026</div></div>
+      <div class="year">2026</div>
+    </div>
+    <div class="meta"><span class="tag t-test">GUI Playtester</span><span class="tag t-auto">Coding Agent</span><span class="tag t-intent">Memory</span></div>
+    <p class="one-line"><b>它解决的问题：</b>游戏代码“看上去没错”不代表真的能玩，所以让 GUI Agent 像人一样打开浏览器、点击、按键、观察结果，然后把体验中的 bug 反馈给 coding Agent。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>Game Agent 写/修 HTML 游戏，GUI Agent 只看界面并实际操作游戏。每轮 GUI Agent 产出 gameplay summary + actionable fix list，Game Agent 决定哪些反馈要修。系统还有 Episode / Skill / World 三层 memory，把当前任务经验和跨任务经验积累起来。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>这是目前非常关键的一步：<b>把“play”变成 code generation 的反馈信号</b>。PlaytestArena 还用 200 个 browser game tasks + gameplay rubrics 来评估游戏是否按预期工作。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>作者的 human comparison 显示：human-driven refinement 在所有轮次仍优于 GUI Agent，后期细微交互问题尤其容易被 AI 漏掉。</li>
+        <li>Rubric 大量聚焦 mechanics、controls、progression、visual feedback——非常适合“功能是否实现”，但仍不等价于复杂的 creative intent。</li>
+        <li>Human designer 不是 loop 里的核心 actor；它更像“AI 自己做 + AI 自己试玩”。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">和我们最接近的地方</div>
+      <p>如果做游戏设计 Agent，<b>automated playtester 基本已经是应有组件，而不是足够独立的创新点</b>。更值得往前走的是：playtester 反馈如何对齐 human intent，而不是只对齐 prompt/rubric。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2605.28258" target="_blank">arXiv:2605.28258</a> · <a href="https://continual-game-generation.vercel.app/" target="_blank">Project</a></div>
+</article>
+
+<div class="group-title">C. Human-AI Co-Design：人到底怎么参与设计</div>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>LLMs as Evolutionary Engines for Online Interactive Collaborative Game Design</h3><div class="small">Lanzi & Loiacono · 2023</div></div>
+      <div class="year">2023</div>
+    </div>
+    <div class="meta"><span class="tag t-human">Interactive Collaboration</span><span class="tag t-rule">Concept Design</span></div>
+    <p class="one-line"><b>它解决的问题：</b>不是让 LLM 一次决定一个 game concept，而是让人不断对候选方案反馈，再让 LLM 做“重组和变异”。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>流程类似 interactive genetic algorithm：先有一批 candidate designs → 用户对设计做反馈 / 选择 → 算法选择更有希望的设计 → LLM 对它们 recombine / mutate → 再交给用户继续选。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>它很早就把 LLM 放进 <b>human feedback loop</b>，而不是纯自动生成。人负责“这个方向有没有意思”，LLM 负责快速扩大和变形 idea space。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>人的输入主要是对候选 design 的 preference，interaction 比较像“选哪个”。</li>
+        <li>主要工作在 idea / concept 层，没有把设计决策持续传递到 implementation、playtest。</li>
+        <li>没有细分哪些 decision AI 可以自主做、哪些应该主动问人。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">对我们的启发</div>
+      <p>“Human in the loop”本身已经存在；更强的问题是 <b>human 怎么 in the loop</b>：只选方案、给 critique、批准改动，还是 Agent 根据 uncertainty 主动请求设计决策？</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2303.02155" target="_blank">arXiv:2303.02155</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>The Ink Splotch Effect: ChatGPT as a Co-Creative Game Designer</h3><div class="small">Anjum et al. · FDG 2024</div></div>
+      <div class="year">2024</div>
+    </div>
+    <div class="meta"><span class="tag t-human">Co-Creative Study</span><span class="tag t-intent">Designer Intent</span></div>
+    <p class="one-line"><b>它解决的问题：</b>ChatGPT 真正放进一个 game designer 的工作过程中，到底擅长什么、不擅长什么？</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>作者做了三类 prototype：baseline、human-designed、ChatGPT-guided。AI 会建议 feature、game feel、Unity C# 实现；人类研究者尽量按 AI 建议去实现，再让玩家盲评这些游戏。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>它不是在造一个复杂 Agent，而是在研究 <b>LLM 作为“设计搭档 / muse”到底产生什么影响</b>。尤其关注 designer intent、game feel、contextual judgment。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">它暴露出的关键不足</div>
+      <ul>
+        <li>LLM 能提出高层 idea，也能给部分代码，但容易缺乏具体项目上下文。</li>
+        <li>在 game feel 上经常给出“加粒子 / 加音效”这种泛化建议，却不知道什么时候、怎么调才对。</li>
+        <li>真实设计过程需要不断 playtest 后问“为什么这样感觉不对”，而 LLM 并没有直接感知游戏体验。</li>
+        <li>研究者多次需要人工修 AI 给出的实现问题。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">为什么它对我们的 idea 很重要</div>
+      <p>它几乎直接指出：<b>设计 intent 不是一句 prompt；它散落在 mechanic、level、art、UI、feel 和一次次 playtest 的微调里。</b>这正是 intent-aware agent 可以深入的地方。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2403.02454" target="_blank">arXiv:2403.02454</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>SPINE: Mixed-Initiative Game Design Pillar Workflows</h3><div class="small">Geheeb et al. · FDG 2026</div></div>
+      <div class="year">2026</div>
+    </div>
+    <div class="meta"><span class="tag t-human">Mixed Initiative</span><span class="tag t-intent">Design Pillars</span></div>
+    <p class="one-line"><b>它解决的问题：</b>把“游戏的核心设计方向”从散乱聊天变成显式的 <b>Game Design Pillars</b>，然后让 LLM 帮设计者检查、补充和判断新 feature 是否偏离这些 pillars。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>SPINE 对 pillar 做结构检查、改写、pillar set completeness / contradiction 分析，并用 pillars 去验证新 feature 是否和核心方向一致。研究还把工具带到 game jam，并访谈专业开发者。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>这是非常接近 <b>Design Intent Representation</b> 的工作：它不只让 LLM brainstorm，而是把“我们为什么做这个游戏”固化成可被后续 design decisions 查询的结构化文档。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">不足 / 边界</div>
+      <ul>
+        <li>当前主要发生在 early-stage design / documentation，而不是实现和自动 playtest。</li>
+        <li>论文明确提到 output quality、consistency、transparency 的不稳定。</li>
+        <li>评估规模较小、偏 qualitative；目前更像 prototype / design space exploration。</li>
+        <li>它会检查“feature 是否符合 pillar”，但没有持续追踪每一次 code / level / narrative 修改是否违反 intent。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">对我们意味着什么</div>
+      <p><b>“显式存 design intent”本身不能说完全没人做。</b>更强的创新可以是：让 intent representation 真正进入 agent execution loop，作为每次 action、playtest 和 human escalation 的约束。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2605.09767" target="_blank">arXiv:2605.09767</a></div>
+</article>
+
+<article class="paper">
+  <div class="paper-head">
+    <div class="paper-top">
+      <div><h3>AutoBG: A Board Game Design Assistant</h3><div class="small">Li et al. · 2026</div></div>
+      <div class="year">2026</div>
+    </div>
+    <div class="meta"><span class="tag t-human">End-to-End Co-Design</span><span class="tag t-test">Critic Loop</span><span class="tag t-intent">Persona Feedback</span></div>
+    <p class="one-line"><b>它解决的问题：</b>桌游设计不是一次 brainstorm，而是 idea → structured draft → rulebook → critique → revision → audience feedback 的长流程；AutoBG 尝试把整个流程连起来。</p>
+  </div>
+  <div class="paper-grid">
+    <div class="cell">
+      <div class="label">机制怎么做</div>
+      <p>四个核心模块：BG-Ideator 用多轮对话形成 structured design draft；BG-Realizer 写完整 rulebook；BG-Critic 找设计缺陷，并 gate revision，只有确认改进才保留；BG-Persona 用 150 个真实玩家 profile 模拟个体化反馈。</p>
+    </div>
+    <div class="cell">
+      <div class="label">侧重是什么</div>
+      <p>它是目前最接近“<b>完整 human-AI game design workflow</b>”的一类工作之一，而且做了 30 人 user study。重点不仅是自动生成，也是降低 blank-page anxiety、帮助发现隐藏设计问题。</p>
+    </div>
+    <div class="cell gap">
+      <div class="label">作者明确写出的限制</div>
+      <ul>
+        <li><b>Physical Playtesting Gap：</b>现在仍通过文本分析 rulebook，而不是实际把游戏玩起来；ergonomics、实时节奏、emergent strategy 很难从规则文本推出来。</li>
+        <li><b>Multimodal Gap：</b>目前只处理文本规则，board layout、iconography、视觉主题没有进入统一设计过程。</li>
+        <li><b>Persona Depth：</b>玩家 persona 不能充分捕捉群体互动、频率和长期变化的偏好。</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <div class="label">为什么它是必须正面比较的 baseline</div>
+      <p>如果我们说“做一个会和人一起从 idea 走到完整游戏的 Agent”，AutoBG 已经占掉很大一块。因此差异最好落在：<b>可执行 digital game、真实 playtest、动态 agency allocation、长期 intent preservation</b>。</p>
+    </div>
+  </div>
+  <div class="source">Source: <a href="https://arxiv.org/abs/2606.01976" target="_blank">arXiv:2606.01976</a></div>
+</article>
+
+<h2>把这些工作叠在一起，真正还缺什么？</h2>
+<div class="synthesis">
+  <div class="s-card">
+    <span class="tag t-gap">Gap 1</span>
+    <b>设计意图存在，但没有真正贯穿执行链路</b>
+    <p class="muted">SPINE 已经把 pillars 做成显式对象；但目前少有系统把 human intent 从 ideation 一直绑定到 mechanic → code → level → narrative → playtest 的每一次改动。</p>
+  </div>
+  <div class="s-card">
+    <span class="tag t-gap">Gap 2</span>
+    <b>Human-in-the-loop 有了，但“什么时候该找人”还很粗</b>
+    <p class="muted">很多系统要么几乎全自动，要么每轮都让人选。真正 agentic 的问题可以是：根据 uncertainty、impact、reversibility 判断 ASK / SUGGEST / ACT / DEFER。</p>
+  </div>
+  <div class="s-card">
+    <span class="tag t-gap">Gap 3</span>
+    <b>Playtesting 已经很强，但 verifier 仍偏“功能正确”</b>
+    <p class="muted">solvability、controls、win condition、visual feedback 都容易检查；“玩家什么时候理解反转”“紧张感有没有按预期建立”这种 experience trajectory 仍缺稳定表示与验证。</p>
+  </div>
+  <div class="s-card">
+    <span class="tag t-gap">Gap 4</span>
+    <b>AI 会提出修改，但 creative ownership / control 仍难处理</b>
+    <p class="muted">一个 Agent 能自己修所有问题，不代表它应该自己修所有问题。创造性任务中，“不擅自替设计者做高影响决策”可能本身就是系统能力。</p>
+  </div>
+</div>
+
+<div class="position">
+  <h3>一个比较有区分度的研究定位</h3>
+  <p class="muted">不是再做一个“能自动生成完整游戏的 Agent”，而是研究：</p>
+  <p style="font-size:20px;margin:14px 0 0"><b>How can an AI agent actively build and playtest a game while preserving human design intent and knowing when to return creative decisions to the human?</b></p>
+  <div class="position-grid">
+    <div class="position-item">
+      <span>MECHANISM 1</span>
+      <b>Executable Design Intent</b>
+      <div class="muted">把 pillars / intent 变成每次 Agent action 都要检查的约束，而不是只放在文档里。</div>
+    </div>
+    <div class="position-item">
+      <span>MECHANISM 2</span>
+      <b>Adaptive Mixed Initiative</b>
+      <div class="muted">Agent 根据 decision 类型选择 Ask / Suggest / Act / Defer，而不是固定交互节奏。</div>
+    </div>
+    <div class="position-item">
+      <span>MECHANISM 3</span>
+      <b>Experience-aware Playtest</b>
+      <div class="muted">Playtester 不只报告 bug，还比较“实际玩家认知/体验轨迹”和设计者原本希望发生的轨迹。</div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <b>说明：</b>“不足 / 边界”中，一部分来自论文作者明确提出的 limitation，一部分是为了与你关心的 human-AI game-design-agent 方向比较而做的 research-gap 分析；页面中已尽量用“作者明确指出”与“相对我们的方向”区分。
+  研究版本与链接按 2026-08 检索结果整理。
+</div>
+
+</div>
+</body>
+</html>
