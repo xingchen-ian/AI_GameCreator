@@ -247,6 +247,37 @@ main { padding: 36px 0 72px; }
 }
 .criteria strong { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--week-color); }
 
+.submit-intro {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.submit-slots {
+  display: grid;
+  gap: 12px;
+}
+.submit-slot {
+  padding: 16px 18px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--paper-light, #fbf9f4);
+}
+.submit-slot h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.submit-slot p { margin: 0 0 8px; font-size: 14px; }
+.submit-slot p:last-child { margin-bottom: 0; }
+.submit-pending { color: var(--muted); font-style: italic; }
+.submit-meta { font-size: 13px; color: var(--muted); }
+.submit-body {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  font: 13px/1.55 inherit;
+  background: transparent;
+}
 .submit-row {
   display: flex;
   flex-wrap: wrap;

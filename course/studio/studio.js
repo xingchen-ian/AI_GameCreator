@@ -1,6 +1,5 @@
 (function () {
   const weeks = window.WEEKS_DATA || [];
-  const config = window.STUDIO_CONFIG || { submit: {} };
   const root = document.getElementById("session-root");
   if (!root || !weeks.length) return;
 
@@ -28,7 +27,7 @@
 
   function renderReadings(items) {
     if (!items.length) {
-      return `<p class="empty-note">No assigned reading this week — studio and writing focus.</p>`;
+      return `<p class="empty-note">No assigned reading this week.</p>`;
     }
     return items
       .map(
@@ -52,56 +51,40 @@
   }
 
   function submitButtons() {
-    const submit = config.submit || {};
-    const weekSubject = encodeURIComponent(
-      `AI Game Design Engine · Week ${week.id} · ${week.title}`
-    );
-    const mailto =
-      submit.mailto ||
-      (config.instructorEmail
-        ? `mailto:${config.instructorEmail}?subject=${weekSubject}`
-        : "");
+    const sub = week.submission || {};
+    const game = sub.pipelineGame || {};
+    const report = sub.surveyReport || {};
 
-    const buttons = [
-      {
-        key: "brightspace",
-        label: "Open Brightspace",
-        href: submit.brightspace,
-        secondary: false
-      },
-      {
-        key: "drive",
-        label: "Open Drive folder",
-        href: submit.drive,
-        secondary: true
-      },
-      {
-        key: "mailto",
-        label: "Email instructor",
-        href: mailto,
-        secondary: true
+    function slot(title, inner) {
+      return `<article class="submit-slot"><h4>${escapeHtml(title)}</h4>${inner}</article>`;
+    }
+
+    function urlLine(url, emptyLabel) {
+      if (url && String(url).trim()) {
+        return `<p><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)} ↗</a></p>`;
       }
-    ];
+      return `<p class="submit-pending">${escapeHtml(emptyLabel)}</p>`;
+    }
 
-    const configured = buttons.filter((button) => button.href);
-    const html = buttons
-      .map((button) => {
-        if (!button.href) {
-          return `<span class="submit-btn disabled" aria-disabled="true">${escapeHtml(
-            button.label
-          )} · not set</span>`;
-        }
-        return `<a class="submit-btn${button.secondary ? " secondary" : ""}" href="${escapeHtml(
-          button.href
-        )}" target="_blank" rel="noopener">${escapeHtml(button.label)} ↗</a>`;
-      })
-      .join("");
+    const gameInner =
+      urlLine(game.url, "Not submitted yet — paste the playable URL into submission.pipelineGame.url") +
+      `<p class="submit-meta">Pipeline: <strong>${escapeHtml(game.pipeline || "—")}</strong></p>` +
+      (game.note ? `<p>${escapeHtml(game.note)}</p>` : "");
 
-    const hint = configured.length
-      ? `Submit Week ${week.id} through one of the links above. Update URLs in <code>studio/config.js</code> when destinations change.`
-      : `Submission links are not configured yet. Set <code>submit.brightspace</code>, <code>submit.drive</code>, or <code>submit.mailto</code> in <code>studio/config.js</code>.`;
+    const reportInner =
+      urlLine(report.url, "Not submitted yet — paste a doc URL into submission.surveyReport.url, or write the report in submission.surveyReport.body") +
+      (report.body ? `<pre class="submit-body">${escapeHtml(report.body)}</pre>` : "");
 
-    return `<div class="submit-row">${html}</div><p class="submit-hint">${hint}</p>`;
+    if (week.submission) {
+      return `
+        <div class="submit-slots">
+          ${slot("Pipeline game", gameInner)}
+          ${slot("Research / product survey report", reportInner)}
+        </div>
+        <p class="submit-hint">To submit: edit the <code>submission</code> object for this week in <code>course/studio/weeks-data.js</code> (that is this Submit section), then push. The live page is the official hand-in. Do not email or use Brightspace unless asked.</p>`;
+    }
+
+    return `<p class="submit-hint">Hand in by editing this Submit section: add a <code>submission</code> object on this week in <code>course/studio/weeks-data.js</code> (same pattern as Week 01), then push. What appears here is the official hand-in.</p>`;
   }
 
   function sessionMenuItems(base) {
@@ -140,7 +123,11 @@
           <span class="phase-pill">${escapeHtml(week.phase)}</span>
         </div>
         <h1>${escapeHtml(week.title)}</h1>
-        <p class="lead">Readings, guided questions, assignment, and external submission for this Monday studio.</p>
+        <p class="lead">${
+          week.readings && week.readings.length
+            ? "Readings, guided questions, assignment, and on-page submission for this Monday studio."
+            : "Agenda, assignment, and on-page submission for this Monday studio. No assigned reading this week."
+        }</p>
       </div>
     </section>
     <main>
@@ -157,7 +144,11 @@
 
         <section class="panel">
           <h2>03 · Guided questions</h2>
-          <h3>Read toward an engine decision</h3>
+          <h3>${
+            week.readings && week.readings.length
+              ? "Read toward an engine decision"
+              : "Discuss toward an engine decision"
+          }</h3>
           ${renderList(week.questions, "question-list")}
         </section>
 
@@ -173,9 +164,11 @@
 
         <section class="panel">
           <h2>05 · Submit</h2>
-          <h3>Hand in through your course channel</h3>
-          <p style="margin-top:0;color:var(--muted);font-size:14px;">
-            This site does not store files. Use Brightspace, Drive, or email once configured.
+          <h3>Submit on this page</h3>
+          <p class="submit-intro">
+            This block <em>is</em> the hand-in. Edit the <code>submission</code> fields for this week in
+            <code>course/studio/weeks-data.js</code>, push to GitHub, and they appear here.
+            Do not email or use Brightspace unless asked.
           </p>
           ${submitButtons()}
         </section>

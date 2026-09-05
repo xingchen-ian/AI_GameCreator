@@ -167,8 +167,8 @@ Dates follow the NYU Shanghai Fall 2026 calendar. Homework listed for a class is
 
 | Class | Topic | Reading (do before class) | Due at the start of class |
 | --- | --- | --- | --- |
-| **01** | Two summer pipelines; MDA as a lens | Hunicke, LeBlanc & Zubek, *MDA* (2004), full paper | Assignment given in class: (1) make a playable game with one summer pipeline; reflection in Class 02. (2) related research/product survey report. |
-| **02** | Meaningful play; reflection on the pipeline game | Salen & Zimmerman, *Rules of Play*, chapter on meaningful play | Playable pipeline game; survey report. In class: written reflection on the making process. Reading response: map play onto Mechanics / Dynamics / Aesthetics. |
+| **01** | Course plan, vision, outcomes; review the summer pipeline; logistics | None | Assignment given in class: (1) make a playable game with one summer pipeline; reflection in Class 02. (2) related research/product survey report. Submit on the Week 01 studio page (edit the Submit section). |
+| **02** | Meaningful play; reflection on the pipeline game | MDA (full paper); summer demos and both pipelines; Salen & Zimmerman, *Rules of Play*, chapter on meaningful play | Playable pipeline game; survey report (on the Week 01 Submit section). In class: written reflection on the making process. Reading response: map play onto Mechanics / Dynamics / Aesthetics. |
 | **03** | Systems; freeze blueprint v0; sprint plan. Week 3 is also a technical warm-up for Sprint 1. | *Rules of Play*, selected pages on systems / rules | **Pipeline autopsy:** one summer project from questions → system diagram → demo; mark what the human wrote, what the agent filled, what was lost. Draft blueprint field list. |
 
 **End of Week 3 gate:** field list v0 frozen; three sprint doors written as acceptance criteria; one filled sample blueprint (emotion *or* domain path).

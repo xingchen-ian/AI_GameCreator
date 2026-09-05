@@ -1,40 +1,15 @@
 window.WEEKS_DATA = [
   {
     id: "01",
-    title: "Two summer pipelines",
+    title: "Course plan and the summer pipeline",
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "8:30–9:15 · Walk both summer paths and play three demos together",
-      "9:15–10:15 · Annotate one pipeline end-to-end on the board",
-      "10:15–11:00 · Lock what must become explicit in the engine this term"
+      "8:30–9:15 · Introduce the course plan, vision, and outcomes",
+      "9:15–10:15 · Review the summer pipeline and discuss",
+      "10:15–11:00 · Course logistics"
     ],
-    readings: [
-      {
-        title: "Hunicke, LeBlanc & Zubek · MDA",
-        href: "https://users.cs.northwestern.edu/~hunicke/MDA.pdf",
-        access: "Open PDF",
-        note: "Mechanics, dynamics, and aesthetics as a bidirectional lens."
-      },
-      {
-        title: "Summer demos gallery",
-        href: "https://xingchen-ian.github.io/game-design-from-life/summer-camp.html",
-        access: "Course material",
-        note: "Play at least three student games before class."
-      },
-      {
-        title: "Emotion path",
-        href: "https://xingchen-ian.github.io/game-design-from-life/practice.html",
-        access: "Course material",
-        note: "Lived event → emotional structure → playable mechanics."
-      },
-      {
-        title: "Domain-learning path",
-        href: "https://xingchen-ian.github.io/game-design-from-life/domain-learning.html",
-        access: "Course material",
-        note: "Novice/expert gap → skill loop → challenge space."
-      }
-    ],
+    readings: [],
     questions: [
       "Where does each pipeline turn a vague intention into a system description an agent can compile?",
       "What did the human author that the agent could not safely invent?",
@@ -48,6 +23,18 @@ window.WEEKS_DATA = [
         "A short report surveying related research and products (AI-assisted game-making tools, papers, and what they do / don’t cover)"
       ],
       criteria: "The game is playable and the pipeline used is identifiable. The report names specific systems or papers, not a generic list."
+    },
+    // Hand-in lives here. Edit these fields, push, and §05 Submit on the live page is the official submission.
+    submission: {
+      pipelineGame: {
+        url: "",
+        pipeline: "",
+        note: ""
+      },
+      surveyReport: {
+        url: "",
+        body: ""
+      }
     }
   },
   {
@@ -61,6 +48,30 @@ window.WEEKS_DATA = [
       "10:15–11:00 · Decide what “meaningful” means for a designer-user of the engine"
     ],
     readings: [
+      {
+        title: "Hunicke, LeBlanc & Zubek · MDA",
+        href: "https://users.cs.northwestern.edu/~hunicke/MDA.pdf",
+        access: "Open PDF",
+        note: "Mechanics, dynamics, and aesthetics as a bidirectional lens."
+      },
+      {
+        title: "Summer demos gallery",
+        href: "https://xingchen-ian.github.io/game-design-from-life/summer-camp.html",
+        access: "Course material",
+        note: "Play at least three student games."
+      },
+      {
+        title: "Emotion path",
+        href: "https://xingchen-ian.github.io/game-design-from-life/practice.html",
+        access: "Course material",
+        note: "Lived event → emotional structure → playable mechanics."
+      },
+      {
+        title: "Domain-learning path",
+        href: "https://xingchen-ian.github.io/game-design-from-life/domain-learning.html",
+        access: "Course material",
+        note: "Novice/expert gap → skill loop → challenge space."
+      },
       {
         title: "Salen & Zimmerman · Rules of Play, Ch. 3 Meaningful Play",
         href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
