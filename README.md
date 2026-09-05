@@ -4,9 +4,11 @@ Shared working repository for the Fall 2026 independent study **AI-Assisted Game
 
 ## Open the course site
 
-- [Syllabus](course/syllabus.html)
-- [Studio · Week 01](course/studio/week-01.html)
-- [Course hub](course/index.html)
+Live: [xingchen-ian.github.io/AI_GameCreator](https://xingchen-ian.github.io/AI_GameCreator/)
+
+- [Syllabus](https://xingchen-ian.github.io/AI_GameCreator/syllabus.html)
+- [Studio · Week 01](https://xingchen-ian.github.io/AI_GameCreator/studio/week-01.html)
+- [Course hub](https://xingchen-ian.github.io/AI_GameCreator/)
 
 Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`.
 
