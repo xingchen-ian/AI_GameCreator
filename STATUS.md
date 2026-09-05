@@ -7,4 +7,5 @@ Update before each weekly meeting. Newest week at the top.
 - Course website is in `course/` (syllabus + studio). The intro deck and research survey stay local-only; they are not on GitHub.
 - Josie’s existing notes and research map are in `student/research/`.
 - Next: invite Josie as collaborator; she clones this repo and continues in `student/`.
-- Open: weekday meeting slot; GitHub Pages for `course/` if we want a stable URL.
+- Course site: https://xingchen-ian.github.io/AI_GameCreator/ (GitHub Pages publishes `course/` only).
+- Open: weekday meeting slot.
