@@ -209,6 +209,18 @@ main { padding: 36px 0 72px; }
 .agenda-list li, .question-list li, .deliverable-list li { margin: 0.45em 0; }
 .question-list li { color: #2a333b; }
 
+.prompt-note {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.question-group + .question-group { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.question-group .group-intro {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .reading-card {
   display: grid;
   gap: 4px;

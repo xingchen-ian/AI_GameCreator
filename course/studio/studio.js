@@ -43,6 +43,32 @@
       .join("");
   }
 
+  function renderGuidedQuestions() {
+    const groups = week.questionGroups;
+    const note = week.questionsNote
+      ? `<p class="prompt-note">${escapeHtml(week.questionsNote)}</p>`
+      : "";
+
+    if (groups && groups.length) {
+      const blocks = groups
+        .map((group) => {
+          return `<div class="question-group">
+            <h3>${escapeHtml(group.title)}</h3>
+            ${group.intro ? `<p class="group-intro">${escapeHtml(group.intro)}</p>` : ""}
+            ${renderList(group.items || [], "question-list")}
+          </div>`;
+        })
+        .join("");
+      return `${note}${blocks}`;
+    }
+
+    const heading =
+      week.readings && week.readings.length
+        ? "Read toward an engine decision"
+        : "After class";
+    return `${note}<h3>${heading}</h3>${renderList(week.questions || [], "question-list")}`;
+  }
+
   function renderList(items, className) {
     if (!items.length) return `<p class="empty-note">—</p>`;
     return `<ol class="${className}">${items
@@ -144,12 +170,7 @@
 
         <section class="panel">
           <h2>03 · Guided questions</h2>
-          <h3>${
-            week.readings && week.readings.length
-              ? "Read toward an engine decision"
-              : "Discuss toward an engine decision"
-          }</h3>
-          ${renderList(week.questions, "question-list")}
+          ${renderGuidedQuestions()}
         </section>
 
         <section class="panel">

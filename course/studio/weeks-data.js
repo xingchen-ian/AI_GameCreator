@@ -10,10 +10,29 @@ window.WEEKS_DATA = [
       "10:15–11:00 · Course logistics"
     ],
     readings: [],
-    questions: [
-      "Where does each pipeline turn a vague intention into a system description an agent can compile?",
-      "What did the human author that the agent could not safely invent?",
-      "If these pipelines become a tool, which steps must stay visible rather than automated?"
+    questionsNote:
+      "Prompts only — you do not hand in answers. Use them while making the pipeline game and writing the survey.",
+    questionGroups: [
+      {
+        title: "A · Summer pipeline",
+        intro: "Ask these while you make the game.",
+        items: [
+          "Which path are you using (emotion / domain-learning), and what is the human-authored input that the rest of the pipeline is not allowed to invent?",
+          "At which step did a vague intention become a system description an agent could compile? Copy that step (question list, diagram, or outline) into your notes.",
+          "Where did the agent fill a gap? Keep it, rewrite it, or throw it away — and why, in one sentence?",
+          "If this pipeline later becomes the engine, which of the steps you just used must stay visible on screen rather than happen inside the model?"
+        ]
+      },
+      {
+        title: "B · Survey",
+        intro: "Ask these while you write the report.",
+        items: [
+          "Name one research project and one product that already claim AI can make a game. What structured representation do they use (GDD, graph, prompt chain, none)?",
+          "What can a designer decide in that system, and what does the model decide by default?",
+          "Where would your summer-pipeline game have broken if you had used that tool instead?",
+          "What gap are you leaving for our engine — something neither the paper nor the product treats as a first-class object?"
+        ]
+      }
     ],
     assignment: {
       summary: "Two tasks after class. The reflection happens in Class 02.",
