@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play — Boil an Egg</title>
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="assets/css/game.css">
+</head>
+<body class="game-page">
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="yolk"></span> Boil an Egg</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="index.html#domain">Domain Knowledge</a>
+    <a href="index.html#system">System Design</a>
+    <a href="process.html">Development Process</a>
+    <a class="active play" href="game.html">Play</a>
+  </nav>
+</header>
+
+<main class="stage">
+
+  <div class="hud">
+    <div class="stat"><span class="label">Coins</span><span class="value coins" id="hud-coins">0</span></div>
+    <div class="stat"><span class="label">Served</span><span class="value" id="hud-served">0</span></div>
+    <div class="stat"><span class="label">Best</span><span class="value" id="hud-best">0</span></div>
+    <span class="spacer"></span>
+    <span class="pill" id="hud-preset">Easy</span>
+    <button class="icon-btn" id="btn-sound">Sound: on</button>
+  </div>
+
+  <div class="screen">
+    <canvas id="scene" width="960" height="600" role="img"
+            aria-label="A pot of water on a stove with a customer waiting"></canvas>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><kbd>Space</kbd> <span><b>hold</b> = egg stays in the water &nbsp;·&nbsp; <b>release</b> = serve it</span></div>
+    <div class="ctl"><kbd>&larr;</kbd><kbd>&rarr;</kbd> <span>lower / raise the heat</span></div>
+    <div class="hint">No timer. No doneness meter. Read the water, the egg, and the sound.</div>
+  </div>
+
+</main>
+
+<script src="assets/js/audio.js"></script>
+<script src="assets/js/render.js"></script>
+<script src="assets/js/game.js"></script>
+</body>
+</html>

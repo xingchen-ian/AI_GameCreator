@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Development Process — Boil an Egg</title>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="yolk"></span> Boil an Egg</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="index.html#domain">Domain Knowledge</a>
+    <a href="index.html#system">System Design</a>
+    <a class="active" href="process.html">Development Process</a>
+    <a class="play" href="game.html">Play</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h1>Development process</h1>
+    <p class="lede">A human–AI development timeline. This page is a summary of
+    <a href="development-log/agent-development-log.md">agent-development-log.md</a> and does not
+    add anything that is not in it. Failures and unfinished work are included on purpose.</p>
+    <p class="byline">Josie (design decisions) · Claude Opus 5 via Claude Code (implementation) ·
+    5–6 September 2026</p>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <ol class="timeline">
+
+      <li>
+        <div class="when">5 September 2026 · Interaction 01</div>
+        <h3>Indexing the workspace, before any design</h3>
+        <p>The AI was told to read everything first and write no code. It listed the three files in
+        the folder, read the brief and the log protocol, and read the hand-drawn system graph.</p>
+        <p>It reported ten contradictions and gaps rather than smoothing over them. The three that
+        mattered:</p>
+        <ul>
+          <li>The brief file is named <code>domain-learning-brief.md</code>, but section 11 of the
+          brief expects <code>brief.md</code>.</li>
+          <li>The power of the pot is listed as <em>both</em> environment data and
+          player-controlled data. It cannot be both.</li>
+          <li>The brief says there are "about 6 doneness levels" but only ever names about four
+          of them.</li>
+        </ul>
+        <p><b>No design decisions were made at this step.</b> Gaps were reported, not filled.</p>
+      </li>
+
+      <li>
+        <div class="when">6 September 2026 · Interaction 02</div>
+        <h3>The student closes the design gaps</h3>
+        <p>The AI separated seven blocking questions from four that could wait, and Josie answered
+        all seven: the six English doneness names, hold-to-cook and release-to-take-out, the player
+        controls the heat, an endless run scored in coins, 8–12 second patience on Easy and 4–8 on
+        Hard, two presets only, and no timer.</p>
+        <p>In a second pass she removed the coin penalty completely — a customer either pays or
+        does not — and added the constraint that ended up shaping the whole build:</p>
+        <div class="note"><strong>Difficulty must never change how fast the egg cooks.</strong>
+        Cooking speed depends only on heat and egg size. This is what stops Easy and Hard from
+        being a difficulty slider: they change the constraints you work under, not the physics.</div>
+
+        <h3>Where AI pushed back</h3>
+        <p>Josie asked for a patience countdown. The AI flagged that a <em>numeric</em> countdown
+        would hand the player a clock, and since cooking speed is fixed, players would learn
+        "deliver at 5 seconds left" and stop reading the water entirely — defeating the learning
+        shift the whole project is built on. Josie chose a draining bar with no digits.</p>
+
+        <h3>Where AI added things that were not in the brief</h3>
+        <p>Recorded honestly, because they are the AI's ideas and not Josie's:</p>
+        <ul>
+          <li><strong>Splitting the two visual cues.</strong> The brief lists "how the water boils"
+          and "how the egg moves" as feedback but never says they are separate channels. The AI
+          proposed that the water tells you about the pot while the egg's movement tells you about
+          the egg — so a violent boil shakes even a raw egg and you have to see past it. Presented
+          as an interpretation; not objected to.</li>
+          <li><strong>Orders never ask for Raw or Overcooked</strong>, since those read as failure
+          states rather than things a customer orders. The brief does not say this.</li>
+        </ul>
+      </li>
+
+      <li>
+        <div class="when">6 September 2026 · Interaction 03</div>
+        <h3>First playable milestone — game and website together</h3>
+        <p>Built in one pass: the complete loop, the six-level ladder, three heat levels, both
+        presets, the coin rules, game over, a per-difficulty best score, and this website.
+        Dependency track A — plain HTML, CSS, JavaScript and Canvas 2D. The boiling sound is
+        generated live by the Web Audio API, so nothing is loaded from a CDN and the game works
+        offline.</p>
+
+        <h3>Other decisions the AI made on its own</h3>
+        <ul>
+          <li>Three discrete heat levels instead of a continuous dial — the brief only says
+          "high / low heat".</li>
+          <li>Heat carries over between customers, so you can preheat for the next order.</li>
+          <li>A fairness guard: an order is re-rolled if it could not be reached at full heat with
+          1.2 seconds to spare. Without it, a large egg with a hard-boiled order and 4 seconds of
+          patience would be impossible. It re-rolls the order, never the cooking speed.</li>
+          <li>Releasing Space serves the egg immediately, making lifting and handing over one
+          gesture. <b>This means you cannot lift the egg out to inspect it</b> — a real consequence
+          Josie has not signed off on yet.</li>
+          <li>The water visibly boils away over time, from the brief's line about long evaporation
+          meaning overcooked.</li>
+        </ul>
+
+        <h3>What went wrong</h3>
+        <div class="note warn">The first attempt to write <code>assets/js/game.js</code> was
+        corrupted mid-write: a stray fragment of text landed in the middle of the file and about a
+        third of the functions never got written. The AI caught it, said so, and rewrote the file
+        with a different tool instead of patching around the damage.</div>
+
+        <h3>What is verified, and what is not</h3>
+        <p><b>Verified:</b> all three scripts parse, the pages load, the loop runs end to end, and
+        every path in the project is relative.</p>
+        <p><b>Not verified:</b> nobody has actually played it yet. Two things are genuinely
+        uncertain — whether the egg's spin stays readable against a hard boil on Hard difficulty,
+        and whether 4-second patience feels fair or just frantic.</p>
+      </li>
+
+      <li>
+        <div class="when">6 September 2026 &middot; Interaction 04</div>
+        <h3>Playtest note: the pot was not actually boiling</h3>
+        <p>Josie played the first build and said it was wrong: the bubbles and the sound should
+        climb from small to loud over time, and the egg's turning should get more and more obvious.</p>
+        <p>She was right, and for two reasons the AI had missed:</p>
+        <ul>
+          <li>The water snapped straight to whatever the heat dial said and then sat flat. There was
+          no build-up at all, so the sound had nothing to climb.</li>
+          <li>The egg only rotated on its own axis — and a near-symmetrical oval rotating in place
+          looks almost identical to one standing still.</li>
+        </ul>
+        <p><b>What changed:</b> the pot now has to work up to a rolling boil, faster on high heat,
+        and a cold egg knocks it back down when it goes in — a large egg further than a small one.
+        The egg now <em>circles around the pot</em> instead of spinning in place, with a wake behind
+        it, and it has speckles on the shell so the turning is actually visible. The sound climbs
+        with the boil and keeps opening the longer the egg is in.</p>
+        <p>This made the feedback closer to the brief, not further from it: section 4 says the sound
+        goes "from low to loud" to show how long it has boiled, and that the egg "starts to turn
+        around in the pot". Neither was really true of the first build.</p>
+        <p><b>Verified:</b> a headless test harness now drives the real game files and checks the
+        boil actually dips when the egg goes in and then climbs, and that the egg's turning
+        accelerates as it cooks. 16 checks passing.</p>
+      </li>
+
+      <li>
+        <div class="when">6 September 2026 &middot; Interaction 05</div>
+        <h3>Second playtest note: the ramp still didn't start from calm</h3>
+        <p>Josie played the fixed build and said the ripples should also go from small to large, and
+        the sound wasn't quiet enough at the start.</p>
+        <p>She was right again. The previous fix had built the ramp mechanic, but left three separate
+        hard floors in three different files, each quietly keeping the pot at a medium starting point
+        instead of near-zero: the agitation target had a 40% floor even at a cold pot, the ripple
+        drawing had a fixed baseline wobble regardless of agitation, and the sound's noise bed had a
+        fixed minimum volume. All three were removed, and the build-up now eases in on a curve rather
+        than a straight line, so the first second reads as noticeably calmer than the last.</p>
+        <p><b>Verified:</b> extended the same test harness — agitation now measures under 0.05 the
+        instant a fresh pot appears, and ramps smoothly through 0.042 &rarr; 0.069 &rarr; 0.267 &rarr;
+        0.550 over the next few seconds. 18 of 18 checks passing.</p>
+      </li>
+
+    </ol>
+  </section>
+
+  <section>
+    <h2>Still open</h2>
+    <ul>
+      <li>Playtesting. Nobody outside the project has played it.</li>
+      <li>Is the egg's turning readable at high heat, or does the shaking water still hide it? The
+      circling motion and the shell speckles were added to fix this, but nobody has played the new
+      build yet.</li>
+      <li>Should serving stay tied to releasing Space, or should lifting the egg out and handing it
+      over be two separate actions?</li>
+      <li>"Easy" and "Hard" are generic names for two presets that differ in a specific way. They
+      probably deserve better names.</li>
+      <li>No background music yet — only the boiling sound. The brief asks for "cute music".</li>
+      <li>No stage reflection has been written yet. Josie asked to be the one to trigger it.</li>
+      <li>Whether this folder becomes its own repository for GitHub Pages, and whether the brief
+      and the development log may be published publicly.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="site">
+  Boil an Egg · Josie · Game Design from Everyday Life ·
+  <a href="development-log/agent-development-log.md">read the full log</a>
+</footer>
+
+</body>
+</html>
