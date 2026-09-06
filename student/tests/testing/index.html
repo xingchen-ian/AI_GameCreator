@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boil an Egg — a game about reading a pot</title>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="yolk"></span> Boil an Egg</a>
+  <nav>
+    <a class="active" href="index.html">Home</a>
+    <a href="index.html#domain">Domain Knowledge</a>
+    <a href="index.html#system">System Design</a>
+    <a href="process.html">Development Process</a>
+    <a class="play" href="game.html">Play</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h1>Boil an Egg</h1>
+    <p class="byline">A game design from everyday life · by Josie · CGDD</p>
+    <p class="lede">You cook eggs for a queue of customers. There is no clock and no doneness
+    meter. You decide when the egg is ready by watching how hard the water boils, how the egg
+    moves, and how loud the pot has become.</p>
+    <p><a class="cta" href="game.html">Play the game &rarr;</a></p>
+  </section>
+
+  <section>
+    <h2>Designer statement</h2>
+    <div class="card">
+      <p>Boiling an egg is one of the most ordinary things I know how to do. Most people in China
+      have had a morning where an egg is breakfast. And almost everybody does it the same
+      wrong way: you drop the egg in, you try to count the minutes in your head, you get
+      distracted, and then you are guessing.</p>
+      <p>What I actually learned over time is that you do not need the clock. The pot is already
+      telling you. Water that is only just trembling is not the same as water rolling hard. An egg
+      that has started to turn over in the water is not the same as an egg that is still sitting
+      still. The sound climbs the longer it goes. I wanted to make a game where you are
+      <em>forced</em> to use those signals, because I took the clock away.</p>
+      <p>The core emotion I want is light and warm — a small, relaxing thing, not a stressful one.
+      The pressure comes from a customer who is waiting, not from a scoreboard shouting at you.</p>
+    </div>
+  </section>
+
+  <section id="domain">
+    <h2>Domain knowledge</h2>
+
+    <h3>The real experience</h3>
+    <p>Boiling an egg for breakfast. Everyone has done it. Almost nobody has been taught to do it
+    by observation.</p>
+
+    <h3>The novice misconception</h3>
+    <p>A beginner believes that boiling an egg is a <strong>timing problem</strong>: set a number of
+    minutes and wait. So when they forget to start the timer, they have nothing left to fall back
+    on — they cannot tell doneness by looking. They also assume every egg cooks at the same rate,
+    and do not adjust for a bigger or smaller egg.</p>
+
+    <h3>What the expert actually does</h3>
+    <p>An experienced cook reads the pot instead of the clock:</p>
+    <ul>
+      <li><strong>How the water boils.</strong> Barely trembling means the egg is still near raw. A
+      strong rolling boil means it is moving through soft-boiled toward half-set. Water that has
+      been evaporating for a long time means you are heading into overcooked.</li>
+      <li><strong>How the egg moves.</strong> When it first starts to turn over in the water, it is
+      around soft-boiled. When it turns quickly and violently, it is well done. If that goes on a
+      long time, it is past done.</li>
+      <li><strong>The sound.</strong> The boil climbs from low to loud the longer it runs.</li>
+      <li><strong>The size of the egg.</strong> A large egg is still behind a small one even in the
+      same water.</li>
+    </ul>
+
+    <h3>The core learning shift</h3>
+    <div class="note">
+      From <strong>counting time in your head or going on feeling</strong>, to
+      <strong>observing how the water boils, how the egg moves, and the sound of the boil</strong>.
+    </div>
+
+    <h3>Why this becomes playable</h3>
+    <p>Because doneness is invisible and time is invisible, but the <em>cues</em> are not. The game
+    hides the number and shows only the signals, so the only way to get better is to actually learn
+    to read them. Failing teaches you directly: you see the level you served next to the level they
+    asked for, so you know whether to hold longer or lift sooner.</p>
+
+    <h3>The hard part, and why it is not a lookup table</h3>
+    <p>The water tells you about <strong>the pot</strong>. The egg's movement tells you about
+    <strong>the egg</strong>. These are not the same thing. A hard boil rattles a raw egg too — so
+    a violently boiling pot makes it <em>harder</em>, not easier, to see whether the egg itself is
+    ready. And because a large egg cooks slower than a small one, the same rolling boil does not
+    mean the same doneness. Separating the signal from the noise is the skill.</p>
+  </section>
+
+  <section id="system">
+    <h2>System design</h2>
+
+    <figure>
+      <img src="system-graph.png" alt="Hand-drawn system graph: game environment feeds player input, which feeds win or game over.">
+      <figcaption>The original hand-drawn system graph. Environment &rarr; player input &rarr; win or
+      game over, with difficulty acting on the environment only.</figcaption>
+    </figure>
+
+    <h3>The doneness ladder</h3>
+    <p>Six levels. Serving within <strong>one level</strong> of the order still counts.</p>
+    <ul class="ladder">
+      <li><b>1</b> Raw</li><li><b>2</b> Soft-Boiled</li><li><b>3</b> Jammy</li>
+      <li><b>4</b> Medium</li><li><b>5</b> Hard-Boiled</li><li><b>6</b> Overcooked</li>
+    </ul>
+
+    <h3>The data</h3>
+    <div class="scroll-x">
+      <table>
+        <thead>
+          <tr><th>Group</th><th>Variable</th><th>What it does</th><th>Can the player see it?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="tag env">Environment</span></td><td><code>eggSize</code></td>
+              <td>Small, medium, or large. Changes how fast the egg cooks.</td><td>Yes — on the order ticket</td></tr>
+          <tr><td><span class="tag env">Environment</span></td><td><code>desired</code></td>
+              <td>The doneness the customer asked for.</td><td>Yes — on the order ticket</td></tr>
+          <tr><td><span class="tag env">Environment</span></td><td><code>patienceLeft</code></td>
+              <td>How long this customer will wait. Starts draining the moment they order.</td>
+              <td>Only as a draining bar — never as a number</td></tr>
+          <tr><td><span class="tag player">Player</span></td><td><code>heatIndex</code></td>
+              <td>Low / Medium / High. Set with &larr; and &rarr;. Carries over between customers.</td><td>Yes — the heat dial</td></tr>
+          <tr><td><span class="tag player">Player</span></td><td><code>eggInPot</code></td>
+              <td>True while Space is held. Releasing hands the egg straight to the customer.</td><td>Yes</td></tr>
+          <tr><td><span class="tag calc">Calculated</span></td><td><code>doneness</code></td>
+              <td>Climbs from 1 to 6 at <code>heat rate × size multiplier</code>.</td>
+              <td><strong>No.</strong> This is the hidden number the whole game is about.</td></tr>
+          <tr><td><span class="tag calc">Calculated</span></td><td><code>agitation</code></td>
+              <td>How hard the water boils right now. The heat dial sets the ceiling; the boil has to climb to it.</td>
+              <td>Yes — ripples, bubbles, steam, volume</td></tr>
+          <tr><td><span class="tag calc">Calculated</span></td><td><code>potBuild</code></td>
+              <td>How far the pot has worked up to a full rolling boil. Climbs faster on high heat, and drops when a cold egg goes in.</td>
+              <td>Only through the water and the sound</td></tr>
+          <tr><td><span class="tag calc">Calculated</span></td><td><code>waterLevel</code></td>
+              <td>Boils away over time. Shows how long the pot has been running.</td><td>Yes — the water line drops</td></tr>
+          <tr><td><span class="tag calc">Calculated</span></td><td><code>coins</code></td>
+              <td>Your score for the run.</td><td>Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>How the hidden number becomes readable</h3>
+    <div class="grid three">
+      <div class="card"><h3>The water</h3><p>A pot does not reach a rolling boil the moment you turn
+      the dial up. The bubbles start small and few and build, and dropping a cold egg in knocks the
+      boil back down again — a bigger egg knocks it back further. So the water tells you how long
+      this pot has been going, not how cooked the egg already is.</p></div>
+      <div class="card"><h3>The egg</h3><p>It sits still while it is raw, starts to turn around the
+      pot near soft-boiled, and circles fast and lolls onto its side by hard-boiled. But a violent
+      boil rattles a raw egg too, so you have to see past the water.</p></div>
+      <div class="card"><h3>The sound</h3><p>Generated live in the browser, never loaded as a file.
+      It climbs from low to loud as the boil builds, and keeps opening up the longer the egg is
+      in.</p></div>
+    </div>
+
+    <h3>Success, failure, and coins</h3>
+    <ul>
+      <li><strong>Exactly the level they asked for</strong> &rarr; 5 coins.</li>
+      <li><strong>One level off</strong> &rarr; 3 coins.</li>
+      <li><strong>Two or more levels off</strong> &rarr; the customer leaves without paying. <strong>Run over.</strong></li>
+      <li><strong>The patience bar empties</strong> &rarr; the customer stops waiting. <strong>Run over.</strong></li>
+    </ul>
+    <p>Coins are never taken away. A run lasts until you fail, and your score is the coins you
+    collected. Your best run per difficulty is stored in your own browser.</p>
+
+    <h3>The two challenge presets</h3>
+    <div class="note">
+      Both presets use the <strong>exact same cooking model</strong>. Cooking speed depends only on
+      heat and egg size. Difficulty never makes eggs cook faster or slower — it changes the
+      constraints you work under, not the physics.
+    </div>
+    <div class="scroll-x">
+      <table>
+        <thead><tr><th></th><th>Easy</th><th>Hard</th></tr></thead>
+        <tbody>
+          <tr><td><b>Customer patience</b></td><td>8–12 seconds</td><td>4–8 seconds</td></tr>
+          <tr><td><b>Egg sizes</b></td><td>Medium only</td><td>Small, medium and large</td></tr>
+          <tr><td><b>Orders</b></td><td>Soft-Boiled, Jammy, Medium</td><td>Soft-Boiled to Hard-Boiled</td></tr>
+          <tr><td><b>What actually gets harder</b></td>
+              <td>You have room to run a lower heat and watch the egg properly.</td>
+              <td>Short patience pushes you onto high heat, and high heat is exactly the
+                  condition where the shaking water hides what the egg is doing. Varying size
+                  means the same cue no longer means the same doneness.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where the project actually is</h2>
+    <div class="note warn">
+      <p style="margin:0"><strong>This is the first playable milestone, finished 6 September 2026.</strong>
+      One complete observe → judge → act → feedback → adjust loop, with both challenge presets.</p>
+    </div>
+    <p><strong>Built and working:</strong> the full loop, six-level doneness, hold-to-cook and
+    release-to-serve, three heat levels, water and egg and sound feedback, both presets, coins,
+    game over, best score, and this site.</p>
+    <p><strong>Not built yet:</strong> background music (only the boiling sound is generated so far),
+    hand-drawn character art beyond the simple shapes currently on screen, and any playtesting with
+    other people. Nothing on this page describes a feature that does not exist.</p>
+    <p>Read the honest version, including what went wrong, on the
+    <a href="process.html">development process page</a>.</p>
+  </section>
+
+</main>
+
+<footer class="site">
+  Boil an Egg · Josie · Game Design from Everyday Life ·
+  <a href="domain-learning-brief.md">the brief</a> ·
+  <a href="development-log/agent-development-log.md">development log</a>
+</footer>
+
+</body>
+</html>
