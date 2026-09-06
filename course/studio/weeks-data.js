@@ -46,12 +46,12 @@ window.WEEKS_DATA = [
     // Hand-in lives here. Edit these fields, push, and §05 Submit on the live page is the official submission.
     submission: {
       pipelineGame: {
-        url: "",
-        pipeline: "",
-        note: ""
+        url: "https://boil-an-egg-josie.surge.sh",
+        pipeline: "domain-learning path",
+        note: "Boil an Egg — the novice treats doneness as a timing problem; the expert reads how the water boils, how the egg moves, and how loud the pot is. Play: game.html."
       },
       surveyReport: {
-        url: "",
+        url: "https://docs.google.com/document/d/1ssUvRNjCH8PJqIjNF5x62n5TI2JiaoHmhkfWCPx1C9U/edit",
         body: ""
       }
     }
