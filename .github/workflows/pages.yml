@@ -27,57 +27,13 @@ jobs:
           set -euo pipefail
           mkdir -p _site
           cp -R course/. _site/
-          # Publish Josie's full student/ tree at /student/
           cp -R student _site/student
-          # Convenience short URL for the research map (same file, not a second source).
           mkdir -p _site/research
           if [ -f student/research/llm_agent_game_design_research_map.html ]; then
             cp student/research/llm_agent_game_design_research_map.html \
               _site/research/llm_agent_game_design_research_map.html
           fi
-          # Directory listing index so /student/ is browsable (Pages has no auto-index).
-          python3 <<'PY'
-          from pathlib import Path
-          root = Path("_site/student")
-          rows = []
-          for path in sorted(root.rglob("*")):
-              if path.name.startswith("."):
-                  continue
-              rel = path.relative_to(root).as_posix()
-              if path.is_dir():
-                  rows.append(f'<li><strong>{rel}/</strong></li>')
-              elif path.suffix.lower() in {".html", ".htm", ".md", ".txt", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".json"}:
-                  rows.append(f'<li><a href="{rel}">{rel}</a></li>')
-          listing = "\n".join(rows) or "<li><em>Empty for now.</em></li>"
-          (root / "index.html").write_text(f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>student/ · AI Game Creator</title>
-  <style>
-    body {{ margin: 0; font: 16px/1.6 Inter, system-ui, sans-serif; background: #f4f0e7; color: #17202a; }}
-    main {{ width: min(40rem, calc(100% - 40px)); margin: 48px auto; }}
-    a {{ color: #293e6a; }}
-    ul {{ padding-left: 1.2em; }}
-    li {{ margin: 0.35em 0; }}
-    .note {{ color: #647078; font-size: 14px; }}
-  </style>
-</head>
-<body>
-  <main>
-    <p><a href="../">← Course hub</a></p>
-    <h1>student/</h1>
-    <p class="note">Josie’s working folder, published from the repository on each deploy to <code>main</code>. HTML opens in the browser; Markdown downloads or shows as source unless a viewer is added later.</p>
-    <ul>
-{listing}
-    </ul>
-  </main>
-</body>
-</html>
-""", encoding="utf-8")
-          print(f"Indexed {len(rows)} student paths")
-          PY
+          python3 .github/scripts/index-student.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
