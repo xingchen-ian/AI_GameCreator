@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scope-First Literature Review — AI-Supported Novice Game Design Learning</title>
+<style>
+:root{--fg:#17212b;--muted:#5b6773;--line:#dfe5ea;--soft:#f6f8fa;--accent:#244a73;--core:#eef5ff;--support:#f8f5ee;--good:#edf7ef;--warn:#fff7e8;--bad:#fff1f0}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;color:var(--fg);line-height:1.72;background:white}
+main{max-width:1160px;margin:0 auto;padding:48px 28px 90px}.hero{border-bottom:2px solid var(--fg);padding-bottom:22px;margin-bottom:28px}h1{font-size:34px;line-height:1.2;margin:0 0 12px}h2{font-size:25px;margin:44px 0 14px;border-bottom:1px solid var(--line);padding-bottom:7px}h3{font-size:20px;margin:32px 0 10px}h4{font-size:16px;margin:22px 0 7px}.subtitle{font-size:17px;color:var(--muted)}.stamp{font-size:13px;color:var(--muted);margin-top:8px}.box{padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:var(--soft);margin:14px 0}.thesis{background:var(--core);border-left:5px solid var(--accent)}.gap{background:var(--warn);border-left:5px solid #b47713}.good{background:var(--good);border-left:5px solid #3f7f4b}.bad{background:var(--bad);border-left:5px solid #a33}.toc{columns:2;column-gap:28px}.toc a{display:block;color:var(--accent);text-decoration:none;margin:4px 0}.toc a:hover{text-decoration:underline}table{width:100%;border-collapse:collapse;margin:14px 0 24px;font-size:14px}th,td{border:1px solid var(--line);padding:9px 10px;vertical-align:top}th{background:#f0f3f6;text-align:left}.tag{display:inline-block;padding:2px 7px;border-radius:999px;font-size:12px;margin-right:4px;background:#e8edf2}.core{background:var(--core)}.support{background:var(--support)}ul{padding-left:23px}.paper{border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:20px 0}.paper.corepaper{border-left:5px solid #5379a4}.paper.supportpaper{border-left:5px solid #9b8b6b}.meta{color:var(--muted);font-size:14px;margin-bottom:10px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.small{font-size:13px;color:var(--muted)}.source a{color:var(--accent);word-break:break-all}.axis{padding:10px 12px;background:#fafbfc;border:1px solid var(--line);border-radius:8px;margin:7px 0}.rank{font-weight:700;color:var(--accent)}code{background:#f3f5f7;padding:1px 4px;border-radius:4px}.footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}.metric{font-variant-numeric:tabular-nums}.quote{padding:10px 14px;border-left:3px solid #b5bec7;background:#fafbfc;color:#35414d}.note{font-size:14px;color:#3f4b56}.nowrap{white-space:nowrap}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.toc{columns:1}table{font-size:12px}h1{font-size:28px}}
+</style>
+</head><body><main>
+<section class="hero"><h1>Scope-First Literature Review</h1><div class="subtitle">AI-Supported Novice Game-Design Learning：从“替新手生成游戏”到“让新手学会进行游戏设计推理”</div><div class="stamp">Scope lock: 2010–2026（重点 2023–2026） · 详细版更新至 2026-09-06</div></section>
+
+<section id="scope"><h2>1. Scope Lock：这轮综述到底在找什么</h2>
+<div class="box"><b>核心研究对象：</b>AI-supported novice game-design learning（AI 支持的新手游戏设计学习）。<br><b>核心问题：</b>生成式 AI（Generative AI，能够直接生成文本、图像、代码、游戏内容的 AI）怎样帮助新手完成游戏设计，同时又不替他们跳过 reflection（反思）、evaluation（评估）、experimentation（试错）与 design reasoning（设计推理）。<br><b>任务场景：</b>从 personal/lived experience（个人/亲身经历）出发，逐渐形成 game concept（游戏概念）、design note（设计笔记）、mechanics（游戏机制）乃至 prototype（原型）。该场景很重要，但<b>不把“别人没做过 lived experience”当主要创新</b>。<br><b>主要研究社区：</b>Games HCI（游戏人机交互）、Game Design Education（游戏设计教育）、Human-AI Co-Creation（人机共同创作）。<br><b>辅助研究社区：</b>Creativity Support Tools（创造力支持工具）、Design Education（设计教育）、Learning Sciences（学习科学）。<br><b>排除：</b>只提高自动生成质量、但没有 human process / learning evidence（人的思维过程或学习证据）的纯 PCG、纯 Agent architecture、纯 game generation 工作。</div>
+<div class="box thesis"><b>这轮 review 的核心结论：</b>最有力的 gap 不是“没人用 AI 帮用户从生活经历做游戏”，而是：<b>已有研究已经证明 GenAI 可以提高 productivity（产出效率）和 exploration（探索广度），但也反复暴露出 novice 依赖 AI 初始结果、problem-solving opportunity（自己解决问题的机会）被自动化拿走、更多 control（控制选项）不等于真正 agency（主体控制能力）、以及固定 reflective prompts（反思性问题）会重复或与用户当前需要不匹配等问题。尚缺的是一个经过实验验证的机制：系统如何识别 novice 当前的 design-reasoning state（设计推理状态），并动态决定此刻应该追问、挑战、解释、给例子、生成候选、要求比较，还是暂时不介入。</b></div>
+</section>
+
+<section id="glossary"><h2>2. 核心术语解释</h2>
+<table><thead><tr><th>术语</th><th>中文解释</th><th>放到你项目里是什么意思</th></tr></thead><tbody>
+<tr><td><b>Scaffolding（脚手架式支持）</b></td><td>教育学术语：不是替学生把答案做掉，而是在学生暂时做不到时提供结构、提示、追问、例子和反馈，让学生自己完成原本独立完成不了的思考；随着能力提高，帮助应该减少。</td><td>Agent 不应该一直输出完整 game design，而应根据用户状态控制帮助强度。</td></tr>
+<tr><td><b>Reflection（反思）</b></td><td>回头检查自己的设计决定：为什么这么做？这条机制真的产生我想要的玩家体验吗？有没有其他解释？</td><td>“为什么你觉得倒计时能表达失控感？”比“再生成 3 个机制”更接近 reflection。</td></tr>
+<tr><td><b>Critical evaluation（批判性评估）</b></td><td>对已有方案做判断，而不是默认接受 AI 结果；包括指出不一致、风险、取舍与替代方案。</td><td>用户是否会 reject（拒绝）、refine（改进）、transform（重构）AI 的建议。</td></tr>
+<tr><td><b>Divergent thinking（发散思维）</b></td><td>寻找多个可能方向。</td><td>“这段经历还能做成哪些玩法？”</td></tr>
+<tr><td><b>Convergent thinking（收敛思维）</b></td><td>在多个方案中做选择并明确设计方向。</td><td>“我决定核心不是做饭，而是缺少话语权。”</td></tr>
+<tr><td><b>Evaluative thinking（评估性思维）</b></td><td>判断方案的质量、逻辑、可行性和表达效果。</td><td>“金币会不会把家庭话语权错误表达成经济权力？”</td></tr>
+<tr><td><b>Agency（主体控制感）</b></td><td>用户能否理解并控制重要决定，是否觉得作品主要是自己设计出来的。</td><td>不是界面上有 20 个参数就叫 agency；用户要知道这些参数为什么重要、改变后会怎样。</td></tr>
+<tr><td><b>Transfer（迁移）</b></td><td>用了辅助工具完成任务 A 之后，换一个新任务、拿走工具，用户仍能使用学到的方法。</td><td>这是你如果声称“教会 game design”最关键的证据之一。</td></tr>
+<tr><td><b>Within-subject（被试内实验）</b></td><td>同一个参与者体验多个条件，比较自己的表现。</td><td>例如每个人都用 RPGAgent 和普通 GPT。</td></tr>
+<tr><td><b>Between-subject（被试间实验）</b></td><td>不同参与者随机分到不同条件。</td><td>例如一组用 AI-led，一组用 reflective scaffold。</td></tr>
+<tr><td><b>p-value（p 值）</b></td><td>用于判断观察到的差异是否很可能只是随机波动。通常 p&lt;.05 被视为具有统计显著性，但显著不代表效果一定很大。</td><td>如果 Adaptive condition 分数更高，要看差异是否显著。</td></tr>
+<tr><td><b>Cohen's d（效应量）</b></td><td>衡量差异大小。粗略而言 0.2 小、0.5 中等、0.8 以上较大。</td><td>比只报告 p 值更能说明 improvement 的实际规模。</td></tr>
+<tr><td><b>Research-through-Design（通过设计进行研究，RtD）</b></td><td>通过设计并部署一种新系统/交互理念，再从使用过程理解现象；常见于 HCI，未必有严格控制组。</td><td>Reflective AI 就更接近这种研究，而不是严格效果实验。</td></tr>
+</tbody></table>
+</section>
+
+<section id="toc"><h2>3. Contents</h2><div class="toc">
+<a href="#map">4. Literature Map</a><a href="#register">5. Evidence Register</a><a href="#rpgagent">6. RPGAgent</a><a href="#lak">7. Unpacking Co-Creation with AI</a><a href="#productive">8. Productive vs. Reflective</a><a href="#jamplate">9. Jamplate</a><a href="#sgdtf">10. SGDTF</a><a href="#gdg">11. Game Design Games</a><a href="#dreamgarden">12. DreamGarden</a><a href="#reflectiveai">13. Reflective AI</a><a href="#supporting">14. Supporting Theory</a><a href="#synthesis">15. Cross-paper Synthesis</a><a href="#gaps">16. Strong Gaps</a><a href="#direction">17. Your Project Direction</a><a href="#eval">18. Evaluation Plan</a><a href="#venues">19. Venue Fit</a></div></section>
+
+<section id="map"><h2>4. Literature Map：这些论文分别在解决哪一层问题</h2>
+<div class="axis"><b>A. AI game creation：</b>DreamGarden、RPGAgent 证明 AI 已经可以从高层 idea/story 快速生成 structured plan 和 playable prototype，但也暴露 automation vs learning / control 的矛盾。</div>
+<div class="axis"><b>B. AI + design cognition：</b>Jamplate、Productive vs. Reflective 证明 AI 的 intervention style（介入方式）会改变人的 cognition（认知活动）；“多轮问问题”本身已经不是创新。</div>
+<div class="axis"><b>C. AI + game-design learning：</b>LAK 2026 直接观察 game-design students 与 AI 的 creative thinking，发现高表现学生更多 refine/transform，但还没有因果性 intervention 去训练这种行为。</div>
+<div class="axis"><b>D. Game-design pedagogy：</b>SGDTF、Game Design Games 说明 staged iteration（分阶段迭代）、experimentation（试错）和 designer perspective（设计师视角）非常关键，但严格 learning validation 仍有限。</div>
+<div class="axis"><b>E. Experience/meaning → game：</b>Grow-A-Game、Inviting Grief、Design Bleed 说明 value、metaphor、lived experience 如何进入 game design；这条线更适合支撑“你要 scaffold 什么”，而不是主要 novelty。</div>
+</section>
+
+<section id="register"><h2>5. Evidence Register：8 篇核心论文一览</h2>
+<table><thead><tr><th>Paper</th><th>Venue</th><th>做了什么</th><th>样本 / 证据</th><th>最硬的结果</th><th>最重要的 Gap</th></tr></thead><tbody>
+<tr><td><b>RPGAgent</b></td><td>CHI 2026</td><td>Multi-agent story→playable RPG</td><td>N=18，被试内；UEQ/CSI + logs/interviews</td><td>Overall UEQ 5.047 vs 3.836，adj. p=.00004；Overall CSI 5.233 vs 4.406，p=.00019</td><td>novice 不会使用 exposed controls；ready-made output 可能妨碍 learning；作者明确提出 educational scaffolds + safe experimentation</td></tr>
+<tr><td><b>Unpacking Co-Creation with AI</b></td><td>LAK 2026</td><td>分析 game-design students 与 AI 共创中的思维模式</td><td>31 students；1,558 interaction turns；ENA</td><td>高/低表现组网络差异 p=.03，d=.86；高表现组更多 Convergent–Refine–Transform</td><td>观察性相关，不证明“scaffold refine/transform → learning”；作者要求 phase-specific guidance</td></tr>
+<tr><td><b>Productive vs. Reflective</b></td><td>CHI 2025</td><td>No-AI vs Co-led vs AI-led，研究 AI positioning 如何改变 design cognition</td><td>N=47，被试间</td><td>No-AI/Co-led cognitive engagement & decision-making 高于 AI-led：F(2,41)=4.90, p=.012；AI-led topic diversity 更广</td><td>固定 reflective prompts 会重复、无关、steer 用户；何时问、问什么、给多少 generation 未解决</td></tr>
+<tr><td><b>Jamplate</b></td><td>IUI 2024</td><td>LLM + structured design templates + reflective questions</td><td>Formative: 52 students + 5 instructors；pilot N=8</td><td>前期研究发现 novice 缺 critical reflection；pilot 多数用户认为 in-situ questions 有帮助</td><td>证据初步；模板和 timing 固定；无法证明 learning/transfer</td></tr>
+<tr><td><b>SGDTF</b></td><td>ACM TOCE 2026</td><td>四阶段 reflective game-design teaching framework</td><td>N=26 workshop；mixed methods；pre/post reflection</td><td>部分组 reflection score 前后大幅上升，例如 2.65→4.28，p&lt;.001</td><td>探索性研究、无严格对照；不能证明 framework 导致 improvement</td></tr>
+<tr><td><b>Game Design Games</b></td><td>FDG 2025</td><td>用可快速修改/试玩的数字小游戏教 game design</td><td>12 classroom interventions；N=164；thematic analysis</td><td>发现 experimentation、unexpected complexity、design diversity、perspective difficulty 四主题</td><td>作者明确：缺 formal validation；无法区分工具效果和课堂 instruction</td></tr>
+<tr><td><b>DreamGarden</b></td><td>CHI 2025 Best Paper</td><td>single prompt→hierarchical plan→Unreal prototype</td><td>N=10 usability study</td><td>用户高度认可 planning/prototyping utility</td><td>用户明确担心 AI 拿走 problem-solving opportunity；autonomy 与 fine-grained control 冲突</td></tr>
+<tr><td><b>Reflective AI</b></td><td>CHI 2026</td><td>Slow technology，让 AI 成为 reflection medium 而非 production tool</td><td>N=11，3-day workshop；qualitative RtD</td><td>观察到 learning through AI 与 learning about AI</td><td>故意不用 GenAI；作者明确提出未来扩展到 generative models；无 control/transfer test</td></tr>
+</tbody></table>
+</section>
+
+<section id="rpgagent"><h2>6. RPGAgent — CHI 2026</h2>
+<div class="paper corepaper">
+<h3>6.1 它到底解决什么问题？</h3>
+<p>普通 LLM 已经能分别写剧情、想场景、生成 mechanic（游戏机制）和代码，但这些输出很容易互相不一致。比如故事里是被洪水淹没的村庄，场景却没有洪水，mechanic 又只是收集金币。RPGAgent 的核心目标因此是 <b>coherence（一致性）+ rapid prototyping（快速原型）</b>，而不是教育。</p>
+<h3>6.2 系统怎么做？</h3>
+<p>作者依据 Jesse Schell 的 <b>Elemental Tetrad（游戏四元素框架）</b>，把游戏拆成 Story（故事）、Aesthetics（视觉/表现）、Mechanics（机制）、Technology（技术）。系统用多个 specialized agents（专门代理）分别负责 narrative、scene、mechanics 与 code，再通过结构化中间表示和 Unity/PCG 串起来：</p>
+<div class="box">用户 story outline → Narrative Agent → Scene Agent → Mechanics Agent → Code Generator → playable 2D RPG prototype</div>
+<p>这一步的技术价值在于：novice 不需要自己把 ChatGPT 的故事、代码、场景描述手动拼起来。</p>
+<h3>6.3 怎么评？</h3>
+<p><b>N=18，被试内 crossover study（同一个人都体验两种系统）</b>。对比 RPGAgent 与“普通 GPT 辅助 + 手动 Unity workflow”。主要量表：</p>
+<ul><li><b>UEQ（User Experience Questionnaire，用户体验问卷）</b>：效率、可靠性、刺激性、新颖性等。</li><li><b>CSI（Creativity Support Index，创造力支持指数）</b>：探索、表达、自主创作、沉浸、愉快等。</li></ul>
+<h3>6.4 量化结果</h3>
+<table><thead><tr><th>指标</th><th>RPGAgent</th><th>Baseline</th><th>结论</th></tr></thead><tbody>
+<tr><td>Efficiency（效率）</td><td class="metric"><b>5.236</b></td><td>3.278</td><td>显著提高，adjusted p=.00114</td></tr>
+<tr><td>Stimulation（激发创作）</td><td><b>5.314</b></td><td>3.426</td><td>显著提高</td></tr>
+<tr><td>Novelty（新颖性）</td><td><b>5.208</b></td><td>3.056</td><td>显著提高</td></tr>
+<tr><td>Exploration（探索）</td><td><b>5.278</b></td><td>4.250</td><td>显著提高，p=.00636</td></tr>
+<tr><td>Enjoyment（愉悦）</td><td><b>5.722</b></td><td>3.528</td><td>显著提高，p=.00095</td></tr>
+<tr><td>Overall UEQ</td><td><b>5.047</b></td><td>3.836</td><td>adjusted p=.00004；效应量 d<sub>z</sub>=2.46</td></tr>
+<tr><td>Overall CSI</td><td><b>5.233</b></td><td>4.406</td><td>p=.00019；效应量 d<sub>z</sub>=2.74</td></tr>
+</tbody></table>
+<div class="box bad"><b>但这些指标没有显著改善：</b>Dependability（可靠/可预测性）p=.125；Expressiveness（表达自己的设计意图）p=.425；Immersion（沉浸）p=.408；Effort/Reward（投入—回报感）p=.078。也就是说，<b>更快、更容易探索，并不自动等于更会表达自己的设计。</b></div>
+<h3>6.5 实验真正暴露出的失败</h3>
+<h4>失败 A：更多 control 不等于真正 agency</h4>
+<p>系统为了让用户有控制权，暴露了很多 procedural generation（程序化生成）参数。但真正能精确使用 parameterization（参数控制）的主要是有经验 participant；多个 novice 因为不知道参数含义、不知道改完会发生什么，反而不敢动。这里暴露出：</p>
+<div class="box thesis"><b>Control availability（有控制选项） ≠ Control capability（有能力理解并使用控制）</b></div>
+<h4>失败 B：ready-made output 可能跳过学习</h4>
+<p>作者在 Discussion 里直接指出，给 novice 一个基本已经做好的游戏可能妨碍他们学习 game-design principles（游戏设计原则），并提出未来应该把这类系统做成 <b>educational scaffolds（教育脚手架）</b>，逐步暴露 underlying logic（背后的设计逻辑），同时支持 <b>safe experimentation（安全试错）</b>。</p>
+<h3>6.6 Gap 类型</h3>
+<div class="box gap"><b>作者明确提出：</b>需要 educational scaffolds、progressively exposed logic、safe experimentation，以及更长期的 skill development / agency 研究。<br><b>实验直接暴露：</b>automation 能提高效率，却没有同时提升 expressiveness / dependability；novice 无法有效使用裸露参数。<br><b>对你最有价值的问题：</b>AI 怎样帮助 novice 做游戏，同时不替 novice 跳过本来应该学习的 design reasoning？</div>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3772318.3790326">https://doi.org/10.1145/3772318.3790326</a></p>
+</div>
+</section>
+
+<section id="lak"><h2>7. Unpacking Co-Creation with AI — LAK 2026</h2>
+<div class="paper corepaper">
+<h3>7.1 它研究什么？</h3>
+<p>这篇不是做一个复杂的新 Agent，而是在真实本科 game-design course（游戏设计课程）里研究：<b>学生与 AI 一轮轮对话时，到底在进行哪种 creative cognition（创作认知）？</b>它把研究重点从 final output（最终作品）转向 process（设计过程）。</p>
+<h3>7.2 Study context（研究场景）</h3>
+<ul><li>课程：Introduction to Creative Game Design（创意游戏设计导论）</li><li>周期：6 weeks / 40 class hours</li><li>任务：9 个 game-design tasks</li><li>班级人数：38</li><li>实际使用 GameMate 的学生：31</li><li>分析交互：<b>1,558 个 student-AI turns</b></li></ul>
+<h3>7.3 它怎么编码“学生在想什么”？</h3>
+<div class="grid"><div class="box"><b>Thinking Type（思维类型）</b><br><b>Divergent（发散）</b>：找更多可能。<br><b>Convergent（收敛）</b>：做选择、把方向具体化。<br><b>Evaluative（评估）</b>：判断方案质量、逻辑和可行性。</div><div class="box"><b>Contribution Type（修改类型）</b><br><b>Create New（新建）</b>：提出新 idea。<br><b>Extend（扩展）</b>：给已有设计继续加东西。<br><b>Refine（改进）</b>：把已有设计修得更合理。<br><b>Transform（重构）</b>：重新理解并改变已有设计方向。</div></div>
+<p>为了证明 coding 不是研究者随意判断，他们报告 Cohen's κ（编码者一致性）：Thinking Type κ=.88，Contribution Type κ=.70，说明分类可靠度较好。</p>
+<h3>7.4 最重要的量化结果</h3>
+<p>作者把学生按课程 game-design project achievement（项目成绩）分成 high-achievement 与 low-achievement。结果：</p>
+<div class="grid"><div class="box bad"><b>Low-achievement students：</b><br>Divergent ↔ Create New ↔ Extend 更强。通俗说就是：不断向 AI 要新点子、加功能、拓展，但较少真正修改或重构已有设计。</div><div class="box good"><b>High-achievement students：</b><br>Convergent ↔ Refine ↔ Transform 更强。也就是更会做选择、质疑已有结果、修改和重构 AI 的输出。</div></div>
+<p>两组 network pattern 差异：<b>t(23.95)=-2.25，p=.03，Cohen's d=.86</b>。d=.86 属于较大的 effect。</p>
+<h3>7.5 它真正证明什么？</h3>
+<div class="box thesis"><b>好的 AI-supported creativity（AI 辅助创作）不等于“生成更多 idea”。</b>更高表现学生的重要特征是：他们会把 AI output 当作可以被质疑、修改、重构的材料，而不是成品。</div>
+<h3>7.6 Gap</h3>
+<p><b>关键不是“他们没有做我们这个场景”</b>，而是他们只观察到了 pattern，却没有设计 intervention（干预机制）去改变这个 pattern。</p>
+<div class="box gap"><b>研究结果只能说明：</b>Better students → more Refine / Transform。<br><b>它没有证明：</b>Scaffolding Refine / Transform → students learn better。<br><b>这是 correlation（相关）与 causality（因果）的差别。</b></div>
+<p>作者明确提出未来需要 <b>phase-specific guidance（分阶段指导）</b>，帮助学生在 divergent / convergent / evaluative modes 之间切换，并促进 critical evaluation。对你来说，这就是最直接的 intervention target。</p>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3785022.3785084">https://doi.org/10.1145/3785022.3785084</a></p>
+</div>
+</section>
+
+<section id="productive"><h2>8. Productive vs. Reflective — CHI 2025</h2>
+<div class="paper corepaper">
+<h3>8.1 为什么这篇很重要？</h3>
+<p>这篇不是 game design，但它直接研究一个与你核心问题几乎一致的机制：<b>不是“用不用 AI”，而是“AI 在 workflow（工作流）的什么位置介入、一次给多少”会不会改变人的 cognition（认知活动）？</b></p>
+<h3>8.2 三个实验条件</h3>
+<ul><li><b>No-AI：</b>用户自己完成 design-thinking activity（设计思维活动）。</li><li><b>Co-led（共同推进）：</b>AI 分步骤提出 reflective questions，用户一步步回答。</li><li><b>AI-led（AI 主导）：</b>AI 一次生成大量内容，用户主要阅读、选择、整理和修改。</li></ul>
+<p>参与者 N=47，为 between-subject study（被试间实验）。</p>
+<h3>8.3 结果一：AI-led 不是“全坏”</h3>
+<p>AI-led 可以增加 design-space breadth（设计空间广度）。例如 problem framing topic diversity 的组间差异：F(2,43)=4.23, p=.02；final solution topic diversity：F(2,43)=5.33, p=.009。也就是说，heavy generation（大量生成）确实能让用户看到更多类型的可能性。</p>
+<h3>8.4 结果二：人的认知劳动被重新分配</h3>
+<p>AI-led 用户更多时间用在 reading / comprehension / synthesis（阅读、理解、综合）；No-AI 与 Co-led 用户更多实际 writing / revising / decision-making（自己写、修改和做决定）。其中 cognitive engagement + decision-making 组间差异：<b>F(2,41)=4.90, p=.012</b>。</p>
+<div class="box thesis"><b>Cognitive Labor Reallocation（认知劳动重新分配）：</b>当 AI 做得越多，人并不是单纯“更快”，而是从主动生成与决策，转向阅读、筛选和整理 AI 结果。</div>
+<h3>8.5 对你最重要的失败：问问题也会问坏</h3>
+<p>Co-led 已经证明“多轮 reflective questions”不是一个新 idea。更关键的是，作者发现这些 predefined prompts（预定义问题）有时：</p>
+<ul><li>repetitive（重复）；</li><li>强调用户根本不关心的 detail；</li><li>把用户原本的 systemic/social thinking（系统/社会层思路）steer（带偏）到某类 app/company solution；</li><li>打断自然 creative flow（创作流）。</li></ul>
+<div class="box gap"><b>真正 gap：</b>More reflection questions ≠ better reflection。尚不清楚 AI 应该在<b>什么时候问、问什么、问到什么粒度、什么时候停止问、什么时候用户已经需要 example / candidate generation</b>。</div>
+<p>作者也因此提出未来 AI support 应更贴合 varying information needs（不断变化的信息需求）与 users' creative priorities（用户当前创作重点）。</p>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3706598.3713649">https://doi.org/10.1145/3706598.3713649</a></p>
+</div>
+</section>
+
+<section id="jamplate"><h2>9. Jamplate — IUI 2024</h2>
+<div class="paper corepaper">
+<h3>9.1 它为什么出现？</h3>
+<p>Jamplate 先做 formative study（前期形成性研究），研究 novice 使用 ChatGPT 做 design ideation（设计构思）时到底卡在哪里。参与者包括 <b>52 名学生 + 5 名教师</b>。</p>
+<p>他们发现三个典型问题：</p>
+<ol><li>novice 不知道怎样 compose prompts（组织提示词）；</li><li>novice 缺少 critical reflection（批判性反思），容易把 AI output 当成可直接使用的答案；</li><li>ChatGPT 经常输出一大段内容，novice 不知道哪些重要，也不知道如何把信息真正转化成自己设计的变化。</li></ol>
+<p>非常重要的是：学生主观上会说“ChatGPT 很有帮助”，但研究者检查他们的 reflection report 后发现，<b>几乎没有证据显示他们真的对 AI 结果进行了深入批判，也很少看到 AI 信息推动原始 idea 发生 substantive change（实质变化）</b>。这说明 self-reported helpfulness（自报“有帮助”）不能当 learning evidence。</p>
+<h3>9.2 Jamplate 怎么做？</h3>
+<p>它不是普通聊天框，而是 <b>LLM-enhanced template（LLM 增强的设计模板）</b>。AI 会把信息放进明确的设计结构，例如 Five Whys（五个为什么）或 Competitive Analysis（竞品分析）模板，并在当前格子里给 in-situ guidance（就地指导）和 reflective questions。</p>
+<h3>9.3 Evaluation</h3>
+<p>最终 pilot 只有 <b>N=8 novice designers</b>。多数参与者认为这些 in-situ questions 帮助他们更批判地思考和修改 idea。</p>
+<div class="box bad"><b>但证据强度有限：</b>没有 control group、没有 pre/post learning measure、没有 transfer test，因此它只能说明 interaction concept（交互概念）有潜力，不能证明“Jamplate 教会了 novice design”。</div>
+<h3>9.4 Gap</h3>
+<p>Jamplate 已经做过：</p><div class="box">LLM + structured design template + multi-turn reflective questions</div>
+<p>所以你的 novelty 不能写成“我们不用一次性生成，而是通过问题引导”。真正未解决的是：<b>这些 scaffold 仍主要由模板预先决定，而不是根据用户当前理解和卡点动态决定</b>。后续 Productive vs. Reflective 进一步证明 static question 可能 repetitive / misaligned。</p>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3640543.3645196">https://doi.org/10.1145/3640543.3645196</a></p>
+</div>
+</section>
+
+<section id="sgdtf"><h2>10. SGDTF — ACM TOCE 2026</h2>
+<div class="paper corepaper">
+<h3>10.1 它研究什么？</h3>
+<p>SGDTF 全名 <b>Synergized Game Design Teaching Framework（协同式游戏设计教学框架）</b>。它研究的不是“用游戏教数学”，而是 <b>how to teach game design itself（怎么教游戏设计本身）</b>。作者批评很多课程容易变成 tool-oriented（工具导向）：学生学会 Unity、Unreal、coding，却未必形成 game-design reasoning。</p>
+<p>作者还讨论了 automation bias（自动化偏误）：AI 给出一个看起来合理、完整的答案后，学生可能默认它是正确答案，从而减少 critical reflection。</p>
+<h3>10.2 Framework 四阶段</h3>
+<div class="box">Concept Design（概念设计） → Interaction Design（交互设计） → Mechanism Design（机制设计） → Prototype Design（原型设计）</div>
+<p>重点不是四阶段本身，而是它们之间需要持续 reflection（反思）和 iteration（迭代）。设计并不是“第一阶段填完永远不回去”，而是看到 artifact（产物）以后重新理解前面的决定。</p>
+<h3>10.3 Study</h3>
+<ul><li>N=26，本科生与研究生；</li><li>背景包括艺术、数字媒体、工业/视觉/环境设计等；</li><li>大多数 game prototyping experience（游戏原型经验）有限；</li><li>进行 rhythm game design workshop（节奏游戏设计工作坊）；</li><li>作者刻意降低 coding requirement，避免“编程能力差异”掩盖 game-design reasoning。</li></ul>
+<h3>10.4 量化证据</h3>
+<p>作者用 pre-test / post-test（前测/后测）评 reflection。例如一个小组的 reflection score 从 <b>2.65 提升到 4.28，p&lt;.001</b>，报告了非常大的 Cohen's d。超过 95% 参与者的 satisfaction 达到 4/5 以上，也有很高比例认为自己的能力提高。</p>
+<div class="box warn"><b>怎么理解这些数字：</b>它说明 workshop 前后参与者的 reflection-related self-report 确实明显改变，但因为没有严格 control group，所以不能直接说“SGDTF causally caused（因果导致）这个提升”。学生只是经历了一整个 workshop，也可能因为教师指导、同伴讨论或重复练习而进步。</div>
+<h3>10.5 Gap</h3>
+<p><b>作者自己把研究定位为 exploratory（探索性）</b>，并没有 claim generalizable causality（可泛化因果效果）。因此它非常适合告诉你 game-design education 应该重视 staged reflection / iterative artifact，而不适合直接证明“这种结构一定比其他教学方式好”。</p>
+<div class="box gap"><b>对你的研究意义：</b>如果你要 claim“AI scaffold 教会了 game design”，你需要比 SGDTF 更强的 comparative / causal evaluation（对照与因果验证），最好包括一个真正无 AI 的 transfer task。</div>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3813112">https://doi.org/10.1145/3813112</a></p>
+</div>
+</section>
+
+<section id="gdg"><h2>11. Game Design Games — FDG 2025</h2>
+<div class="paper corepaper">
+<h3>11.1 它在教什么？</h3>
+<p>作者问的是一个非常基础的问题：<b>game design 到底应该怎么教？</b>数字游戏很难像桌游那样快速改规则，于是作者开发四个“专门用来教 game design”的数字游戏。</p>
+<table><thead><tr><th>工具</th><th>学习内容</th><th>核心动作</th></tr></thead><tbody>
+<tr><td>JumpCrafter</td><td>level design（关卡设计）/ design patterns（设计模式）</td><td>修改关卡 → 试玩 → 再修改</td></tr>
+<tr><td>FPS Balancing</td><td>weapon balancing（武器数值平衡）</td><td>改攻击力/射速/弹药等参数</td></tr>
+<tr><td>RaceKart</td><td>parameter → player experience</td><td>改赛车参数并观察体验变化</td></tr>
+<tr><td>Pac-Mön</td><td>mechanic → player experience</td><td>修改规则，看行为和体验如何变化</td></tr>
+</tbody></table>
+<h3>11.2 一个非常重要的概念：Second-order design（二阶设计）</h3>
+<p>设计师不能直接“设计一个情绪”。你不能写一句“玩家这里要感到孤独”，孤独就自动出现。你只能设计：</p>
+<div class="box thesis">Rules / Mechanics（规则与机制） → Player Behavior（玩家行为） → Player Experience（玩家体验）</div>
+<p>因此 game design 的核心能力之一，是预测“我改这个机制以后，另一个玩家会怎么做、怎么感觉”。</p>
+<h3>11.3 Evaluation</h3>
+<p>作者在真实课堂里积累了 <b>12 次 classroom interventions、N=164</b>。但不是 N=164 controlled experiment，而是收集学生 qualitative feedback，再做 reflexive thematic analysis（反思式主题分析）。</p>
+<h3>11.4 四个重要主题</h3>
+<ul><li><b>Unexpected Complexity（意外复杂性）：</b>学生发现小小参数变化都可能改变整个体验，开始理解系统性。</li><li><b>Value of Experimentation（试错价值）：</b>Modify → Play → Observe → Modify 对理解设计特别重要。</li><li><b>Diversity in Designing（设计解的多样性）：</b>同一个问题可以有很多合理设计，不应该有单一“标准答案”。</li><li><b>Trouble with Perspectives（视角转换困难）：</b>novice 容易停留在 gamer mindset（玩家思维）：“我喜不喜欢？”；很难进入 designer mindset（设计师思维）：“这个 rule 会让另一个玩家采取什么行为、产生什么体验？”</li></ul>
+<h3>11.5 作者明确承认的 Gap</h3>
+<div class="box gap"><b>作者明确写：</b>“One of the main limitations ... is a lack of formal validation of their effectiveness.” 即缺少正式的学习效果验证。学生自报“好用”“学到了”不能区分到底是工具有效，还是老师、课堂、同伴讨论有效。</div>
+<p>这直接说明：如果你的论文最后要声称“Agent teaches game design”，仅仅做 satisfaction、helpfulness、final GDD quality 都不够。</p>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3723498.3723713">https://doi.org/10.1145/3723498.3723713</a></p>
+</div>
+</section>
+
+<section id="dreamgarden"><h2>12. DreamGarden — CHI 2025 Best Paper</h2>
+<div class="paper corepaper">
+<h3>12.1 它做什么？</h3>
+<p>DreamGarden 可以直接接受高层输入，例如 dream（梦）、memory（记忆）、imagined scenario（想象场景），然后让 LLM planner 把 idea 递归拆成 <b>hierarchical action plan（分层行动计划）</b>，再由不同模块生成/寻找 3D asset、写 Unreal Engine C++、编译、检查错误、重试，最终长成一个 prototype。</p>
+<div class="box">Seed Prompt → Hierarchical Plan → Subtasks → Assets/Code → Unreal Prototype</div>
+<p>用户可以在 tree UI 中 expand（展开）、prune（剪掉节点）、give feedback（反馈）。</p>
+<h3>12.2 Evaluation</h3>
+<p>N=10 usability / exploratory study。收集 exit survey、enjoyment/frustration、自述、研究者观察、屏幕录像、音频和系统日志。它没有严格 baseline 对照，因此不能说“DreamGarden 比 ChatGPT 显著提升 X%”。</p>
+<h3>12.3 真正有价值的发现</h3>
+<p>用户普遍认可 planning / prototyping 的 utility（实用性）；有些人甚至认为只看 AI 如何把模糊 idea 拆成 plan 就已经有价值。</p>
+<p>但 education 上出现了一个非常关键的分歧：</p>
+<div class="grid"><div class="box good"><b>一种看法：</b>看见 game design 被拆成步骤，可能帮助 novice 理解复杂流程。</div><div class="box bad"><b>另一种看法：</b>如果真的想学习，不愿用它，因为 AI “takes some of the opportunity to problem solve away from the user”（拿走了一部分自己解决问题的机会）。</div></div>
+<div class="box thesis"><b>Seeing AI reasoning（看 AI 怎么拆） ≠ Doing reasoning yourself（自己学会怎么拆）。</b></div>
+<h3>12.4 第二个 substantive problem：prompt 本身并不解决 novice 的模糊</h3>
+<p>有 participant 直接表示：“I don't have words to describe what I want.” 对 novice 来说，困难往往不是“已经有完整设计但不会实现”，而是“我还不知道自己到底想设计什么”。因此 prompt interface（提示词界面）和 scaffolding interface（脚手架交互）是不同问题。</p>
+<h3>12.5 Gap</h3>
+<p>DreamGarden 的设计动机之一，是减少频繁 human-AI back-and-forth，因为不断来回可能产生 interaction fatigue（交互疲劳）；但用户又要求 fine-grained control（细粒度控制）并担心失去 problem-solving opportunity。</p>
+<div class="box gap"><b>真正未解决：</b>Too much dialogue → fatigue；Too much autonomy → loss of reasoning/control。到底哪些 cognitive work（认知工作）值得留给人，哪些可以自动化？</div>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3706598.3714233">https://doi.org/10.1145/3706598.3714233</a></p>
+</div>
+</section>
+
+<section id="reflectiveai"><h2>13. Reflective AI — CHI 2026</h2>
+<div class="paper corepaper">
+<h3>13.1 它提出什么理论？</h3>
+<p>作者批评现在大多数 GenAI 追求 <b>fast / easy / polished output（快速、轻松、完成度高的产出）</b>。这对生产任务很有用，但 design education 的学习往往发生在“卡住、试错、发现矛盾、重新理解”的过程中。如果 AI 把这些困难全部抹平，人可能失去 learning opportunity。</p>
+<p>于是作者提出 <b>Reflective AI（反思型 AI）</b>：AI 不只是 production tool（生产工具），还可以是 reflective medium（促进反思的媒介）。</p>
+<h3>13.2 它怎么实现？</h3>
+<p>很特别的是：它<b>故意没有使用 ChatGPT / generative AI</b>，而让 11 名 design students 在三天 workshop 中自己收集图片、定义 label、标注数据、fine-tune YOLOv5 object detector（目标检测模型）、再用模型分析自己的 creative work。</p>
+<p>为什么这么慢？因为作者想让 data、label、training、prediction 全部 visible，让学生意识到 AI output 不是客观真理，而与自己的数据和选择有关。</p>
+<h3>13.3 它证明了什么？</h3>
+<p>这是 Research-through-Design + qualitative study，不是 controlled efficacy experiment。作者观察到两类学习：</p>
+<ul><li><b>Learning through AI：</b>借 AI 反思自己的 creative practice；</li><li><b>Learning about AI：</b>理解 dataset、label、training、bias、subjectivity。</li></ul>
+<div class="box bad"><b>它没有：</b>control group、p-value、pre/post design score、transfer task。因此不能说“Reflective AI 比普通 GenAI 显著更能学习”。</div>
+<h3>13.4 作者明确留下的 Gap</h3>
+<p>作者明确承认，他们使用的 object detection 在能力与 UX 上和主流 generative AI 差别很大，并提出 future work：把 Reflective AI 的 disentanglement principle（把 AI 过程拆开、让中间过程可见）扩展到 generative models。</p>
+<div class="box gap"><b>对你最有价值的问题：</b>Reflective AI 通过“减少生成能力”保护 reflection；但如果 AI 本身真的可以生成完整游戏设计，能不能同时保留 generation 的价值和 reflection / learning？</div>
+<p class="source"><b>Source：</b><a href="https://doi.org/10.1145/3772318.3791691">https://doi.org/10.1145/3772318.3791691</a></p>
+</div>
+</section>
+
+<section id="supporting"><h2>14. Supporting Theory：不拿来硬造 Gap，但应该读</h2>
+<div class="paper supportpaper"><h3>14.1 Grow-A-Game — DiGRA 2011</h3>
+<p><b>作用：</b>Values at Play（价值观导向设计）项目中的 card-based scaffold（卡片式脚手架），帮助 beginner / advanced designers 把抽象 value（价值）转成 game mechanic（游戏机制）。例如 trust、privacy、equality 不是只写进故事，而要进入 rules、available actions、rewards、constraints。</p>
+<p><b>证据：</b>5 个 case studies，没有 control group、pre/post、p-value 或 transfer test。</p>
+<p><b>你该怎么用：</b>它非常适合支撑 <b>meaning–mechanic alignment（意义—机制对齐）</b>，告诉你“应该 scaffold 什么”；但不要声称“static cards 不够，所以 adaptive AI 就是创新”，因为论文自己没有这样提出。</p>
+<p class="source"><a href="https://doi.org/10.26503/dl.v2011i1.522">Source</a></p></div>
+
+<div class="paper supportpaper"><h3>14.2 Inviting Grief into Games — DiGRA 2015</h3>
+<p><b>作用：</b>研究如何把 bereaved parents（经历丧子的父母）的 lived experience 转成 game design。作者把参与者当作 <b>experience experts（经验专家）</b>，不用“请你设计 mechanic”这种专业语言，而用 metaphor、physical crafting、dialogue 逐渐从 feeling → metaphor → theme → design implication。</p>
+<p><b>重要发现：</b>参与者愿意讲自己的经历，但一听到“making a game”会觉得 alienating / overwhelming（疏离、压力大）。说明 novice scaffold 不应该一开始就问“请定义 core mechanic”。</p>
+<p><b>证据：</b>4 位 informants + 一个 semester 开发与 playtest，主要定性；不适合拿来证明 general learning effectiveness。</p>
+<p><b>你该怎么用：</b>支撑 lived experience 的 reflection / metaphor / mediation 理论，不作为主要 AI novelty。</p>
+<p class="source"><a href="https://doi.org/10.26503/dl.v2015i1.707">Source</a></p></div>
+
+<div class="paper supportpaper"><h3>14.3 Constructionist Gaming — Kafai & Burke</h3>
+<p><b>作用：</b>Constructionism（建构主义）强调“通过制作来学习”。综述大量 game-making studies 后指出，making games 本身可以成为学习活动，但研究常把重点放在 coding 或课程知识，而不是 designer cognition。</p>
+<p><b>你该怎么用：</b>支撑一个最底层的教育 claim：你的目标不是让 AI 帮用户得到一个更漂亮的 GDD，而是让“设计游戏这个过程”成为 learning process。</p>
+<p class="source"><a href="https://doi.org/10.1080/00461520.2015.1124022">Source</a></p></div>
+</section>
+
+<section id="synthesis"><h2>15. Cross-paper Synthesis：它们共同暴露了什么问题</h2>
+<table><thead><tr><th>已有证据</th><th>已经可以比较确定地说什么</th><th>还不能说什么</th></tr></thead><tbody>
+<tr><td>RPGAgent</td><td>AI automation 能显著提高 novice 的效率、探索和愉悦</td><td>不能说 automation 同时教会了 design；expressiveness / dependability 未提升</td></tr>
+<tr><td>DreamGarden</td><td>高层想法可以自动被拆成复杂游戏实现流程</td><td>不能说“看 AI 拆解”就等于“用户学会拆解”</td></tr>
+<tr><td>LAK 2026</td><td>高表现学生更常 Refine / Transform，低表现学生更常 Create / Extend</td><td>不能说如果 AI 强迫 low performer refine/transform，就一定能提高 learning</td></tr>
+<tr><td>Productive vs. Reflective</td><td>AI 的介入方式会改变 cognition；AI-led 增加 breadth，但降低一部分主动决策</td><td>还不知道什么时刻应该 reflective、什么时刻应该 generative</td></tr>
+<tr><td>Jamplate</td><td>structured reflective prompts 对 novice 有潜力</td><td>固定 template 是否在不同用户/阶段都有效没有被证明</td></tr>
+<tr><td>Game Design Games / SGDTF</td><td>iteration、experimentation、reflection、designer perspective 是重要 learning process</td><td>很多证据仍是 situated / self-report，formal causal learning validation 有限</td></tr>
+<tr><td>Reflective AI</td><td>AI 可以被设计成 reflection medium</td><td>强 generative AI 与 reflection 能否兼得尚未解决</td></tr>
+</tbody></table>
+<div class="box thesis"><b>共同矛盾：</b><br>GenAI 越能替 novice 做完整设计，越有可能减少 novice 必须自己完成的 design reasoning；但如果 AI 什么都不帮，novice 又会因为缺 vocabulary、mental model 和 design experience 而卡住。因此真正的问题不是“AI 要不要帮助”，而是 <b>AI 应该动态承担多少 cognitive work（认知工作）</b>。</div>
+</section>
+
+<section id="gaps"><h2>16. Strong Gaps：只保留能真正支撑论文创新的 Gap</h2>
+<h3>Gap A — Adaptive intervention policy（自适应干预策略） <span class="rank">最强</span></h3>
+<p><b>直接证据：</b>Productive vs. Reflective 发现固定问题会重复、偏离用户需求并 steer 用户；Jamplate 仍以 template 为主；LAK 2026 明确要求 phase-specific guidance。</p>
+<div class="box gap"><b>Gap：</b>现有 reflective scaffolds 大多由固定 template / phase 决定。尚不清楚 AI 应如何判断 novice 当前是发散、收敛、评估、卡住还是已经形成明确设计，并据此动态调整 intervention 的 timing（时机）、type（类型）和 degree（帮助强度）。</div>
+
+<h3>Gap B — 从“观察到 expert-like behavior”到“因果性教学干预”</h3>
+<p><b>直接证据：</b>LAK 2026 发现 high-achiever 更多 Refine / Transform，但只是相关；Game Design Games 明确缺 formal effectiveness validation。</p>
+<div class="box gap"><b>Gap：</b>我们知道哪些 human-AI behaviors 与更好的课程成绩相关，但不知道主动 scaffold 这些行为是否真的让 novice 学会 game-design reasoning。</div>
+
+<h3>Gap C — Generative productivity vs reflective learning</h3>
+<p><b>直接证据：</b>RPGAgent 明确担忧 ready-made game 阻碍 learning；DreamGarden participant 担忧 problem-solving opportunity 被拿走；Reflective AI 为保护 reflection 刻意不用 generative model。</p>
+<div class="box gap"><b>Gap：</b>目前缺少一种经过验证的 mechanism，既保留 GenAI 的生成能力，又要求用户保留 consequential design decisions（关键设计决定）的 ownership 与 reasoning。</div>
+
+<h3>Gap D — Control without competence（有控制但不会控制）</h3>
+<p><b>直接证据：</b>RPGAgent 中 experienced user 能 fine-tune exposed parameters，novice 却因为没有 mental model 而不敢修改。</p>
+<div class="box gap"><b>Gap：</b>怎样让 control 本身成为 learning scaffold，而不是简单暴露更多参数？例如解释“这个参数会影响什么玩家行为”、支持 reversible edits（可撤销修改）、before/after comparison（前后对比）和 safe experimentation。</div>
+
+<h3>Gap E — Learning transfer（学习迁移）的证据不足</h3>
+<p><b>直接证据：</b>RPGAgent 测 UEQ/CSI；DreamGarden 做 usability；Jamplate pilot N=8；SGDTF exploratory；Game Design Games 明确承认缺 formal validation。</p>
+<div class="box gap"><b>Gap：</b>现有研究经常证明 assisted performance（有 AI 时表现更好）、engagement 或 self-reported reflection，但很少直接证明：AI 拿走以后，novice 是否还能独立完成更好的 game-design reasoning。</div>
+</section>
+
+<section id="direction"><h2>17. 你的 Project：从 research gap 推出具体系统</h2>
+<h3>17.1 推荐论文核心问题</h3>
+<div class="box thesis"><b>How can generative AI dynamically scaffold novice game designers so that they benefit from AI generation without bypassing the reflective, evaluative, and iterative reasoning through which game-design expertise develops?</b><br><br>中文：<b>生成式 AI 如何根据 novice 当前设计推理状态动态调整帮助，使用户既能利用 AI 的生成能力，又不跳过形成游戏设计能力所需要的反思、评估和迭代？</b></div>
+<h3>17.2 为什么 lived experience 仍然适合你？</h3>
+<p>不要把“从 personal experience 做游戏”写成主要 novelty，但它是一个很好的 <b>high-reflection testbed（高反思需求实验场景）</b>。因为它天然要求用户完成：</p>
+<div class="box">Lived Experience（亲身经历） → Reflection（反思） → Abstraction（抽象） → Intended Player Experience（期望玩家体验） → Mechanic（机制） → Evaluation（评估） → Revision（修改）</div>
+<p>如果任务只是“帮我做一个 platformer”，AI 直接生成 mechanic 也许就够了；而 lived experience task 更容易看出 AI 到底是在替用户设计，还是帮助用户形成自己的 design rationale（设计理由）。</p>
+<h3>17.3 可以怎样 computationalize（计算化）？</h3>
+<p>你可以维护一个 Design State（设计状态）：</p>
+<div class="box"><code>S_t = { Experience, Meaning, PlayerGoal, Mechanic, Alignment, Uncertainty, ThinkingMode }</code><br><b>Experience：</b>经历是什么；<br><b>Meaning：</b>用户认为经历里真正重要的东西；<br><b>PlayerGoal：</b>希望玩家理解/感受什么；<br><b>Mechanic：</b>已有机制；<br><b>Alignment：</b>机制和期望体验是否一致；<br><b>Uncertainty：</b>用户是否明显卡住；<br><b>ThinkingMode：</b>当前处于发散、收敛还是评估。</div>
+<p>Agent 不再永远执行“问下一题”，而从 Intervention Actions（干预动作）里选择：</p>
+<div class="box"><code>A_t = { Ask, Challenge, Explain, Contrast, Example, Generate, Externalize, Evaluate, Defer }</code><br><b>Ask：</b>追问；<br><b>Challenge：</b>挑战当前假设；<br><b>Explain：</b>解释 game-design concept；<br><b>Contrast：</b>让用户比较两个方向；<br><b>Example：</b>给例子但不替用户决定；<br><b>Generate：</b>生成候选设计；<br><b>Externalize：</b>把已有想法变成 Design Note / diagram；<br><b>Evaluate：</b>检查 mechanic–experience alignment；<br><b>Defer：</b>暂时不介入，让用户自己继续想。</div>
+<h3>17.4 一个具体例子</h3>
+<p>用户说：“小时候跟家人旅行，每次决定去哪吃饭都要争很久，我经常插不上话。”</p>
+<table><thead><tr><th>推理状态</th><th>Agent 不应该做什么</th><th>更合适的 scaffold</th></tr></thead><tbody>
+<tr><td>Experience articulation（经历表达）</td><td>直接说“做餐厅经营游戏”</td><td>问：“你真正记住的是吃饭，还是没有参与决定的感觉？”</td></tr>
+<tr><td>Abstraction（抽象）</td><td>马上生成 5 个 mechanics</td><td>帮助用户把“插不上话”抽象成 lack of agency（缺乏控制权）</td></tr>
+<tr><td>Player experience goal</td><td>AI 替用户决定情绪目标</td><td>问：“你希望玩家一直无力，还是从无力逐渐获得话语权？”</td></tr>
+<tr><td>Mechanic reasoning</td><td>一直追问直到用户烦</td><td>如果用户卡住，再给 2–3 个机制候选，并要求用户比较原因</td></tr>
+<tr><td>Evaluation</td><td>只说“很好”</td><td>挑战：“如果通过金币获得话语权，会不会把家庭权力误表达成经济权力？”</td></tr>
+</tbody></table>
+</section>
+
+<section id="eval"><h2>18. Evaluation：怎样真正证明“教会了”，而不只是“帮做了”</h2>
+<h3>18.1 推荐实验条件</h3>
+<table><thead><tr><th>Condition</th><th>AI 行为</th><th>为什么需要</th></tr></thead><tbody>
+<tr><td><b>A. AI-led</b></td><td>用户描述 experience 后，AI 大量直接生成 design</td><td>代表 productivity-oriented baseline</td></tr>
+<tr><td><b>B. Static Reflective</b></td><td>固定 staged questions → generation</td><td>证明你的优势不是简单来自“多问问题”</td></tr>
+<tr><td><b>C. Adaptive Reflective-Generative</b></td><td>根据当前 Design State 决定 ask / challenge / example / generate / evaluate / defer</td><td>你的核心 intervention</td></tr>
+</tbody></table>
+<h3>18.2 评四层</h3>
+<table><thead><tr><th>层级</th><th>测什么</th><th>具体方法</th></tr></thead><tbody>
+<tr><td><b>Design outcome（设计结果）</b></td><td>最后的 game concept / design note 是否更好</td><td>game-design experts blind rating（专家盲评）：coherence、mechanic–experience alignment、specificity、originality、implementability</td></tr>
+<tr><td><b>Design process（设计过程）</b></td><td>用户是否真正进行了更好的设计推理</td><td>conversation log coding：Divergent / Convergent / Evaluative × Create / Extend / Refine / Transform；统计 reject、revision、rationale、counterfactual reasoning</td></tr>
+<tr><td><b>Agency / ownership</b></td><td>设计到底是谁做的、用户是否理解关键决定</td><td>ownership questionnaire + “为什么这里这样设计？” explanation test + AI suggestion acceptance/rejection logs</td></tr>
+<tr><td><b>Learning / transfer</b></td><td>用户有没有真的学会</td><td><b>第二个任务不给 Agent</b>，看是否仍能独立 articulate player experience、reason mechanics→player effects、evaluate alternatives、justify decisions</td></tr>
+</tbody></table>
+<div class="box thesis"><b>最关键：</b>Assisted performance（有 AI 时做得更好） ≠ Learning（学会）。如果你最终想 claim education contribution，unassisted transfer 是非常强的证据。</div>
+</section>
+
+<section id="venues"><h2>19. Venue Fit：你的论文最终可能属于哪里</h2>
+<table><thead><tr><th>Venue</th><th>适合度</th><th>需要强调什么</th></tr></thead><tbody>
+<tr><td><b>CHI / PACM HCI</b></td><td>高（如果实验和机制够强）</td><td>可泛化的 Human-AI cognition / agency / scaffolding insight，而不只是 game-specific tool</td></tr>
+<tr><td><b>FDG</b></td><td>非常高</td><td>Game Design / Games Pedagogy / Game AI / Generative AI 交叉；适合 game-specific theory + system + study</td></tr>
+<tr><td><b>IUI</b></td><td>高</td><td>adaptive intelligent interaction、state-aware UI、AI intervention policy</td></tr>
+<tr><td><b>Creativity & Cognition</b></td><td>高</td><td>creative process、co-creativity、reflection、creative cognition</td></tr>
+<tr><td><b>ACM TOCE / AIED / Learning Sciences</b></td><td>高（如果 transfer/learning 最强）</td><td>pedagogical mechanism、learning outcome、longitudinal/transfer evidence</td></tr>
+<tr><td><b>DiGRA</b></td><td>中高（如果 personal experience 与 game-design theory 更重）</td><td>design methodology、critical/personal game design、theoretical contribution</td></tr>
+</tbody></table>
+</section>
+
+<section><h2>20. Recommended Positioning v2</h2>
+<div class="box thesis"><b>Paper framing：</b><br>Rather than asking whether generative AI can help novices produce game designs faster, we investigate how AI should dynamically scaffold the design reasoning that novices need to learn. Building on evidence that novice creators may over-rely on initial AI outputs, that static reflective prompts can misalign with users’ needs, and that exposed controls do not automatically confer agency, we study adaptive reflective–generative scaffolding in a game-design task where participants translate personally meaningful experiences into playable systems.</div>
+<div class="box"><b>中文：</b><br>我们的研究不再问“生成式 AI 能不能让新手更快做出游戏设计”，而是研究：AI 应该怎样动态分配自己和 novice 之间的认知工作，使新手既得到生成式 AI 的帮助，又必须保留形成 game-design expertise 所需的关键反思、评估和迭代。我们把“从个人经历转化为可玩的系统”作为高反思需求场景，用来研究这种 adaptive reflective–generative scaffolding。</div>
+<div class="box gap"><b>不要 claim：</b>“我们第一次把 personal experience + AI + game design 结合。”<br><b>更值得 claim：</b>“我们提出并验证了一个根据 novice design-reasoning state 动态选择 AI intervention 的机制，并测量它对 cognition、agency 与 unassisted transfer 的影响。”</div>
+</section>
+
+<section><h2>21. Source Index</h2>
+<ul>
+<li><a href="https://doi.org/10.1145/3772318.3790326">RPGAgent — CHI 2026</a></li>
+<li><a href="https://doi.org/10.1145/3785022.3785084">Unpacking Co-Creation with AI — LAK 2026</a></li>
+<li><a href="https://doi.org/10.1145/3706598.3713649">Productive vs. Reflective — CHI 2025</a></li>
+<li><a href="https://doi.org/10.1145/3640543.3645196">Jamplate — IUI 2024</a></li>
+<li><a href="https://doi.org/10.1145/3813112">SGDTF — ACM TOCE 2026</a></li>
+<li><a href="https://doi.org/10.1145/3723498.3723713">Game Design Games — FDG 2025</a></li>
+<li><a href="https://doi.org/10.1145/3706598.3714233">DreamGarden — CHI 2025</a></li>
+<li><a href="https://doi.org/10.1145/3772318.3791691">Reflective AI — CHI 2026</a></li>
+<li><a href="https://doi.org/10.26503/dl.v2011i1.522">Grow-A-Game — DiGRA 2011</a></li>
+<li><a href="https://doi.org/10.26503/dl.v2015i1.707">Inviting Grief into Games — DiGRA 2015</a></li>
+<li><a href="https://doi.org/10.26503/dl.v2020i1.1278">Design Bleed — DiGRA 2020</a></li>
+<li><a href="https://doi.org/10.1080/00461520.2015.1124022">Constructionist Gaming</a></li>
+</ul>
+</section>
+<div class="footer">Evidence note: “作者明确提出的 gap”仅用于论文原文明确写出的 limitation / future work；“实验直接暴露的 gap”只用于 study result 中明确出现的失败模式或 trade-off；“对你的启发”是 cross-paper synthesis，不冒充作者原话。Scope-first detailed review updated 2026-09-06.</div>
+</main></body></html>
