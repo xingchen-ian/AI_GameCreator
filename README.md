@@ -8,10 +8,18 @@ Live: [xingchen-ian.github.io/AI_GameCreator](https://xingchen-ian.github.io/AI_
 
 - [Syllabus](https://xingchen-ian.github.io/AI_GameCreator/syllabus.html)
 - [Studio · Week 01](https://xingchen-ian.github.io/AI_GameCreator/studio/week-01.html)
-- [Josie’s research map](https://xingchen-ian.github.io/AI_GameCreator/research/llm_agent_game_design_research_map.html)
+- [Josie’s student folder](https://xingchen-ian.github.io/AI_GameCreator/student/)
+- [Josie’s research map](https://xingchen-ian.github.io/AI_GameCreator/student/research/llm_agent_game_design_research_map.html)
 - [Course hub](https://xingchen-ian.github.io/AI_GameCreator/)
 
-Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`. Research HTML under `student/research/` is copied into the live site as `/research/` on each deploy to `main`.
+Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`.
+
+On each deploy to `main`, GitHub Pages publishes:
+
+- `course/` → site root
+- `student/` → `/student/` (full tree; HTML is browsable)
+
+Large binaries in `student/` will also publish; keep engine builds lean or host big assets elsewhere if the Pages artifact grows too large.
 
 ## Who owns which folder
 
@@ -24,7 +32,7 @@ Local preview from the repo root: `npx serve .` then open `/course/syllabus.html
 
 Do not mix instructor teaching assets into `student/`, and do not put engine/report work into `course/`. Details: [NOTICE.md](NOTICE.md).
 
-The only HTML site in this repository is `course/`. The earlier intro deck and research survey live on the instructor’s machine only.
+Instructor teaching HTML lives in `course/`. Josie’s publishable work lives in `student/` and is mirrored onto Pages. The earlier intro deck and research survey live on the instructor’s machine only.
 
 ## How we work
 
