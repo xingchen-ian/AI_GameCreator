@@ -8,9 +8,10 @@ Live: [xingchen-ian.github.io/AI_GameCreator](https://xingchen-ian.github.io/AI_
 
 - [Syllabus](https://xingchen-ian.github.io/AI_GameCreator/syllabus.html)
 - [Studio · Week 01](https://xingchen-ian.github.io/AI_GameCreator/studio/week-01.html)
+- [Josie’s research map](https://xingchen-ian.github.io/AI_GameCreator/research/llm_agent_game_design_research_map.html)
 - [Course hub](https://xingchen-ian.github.io/AI_GameCreator/)
 
-Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`.
+Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`. Research HTML under `student/research/` is copied into the live site as `/research/` on each deploy to `main`.
 
 ## Who owns which folder
 

@@ -22,9 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site/research
+          cp -R course/. _site/
+          # Publish student research HTML on the course site (not the whole student/ tree).
+          if compgen -G "student/research/*.html" > /dev/null; then
+            cp student/research/*.html _site/research/
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: course
+          path: _site
       - id: deploy
         uses: actions/deploy-pages@v4
