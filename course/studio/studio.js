@@ -116,6 +116,28 @@
         <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 02 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
     }
 
+    if (week.id === "03" && (sub.homeworkReview || sub.testAndDataPlan || sub.techPrep)) {
+      const review = sub.homeworkReview || {};
+      const plan = sub.testAndDataPlan || {};
+      const tech = sub.techPrep || {};
+      const reviewInner =
+        urlLine(review.url, "Not submitted yet — submission.homeworkReview.url or .body") +
+        (review.body ? `<pre class="submit-body">${escapeHtml(review.body)}</pre>` : "");
+      const planInner =
+        urlLine(plan.url, "Not submitted yet — submission.testAndDataPlan.url or .body") +
+        (plan.body ? `<pre class="submit-body">${escapeHtml(plan.body)}</pre>` : "");
+      const techInner =
+        urlLine(tech.url, "Not submitted yet — submission.techPrep.url or .body") +
+        (tech.body ? `<pre class="submit-body">${escapeHtml(tech.body)}</pre>` : "");
+      return `
+        <div class="submit-slots">
+          ${slot("1 · Week 02 homework review", reviewInner)}
+          ${slot("2 · Test activity + data plan", planInner)}
+          ${slot("3 · Technical prep notes", techInner)}
+        </div>
+        <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 03 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
+    }
+
     const gameInner =
       urlLine(game.url, "Not submitted yet — paste the playable URL into submission.pipelineGame.url") +
       `<p class="submit-meta">Pipeline: <strong>${escapeHtml(game.pipeline || "—")}</strong></p>` +

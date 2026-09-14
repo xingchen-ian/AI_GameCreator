@@ -22,7 +22,7 @@ Independent study + engine research: structured **blueprint** as shared design l
 |------|---------|
 | 🟠 High | Fall 2026 course running; theory aimed at **CHI PLAY 2027 WiP** |
 
-This week: Josie submits Week 02 homework (guidance frame a/b/c + three investigation questions). Do not collect 247 class data before consent.
+This week: Josie finishes Week 02 homework; Class 03 plans a small trial (data care + tech prep). Do not collect 247 class data before consent.
 
 ---
 
@@ -31,7 +31,7 @@ This week: Josie submits Week 02 homework (guidance frame a/b/c + three investig
 | Area | Status | Notes |
 |------|:------:|-------|
 | Course site + Pages | ✅ | https://xingchen-ian.github.io/AI_GameCreator/ |
-| Syllabus / studio | 🟡 | Week 02 homework = guidance frame a/b/c + three investigation Qs |
+| Syllabus / studio | 🟡 | Week 03 = homework review · test/data plan · tech prep |
 | Blueprint schema v0 | 🟡 | `blueprint-schema-v0.md` + sailing sample |
 | Theoretical framework | 🟡 | `course/theoretical-framework.md` |
 | Student engine / report | 🟡 | Josie owns `student/`; *Boil an Egg* is the Week 01 pipeline game |
@@ -42,9 +42,9 @@ This week: Josie submits Week 02 homework (guidance frame a/b/c + three investig
 
 ## Next steps (≤3)
 
-1. **Josie · Week 02 homework**: (1) design guidance frame a/b/c; (2) answer elaborate / cognitive load / playability+imagination.
-2. **Class 03 · small comparison**: use the homework to pick what to test among 1a / 1b / 1c. Qualitative. No per-question feedback yet.
-3. **Xingchen · consent before 247**: if INTM-SHU 247 students try these flows, send consent first. Also fold “from a lived process → loop” into the engine prompts.
+1. **Josie · finish Week 02 homework** (guidance frame a/b/c + three investigation Qs).
+2. **Class 03 · test + data + tech**: review homework → design small trial with careful data plan → start technical prep in parallel.
+3. **Xingchen · consent before 247**: no class data without consent; fold “lived process → loop” into engine prompts when prep starts.
 
 ---
 
@@ -54,12 +54,18 @@ This week: Josie submits Week 02 homework (guidance frame a/b/c + three investig
 |-----|------|
 | Course site | https://xingchen-ian.github.io/AI_GameCreator/ |
 | Week 02 studio | `course/studio/week-02.html` |
+| Week 03 studio | `course/studio/week-03.html` |
 | Week 02 notes | `shared/meeting-notes/2026-09-14-week02-meeting.md` |
 | Student work | `student/` |
 
 ---
 
 ## Weekly log (newest first)
+
+### 2026-09-14 · Week 03 plan set
+
+- Week 03 becomes: review Week 02 homework → design test activity + careful data plan → explore technical prep in parallel.
+- Old “pipeline autopsy / scope freeze” deferred; RoP systems kept as optional background only.
 
 ### 2026-09-14 · Week 02 homework set from class notes image
 
