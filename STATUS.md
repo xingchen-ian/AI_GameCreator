@@ -31,7 +31,7 @@ This week: Josie submits Week 02 homework (guidance frame a/b/c + three investig
 | Area | Status | Notes |
 |------|:------:|-------|
 | Course site + Pages | ✅ | https://xingchen-ian.github.io/AI_GameCreator/ |
-| Syllabus / studio | 🟡 | Week 02 Class notes refreshed from full meeting summary |
+| Syllabus / studio | 🟡 | Week 02 homework = guidance frame a/b/c + three investigation Qs |
 | Blueprint schema v0 | 🟡 | `blueprint-schema-v0.md` + sailing sample |
 | Theoretical framework | 🟡 | `course/theoretical-framework.md` |
 | Student engine / report | 🟡 | Josie owns `student/`; *Boil an Egg* is the Week 01 pipeline game |
