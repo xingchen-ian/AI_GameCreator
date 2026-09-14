@@ -62,6 +62,10 @@ This week: Josie finishes Week 02 homework; Class 03 plans a small trial (data c
 
 ## Weekly log (newest first)
 
+### 2026-09-14 · Library acquisition list on course hub
+
+- Published `course/library-acquisition-list.html` (sampled from sibling *Game Design from Life* `literature/library-acquisition-list.md`); linked from course hub.
+
 ### 2026-09-14 · Week 03 plan set
 
 - Week 03 becomes: review Week 02 homework → design test activity + careful data plan → explore technical prep in parallel.
