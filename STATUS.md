@@ -31,7 +31,7 @@ This week: Josie writes flow options; prepare a small 1a / 1b / 1c comparison. D
 | Area | Status | Notes |
 |------|:------:|-------|
 | Course site + Pages | ✅ | https://xingchen-ian.github.io/AI_GameCreator/ |
-| Syllabus / studio | 🟡 | Week 02 page now carries Class 02 notes + post-class assignment |
+| Syllabus / studio | 🟡 | Week 02 Class notes refreshed from full meeting summary |
 | Blueprint schema v0 | 🟡 | `blueprint-schema-v0.md` + sailing sample |
 | Theoretical framework | 🟡 | `course/theoretical-framework.md` |
 | Student engine / report | 🟡 | Josie owns `student/`; *Boil an Egg* is the Week 01 pipeline game |
@@ -61,10 +61,15 @@ This week: Josie writes flow options; prepare a small 1a / 1b / 1c comparison. D
 
 ## Weekly log (newest first)
 
+### 2026-09-14 · Week 02 page refreshed from full meeting summary
+
+- Expanded Class notes: linear-Q&A diagnosis, overview→deepen, min playable loop + revision history, win/lose early, emotion/learning mining, UI must-show, 1a/1b/1c, owners, later-together vs not-this-week.
+- Assignment / questions aligned to flow options with early win–lose and revisability.
+- Meeting note rewritten from the longer Zoom summary.
+
 ### 2026-09-14 · Week 02 page updated from class
 
-- Studio Week 02 now includes Class notes (problem, direction, 1a/1b/1c, owners), revised assignment (flow options), and Zoom + meeting-note links.
-- Source of truth for decisions: `shared/meeting-notes/2026-09-14-week02-meeting.md` (Zoom Doc requires login; content mirrored from that meeting).
+- Studio Week 02 includes Class notes, revised assignment (flow options), Zoom + meeting-note links.
 
 ### 2026-09-14 · Week 02 held
 
