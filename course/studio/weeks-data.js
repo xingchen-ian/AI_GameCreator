@@ -187,59 +187,66 @@ window.WEEKS_DATA = [
   },
   {
     id: "03",
-    title: "Pipeline autopsy and scope freeze",
+    title: "Test plan and technical prep",
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "8:30–9:15 · Systems and rules chapters → blueprint field candidates",
-      "9:15–10:15 · Autopsy one summer project: human / agent / lost meaning",
-      "10:15–11:00 · Freeze blueprint v0 and the three sprint doors"
+      "Review Week 02 homework — guidance frame a/b/c + investigation answers",
+      "Design the test activity: what we run, with whom, what we observe",
+      "Data collection — reasonableness and scientific care (consent, questions, bias, what counts as evidence)",
+      "In parallel · explore technical prep so a small trial can actually run"
     ],
     readings: [
       {
-        title: "Rules of Play · Ch. 5 Systems",
-        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
-        access: "Preview",
-        note: "pp. 48–55 · objects, attributes, relationships, environment."
+        title: "Week 02 studio · homework + Class notes",
+        href: "week-02.html",
+        access: "Prior session",
+        note: "Start here: preferred frame among a/b/c and the three investigation answers."
       },
       {
-        title: "Rules of Play · Ch. 11 Defining Rules",
-        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
-        access: "Preview",
-        note: "pp. 118–125 · what counts as a rule."
+        title: "Week 02 meeting note",
+        href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-09-14-week02-meeting.md",
+        access: "Repo",
+        note: "People lead; simplify to 1a / 1b / 1c; no per-question feedback yet; consent before 247."
       },
       {
-        title: "Rules of Play · Ch. 12 Rules on Three Levels",
+        title: "Rules of Play · Ch. 5 Systems (background)",
         href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
         access: "Preview",
-        note: "pp. 126–139 · constitutive, operational, implicit."
-      },
-      {
-        title: "Rules of Play · Ch. 14 Games as Emergent Systems",
-        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
-        access: "Preview",
-        note: "pp. 150–171 · dynamics that are not pre-scripted."
+        note: "Optional carry if the test needs a shared vocabulary for objects / relationships. Not the main Week 03 deliverable."
       }
     ],
     questions: [
-      "Ch. 5 — What are the objects, attributes, relationships, and environment of the proposed blueprint system?",
-      "Ch. 5 — How should the engine expose missing relationships without prescribing a single “correct” design?",
-      "Ch. 11 — In this engine, what is the difference between a rule, a constraint, an AI suggestion, and an implementation default?",
-      "Ch. 11 — Which rules may the AI infer, and which must the human explicitly confirm?",
-      "Ch. 12 — How do constitutive, operational, and implicit rules map onto the blueprint and playable demo?",
-      "Ch. 12 — What information may be lost when AI translates a designer’s operational description into executable rules?",
-      "Ch. 14 — What behaviors should emerge from interactions among rules rather than being explicitly scripted?",
-      "Ch. 14 — When is unexpected behavior a productive discovery, and when is it evidence of structural failure?",
-      "Trace one intention: meaningful-play goal → system relationship → rule representation → emergent behavior → evaluation. Where is distortion most likely?"
+      "From the Week 02 homework: which guidance frame (a / b / c) should we trial first, and why?",
+      "What is one concrete test activity we can run next — steps, materials, time box, and role of AI vs human?",
+      "What data will we collect, from whom, and with what consent? What would make that plan unreasonable or unscientific?",
+      "Which threats to validity matter here (leading prompts, tiny N, selection bias, conflating flow with question wording)?",
+      "What technical prep is required before the trial (prototype surface, logging, prompt pack, staging of a/b/c)?",
+      "How do we keep education trials separate from shipping full product features in this same week?"
     ],
     assignment: {
-      summary: "Trace one project end to end; mark what the human authored, what the agent filled, and what was lost. Freeze blueprint v0 and sprint doors.",
+      summary: "Week 03: review Week 02 homework → design a small test + data plan (reasonable and careful) → start technical prep in parallel.",
       deliverables: [
-        "End-to-end autopsy of one summer project",
-        "Blueprint field list v0",
-        "Written freeze of Sprint 1 / 2 / 3 doors (L1 / L2 / L3)"
+        "1 · Homework review note: which of a / b / c to trial first; what from the investigation answers (elaborate / load / playability) must the test check",
+        "2 · Test activity design: procedure, participants, time box, what AI does vs what the designer does",
+        "2 · Data collection plan: instruments, consent path, what counts as evidence, known limits (N, bias, flow↔question coupling)",
+        "3 · Technical prep notes: what must exist before the trial can run (even a paper / Wizard-of-Oz / thin prototype is fine if named)"
       ],
-      criteria: "Authorship boundaries are explicit; the sprint doors are testable."
+      criteria: "The trial is small and comparable; data plan states consent and limits; tech prep is concrete enough to start. Do not collect 247 class data before consent."
+    },
+    submission: {
+      homeworkReview: {
+        url: "",
+        body: ""
+      },
+      testAndDataPlan: {
+        url: "",
+        body: ""
+      },
+      techPrep: {
+        url: "",
+        body: ""
+      }
     }
   },
   {

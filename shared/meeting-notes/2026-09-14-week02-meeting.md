@@ -83,7 +83,14 @@ Josie：新手如果还没有完整游戏概念，就答不了后面的题。
 
 课页 Assignment / Submit 已按此更新。
 
+## Week 03 课页方向（2026-09-14 后定）
+
+1. 先看 Week 02 作业  
+2. 设计测试活动并搜集数据——注意合理与科学（consent、证据标准、偏差与局限）  
+3. 同时做技术准备  
+
+原「pipeline autopsy + 冻结蓝图」暂缓；详见 Studio Week 03。
+
 ## 和课页的关系
 
-Studio Week 02 已按本纪要更新（Class notes + 上述作业）。  
-Week 03 课页原题仍是 pipeline autopsy + 冻结蓝图；近期课堂重心是流程选型与 1a/1b/1c 小测——Week 03 课页是否改写，另开一步。
+Studio Week 02 / Week 03 已按本纪要与上述方向更新。
