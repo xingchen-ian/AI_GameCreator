@@ -62,22 +62,64 @@ window.WEEKS_DATA = [
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "8:30–9:15 · Reflection on the pipeline game made after Class 01",
-      "9:15–10:15 · Discuss Chapter 3; map play onto M / D / A",
-      "10:15–11:00 · Decide what “meaningful” means for a designer-user of the engine"
+      "Held · Pipeline-game reflection + why linear Q&A fails for novices",
+      "Held · Guidance modes 1a / 1b / 1c — compare, do not lock 1b yet",
+      "Held · Direction: people lead; overview first; minimum loop early; win/lose early; life as material",
+      "Carry · Readings (MDA + Rules of Play Ch. 3) still frame how translation succeeds or fails"
     ],
+    classNotes: {
+      held: "2026-09-14",
+      sources: [
+        {
+          label: "Zoom Doc (class record)",
+          href: "https://hub.zoom.us/doc/qSpRHnObQ0qfdUinb5L9MQ?from=hub&skipCheck=1"
+        },
+        {
+          label: "Meeting note in repo",
+          href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-09-14-week02-meeting.md"
+        }
+      ],
+      problem: [
+        "Linear Q&A assumes the user already has a full game in mind.",
+        "Hard to revise earlier answers once the chain has moved on.",
+        "Little room to pause and think; questions can pin people to a 1:1 life-to-game copy."
+      ],
+      decisions: [
+        "People lead; AI does not own the whole process.",
+        "Show an overview first (loop, challenge, win/lose), then go deeper — not one long question line.",
+        "Get a minimum playable loop early; revise earlier inputs when play shows a problem.",
+        "Name win/lose (or success/fail) conditions early.",
+        "Treat lived experience as material to extract and expand — not a finished product to copy.",
+        "Next: small qualitative test of 1a / 1b / 1c only. Do not lock 1b this week. No per-question feedback yet."
+      ],
+      modes: [
+        { id: "1a", label: "AI asks and runs the full flow", note: "Control case. Authorship is easy to lose." },
+        { id: "1b", label: "Fixed stages; AI asks only inside a stage", note: "Closest to people-lead + visible stages. Not locked yet." },
+        { id: "1c", label: "Write the whole thing, then AI review", note: "Useful as verification — not a substitute for guidance." }
+      ],
+      owners: [
+        "Josie · write interaction-flow options (chain / mesh / outline-first / progressive unlock); put win/lose early in each.",
+        "Xingchen · fold “lived process → loop” into engine prompts; consent before any INTM-SHU 247 trial."
+      ]
+    },
     readings: [
       {
         title: "Hunicke, LeBlanc & Zubek · MDA",
         href: "https://users.cs.northwestern.edu/~hunicke/MDA.pdf",
         access: "Open PDF",
-        note: "Mechanics, dynamics, and aesthetics as a bidirectional lens."
+        note: "Still the translation lens: intent → mechanics → dynamics → aesthetics."
+      },
+      {
+        title: "Salen & Zimmerman · Rules of Play, Ch. 3 Meaningful Play",
+        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
+        access: "Preview",
+        note: "Assigned full chapter via NYU Library (pp. 30–37). Use for designer-user meaning, not only end-player fun."
       },
       {
         title: "Summer demos gallery",
         href: "https://xingchen-ian.github.io/game-design-from-life/summer-camp.html",
         access: "Course material",
-        note: "Play at least three student games."
+        note: "Examples of lived process → playable loop (not 1:1 copies)."
       },
       {
         title: "Emotion path",
@@ -90,27 +132,34 @@ window.WEEKS_DATA = [
         href: "https://xingchen-ian.github.io/game-design-from-life/domain-learning.html",
         access: "Course material",
         note: "Novice/expert gap → skill loop → challenge space."
-      },
-      {
-        title: "Salen & Zimmerman · Rules of Play, Ch. 3 Meaningful Play",
-        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
-        access: "Preview",
-        note: "Assigned full chapter via NYU Library (pp. 30–37)."
       }
     ],
     questions: [
+      "Where did the pipeline game’s Q&A force a full game idea too early — and what would an overview-first flow change?",
+      "For each of 1a / 1b / 1c: who proposes, who commits, and where can the designer revise an earlier answer?",
+      "How early must win/lose (or success/fail) appear so the minimum loop is actually playable?",
       "What would “meaningful play” mean for the designer using the engine, rather than the eventual player?",
-      "How can the engine make the relationship between a designer’s decision and its playable outcome both discernible and integrated?",
-      "Can an AI-generated game function correctly but still lack meaningful play? What evidence would reveal this?",
-      "How should playtest feedback return to the blueprint as an actionable design change?"
+      "Can an AI-generated game function correctly but still lack meaningful play? What evidence would reveal this?"
     ],
     assignment: {
-      summary: "Map one summer game onto M/D/A; note where generated rules do or do not produce meaningful play.",
+      summary: "After Class 02: draft interaction-flow options for the engine (do not lock a single guidance mode yet).",
       deliverables: [
-        "One M/D/A map of a summer game",
-        "Reading response (400–600 words): one claim from Ch. 3 applied to one engine decision, plus a question for class"
+        "2–4 flow sketches we can discuss next class (examples: chain, mesh, outline-first, progressive unlock)",
+        "In each sketch: where overview appears, where win/lose is named, where the designer can revise earlier answers",
+        "A short note comparing 1a / 1b / 1c against those sketches (qualitative; no per-question feedback scheme yet)",
+        "Optional carry: one M/D/A map of the pipeline game or a summer demo marking at least one translation failure"
       ],
-      criteria: "The response uses the chapter’s vocabulary; the map shows at least one translation failure."
+      criteria: "Flows are concrete enough to compare in Class 03; win/lose appears early; 1b is not treated as already chosen."
+    },
+    submission: {
+      flowOptions: {
+        url: "",
+        note: "Link a doc, FigJam, or repo path with the flow sketches."
+      },
+      modeCompare: {
+        url: "",
+        body: ""
+      }
     }
   },
   {

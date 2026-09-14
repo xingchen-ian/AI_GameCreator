@@ -49,6 +49,18 @@
     }
     a:hover { border-color: var(--indigo); }
     a span { display: block; font-size: 13px; color: var(--muted); }
+    .group-label {
+      margin: 22px 0 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    a.current {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 1px var(--indigo);
+    }
   </style>
 </head>
 <body>
@@ -57,9 +69,15 @@
     <h1>AI-Assisted Game Design Engine</h1>
     <p class="lead">Course site for the shared repository. Instructor materials are under the hub; Josie’s work is published from <code>student/</code>.</p>
     <a href="syllabus.html">Syllabus <span>Fourteen-week research studio</span></a>
-    <a href="studio/week-01.html">Studio · Week 01 <span>Session pages for the weekly meeting</span></a>
+
+    <p class="group-label">Studio sessions</p>
+    <a href="studio/week-01.html">Studio · Week 01 <span>Pipeline game + related-work survey</span></a>
+    <a class="current" href="studio/week-02.html">Studio · Week 02 <span>Class notes · flow options · 1a / 1b / 1c</span></a>
+    <a href="studio/week-03.html">Studio · Week 03 <span>Next session</span></a>
+
+    <p class="group-label">Student work</p>
     <a href="student/">Josie’s student folder <span>Full student/ tree on this site</span></a>
-    <a href="student/research/llm_agent_game_design_research_map.html">Josie’s research map <span>student/research/…</span></a>
+    <a href="student/research/scope_first_game_design_literature_review.html">Josie’s literature review <span>student/research/…</span></a>
   </main>
 </body>
 </html>
