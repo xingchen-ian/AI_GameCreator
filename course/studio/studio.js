@@ -80,8 +80,8 @@
     const sub = week.submission || {};
     const game = sub.pipelineGame || {};
     const report = sub.surveyReport || {};
-    const flows = sub.flowOptions || {};
-    const compare = sub.modeCompare || {};
+    const guidance = sub.guidanceFramework || {};
+    const problems = sub.problemInvestigation || {};
 
     function slot(title, inner) {
       return `<article class="submit-slot"><h4>${escapeHtml(title)}</h4>${inner}</article>`;
@@ -94,17 +94,24 @@
       return `<p class="submit-pending">${escapeHtml(emptyLabel)}</p>`;
     }
 
-    if (week.id === "02" && (sub.flowOptions || sub.modeCompare)) {
-      const flowInner =
-        urlLine(flows.url, "Not submitted yet — paste a doc / FigJam / path into submission.flowOptions.url") +
-        (flows.note ? `<p>${escapeHtml(flows.note)}</p>` : "");
-      const compareInner =
-        urlLine(compare.url, "Optional link — or write the 1a/1b/1c note in submission.modeCompare.body") +
-        (compare.body ? `<pre class="submit-body">${escapeHtml(compare.body)}</pre>` : "");
+    if (week.id === "02" && (sub.guidanceFramework || sub.problemInvestigation)) {
+      const guidanceInner =
+        urlLine(
+          guidance.url,
+          "Not submitted yet — paste a doc / FigJam / path into submission.guidanceFramework.url, or write in .body"
+        ) +
+        (guidance.body ? `<pre class="submit-body">${escapeHtml(guidance.body)}</pre>` : "") +
+        (guidance.note ? `<p>${escapeHtml(guidance.note)}</p>` : "");
+      const problemsInner =
+        urlLine(
+          problems.url,
+          "Not submitted yet — paste a doc URL into submission.problemInvestigation.url, or write answers in .body"
+        ) +
+        (problems.body ? `<pre class="submit-body">${escapeHtml(problems.body)}</pre>` : "");
       return `
         <div class="submit-slots">
-          ${slot("Flow options (after Class 02)", flowInner)}
-          ${slot("1a / 1b / 1c compare note", compareInner)}
+          ${slot("1 · Design guidance framework (a / b / c)", guidanceInner)}
+          ${slot("2 · Problem investigation (a / b / c)", problemsInner)}
         </div>
         <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 02 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
     }

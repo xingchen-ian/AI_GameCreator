@@ -22,7 +22,7 @@ Independent study + engine research: structured **blueprint** as shared design l
 |------|---------|
 | 🟠 High | Fall 2026 course running; theory aimed at **CHI PLAY 2027 WiP** |
 
-This week: Josie writes flow options; prepare a small 1a / 1b / 1c comparison. Do not collect 247 class data before consent.
+This week: Josie submits Week 02 homework (guidance frame a/b/c + three investigation questions). Do not collect 247 class data before consent.
 
 ---
 
@@ -42,8 +42,8 @@ This week: Josie writes flow options; prepare a small 1a / 1b / 1c comparison. D
 
 ## Next steps (≤3)
 
-1. **Josie · flow options**: write a few interaction flows we can discuss (chain / mesh / outline-first / progressive unlock). Win/lose conditions appear early.
-2. **Class 03 · small comparison**: test 1a / 1b / 1c only. Qualitative. No per-question feedback yet.
+1. **Josie · Week 02 homework**: (1) design guidance frame a/b/c; (2) answer elaborate / cognitive load / playability+imagination.
+2. **Class 03 · small comparison**: use the homework to pick what to test among 1a / 1b / 1c. Qualitative. No per-question feedback yet.
 3. **Xingchen · consent before 247**: if INTM-SHU 247 students try these flows, send consent first. Also fold “from a lived process → loop” into the engine prompts.
 
 ---
@@ -60,6 +60,11 @@ This week: Josie writes flow options; prepare a small 1a / 1b / 1c comparison. D
 ---
 
 ## Weekly log (newest first)
+
+### 2026-09-14 · Week 02 homework set from class notes image
+
+- Assignment is now: (1) design guidance framework a/b/c; (2) problem investigation — elaborate, cognitive load, playability + imagination.
+- Submit slots: `guidanceFramework` + `problemInvestigation`.
 
 ### 2026-09-14 · Week 02 page refreshed from full meeting summary
 

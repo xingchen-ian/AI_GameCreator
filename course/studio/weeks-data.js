@@ -154,29 +154,32 @@ window.WEEKS_DATA = [
       }
     ],
     questions: [
-      "Where does linear Q&A force a full game idea too early — and what changes if overview (loop, challenge, win/lose) comes first?",
-      "For 1a / 1b / 1c: who proposes, who commits, and where can the designer revise an earlier answer with history kept?",
-      "How early must win/lose appear so a minimum playable loop is actually testable after one round?",
-      "How should questions pull concrete lived events (emotion or learning) without freezing the design into a 1:1 life remake?",
-      "Which UI surfaces must stay visible (actions, challenges, win/lose), and how should question groups reduce repeated rethinking?",
-      "What would “meaningful play” mean for the designer using the engine, rather than only for the eventual player?"
+      "1a · AI asks and guides the full process — where does authorship slip, and when is this still useful?",
+      "1b · Fixed stages; AI guides only inside a stage — what must each stage expose (loop, challenge, win/lose)?",
+      "1c · Finish writing, then AI review — what can review catch that staged guidance cannot?",
+      "How can timely questions and staged flow help the user elaborate their own ideas (not only fill blanks)?",
+      "How do we keep cognitive load manageable — what stays visible, what is grouped, what waits?",
+      "How do we push playability and imagination — expansion from lived material, not 1:1 life remakes?"
     ],
     assignment: {
-      summary: "After Class 02: produce interaction-flow options that make overview, win/lose, and revision visible — without locking a single guidance mode.",
+      summary: "Week 02 homework (from Class 02 notes): choose and argue a design-guidance frame, then answer the three investigation questions.",
       deliverables: [
-        "2–4 flow sketches for Class 03 (examples: chain, mesh, outline-first / overview-then-deepen, progressive unlock)",
-        "In each sketch: where overview appears; where win/lose is named early; where earlier answers can be revised; whether AI keeps a change history",
-        "A short qualitative note mapping those sketches onto 1a / 1b / 1c (no per-question feedback plan yet)",
-        "Optional carry: one M/D/A map of the pipeline game or a summer demo marking at least one translation failure"
+        "1 · Design guidance framework — write a short position on which structure to try first (do not lock forever): (a) AI asks and guides the full process; (b) fixed stages, AI guides only inside each stage; (c) user writes the whole design, then AI review",
+        "1 · For the option you favor: sketch how stages / turns work, and note trade-offs vs the other two",
+        "2 · Problem investigation — answer: (a) How can timely questions and a staged flow help users elaborate their own ideas?",
+        "2 · (b) How do we keep users from carrying too much cognitive load?",
+        "2 · (c) How do we make the resulting games more playable and more imaginative?",
+        "Tie answers to Class 02 direction where useful: people lead; overview → deepen; early win/lose; life as material to expand"
       ],
-      criteria: "Flows are concrete enough to compare in Class 03; win/lose appears early; people lead; 1b is not treated as already chosen."
+      criteria: "Part 1 names a preferred frame among a/b/c with reasons; Part 2 answers all three investigation questions concretely enough to discuss in Class 03. 1b is not treated as already chosen."
     },
     submission: {
-      flowOptions: {
+      guidanceFramework: {
         url: "",
-        note: "Link a doc, FigJam, or repo path with the flow sketches."
+        body: "",
+        note: "Position on 1a / 1b / 1c + optional sketch link."
       },
-      modeCompare: {
+      problemInvestigation: {
         url: "",
         body: ""
       }
