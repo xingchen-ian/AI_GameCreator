@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Library acquisition reading list for Game Design from Life / AI-Assisted Game Design Engine." />
+  <title>图书馆采购书单 · Library acquisition list</title>
+  <style>
+    :root {
+      --paper: #f4f0e7;
+      --paper-light: #fbf9f4;
+      --ink: #17202a;
+      --muted: #647078;
+      --line: #cbc5b9;
+      --indigo: #293e6a;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "Noto Serif SC", serif;
+      --sans: Inter, "SF Pro Text", "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: 15px/1.55 var(--sans);
+    }
+    header.top {
+      position: sticky; top: 0; z-index: 5;
+      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(244, 240, 231, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+    header.top a { color: var(--indigo); text-decoration: none; font-weight: 600; font-size: 14px; }
+    header.top a:hover { text-decoration: underline; }
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 28px auto 64px;
+    }
+    .note {
+      margin: 0 0 20px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-light);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      line-height: 1.25;
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      margin: 36px 0 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+    h3 { margin: 22px 0 8px; font-size: 1.05rem; }
+    p { margin: 0 0 12px; }
+    p.muted { color: var(--muted); font-size: 13px; }
+    blockquote {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-left: 3px solid var(--indigo);
+      background: var(--paper-light);
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+    blockquote p { margin: 0; }
+    ul, ol { margin: 0 0 14px; padding-left: 1.3rem; }
+    li { margin: 0 0 6px; }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+    code {
+      font-size: 0.92em;
+      background: #ece7dc;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+    a { color: var(--indigo); }
+    .table-wrap {
+      overflow-x: auto;
+      margin: 0 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-light);
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 720px;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #ebe6da;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: 0; }
+    nav.toc {
+      margin: 0 0 24px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-light);
+    }
+    nav.toc strong { display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    nav.toc a { display: inline-block; margin: 0 12px 6px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a href="index.html">← Course hub</a>
+    <a href="syllabus.html">Syllabus</a>
+  </header>
+  <main>
+    <p class="note">Published for the AI-Assisted Game Design Engine course site. Content sampled from the sibling methodology repo <em>Game Design from Life</em> (<code>literature/library-acquisition-list.md</code>, 2026-09-12/13). The two repos are not merged — this page is a cite/sample copy for library acquisition and shared reading.</p>
+    <nav class="toc">
+      <strong>Jump</strong>
+      <a href="#how-to-use">How to use</a>
+      <a href="#priority-a">A · Priority</a>
+      <a href="#recommended-b">B · Recommended</a>
+      <a href="#as-needed-c">C · As needed</a>
+      <a href="#background-d">D · Background</a>
+      <a href="#chinese-editions">中文对照</a>
+      <a href="#purchase-priority">采购优先级</a>
+      <a href="#not-books">非图书引用</a>
+      <a href="#for-librarians">给馆员</a>
+    </nav>
+<h1>图书馆采购书单：来自生活的游戏设计</h1>
+<blockquote><p><strong>用途</strong>：课程指定阅读、课堂预备书、教师研究用书。  <br><strong>课程</strong>：Creative Game Design &amp; Development（基于「来自生活的游戏设计」方法论）  <br><strong>编制</strong>：2026-09-12  <br><strong>图书馆链接</strong>：2026-09-13 起增加 NYU Libraries 链接（<code>vid=01NYU_INST:NYU</code>）。<strong>A 级</strong>已尽量换成单书详情页；其余级别暂为按 ISBN 的检索链接。打开后若需登录，用 NYU 账号。A3、A9 的 ISBN 在目录里对不上采购建议版，链的是同名书目页，请抽查。  <br><strong>范围</strong>：仅收录本工作空间中<strong>实际出现过的专著/教材</strong>；论文、会议文章、学位论文、游戏作品不列入采购。  <br><strong>版本原则</strong>：优先采购<strong>仍在版、可馆配</strong>的现行版；工作空间若引用旧版，采购栏给出建议升级版。  <br><strong>复本建议</strong>：A 级 2 册纸质 + 电子版；B 级 1–2 册纸质 + 电子版；C/D 级 1 册纸质（有电子版则一并开通）。</p></blockquote>
+<p>请图书馆先检索本馆已有馆藏（NYU Shanghai 课程大纲中部分书目标注 “search NYU Shanghai Library”）。已有电子版的，优先补<strong>纸质课程预备书</strong>；没有的，纸质 + 电子一起买。</p>
+<hr>
+<h2 id="how-to-use">如何使用本清单</h2>
+<ol><li>1. <strong>先买 A 级</strong>（12 种）：就是本学期指定阅读与方法论主轴。  </li><li>2. <strong>再买 B 级</strong>（12 种）：论文框架、情感/自传体游戏、教学工作坊高频引用。  </li><li>3. <strong>C 级</strong>按系统思维课与研究需要选购。  </li><li>4. <strong>D 级</strong>为背景馆藏，预算允许再买。  </li><li>5. 中译本见文末「中文对照采购」；双语学生多的课，英文原版与中译本各 1 册更稳妥。</li></ol>
+<p><strong>建议第一批馆配</strong>：A 级全部 + B 级前 6 种 ≈ <strong>18 种</strong>。</p>
+<hr>
+<h2 id="priority-a">A. 优先采购 — 课程指定阅读 / 方法论主轴</h2>
+<p>这些书在 <code>course-materials/syllabus-revision-2026.md</code> 指定阅读、<code>methodology/</code> 核心引用，或 <code>system-design-learning/</code> 教学出处表中被标为锚点。</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>作者</th><th>书名</th><th>建议采购版</th><th>出版社</th><th>ISBN-13</th><th>NYU Library</th><th>复本</th><th>在本项目中的用途</th></tr></thead><tbody><tr><td>A1</td><td>Salen Tekinbaş, K. &amp; Zimmerman, E.</td><td><em>Rules of Play: Game Design Fundamentals</em></td><td>2003（现行唯一版）</td><td>MIT Press</td><td><strong>978-0-262-24045-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990000868910107876/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2–3 纸 + ebook</td><td>课程 Mini Project 1–3 指定阅读；「有意义玩法 / 魔法圈 / 规则与系统」；文献库唯一已建专著笔记</td></tr><tr><td>A2</td><td>Juul, J.</td><td><em>Half-Real: Video Games between Real Rules and Fictional Worlds</em></td><td>2011 pbk</td><td>MIT Press</td><td><strong>978-0-262-51651-8</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990045714180107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>课程 Mini Project 2；规则=状态机；规则与虚构；系统课第四讲</td></tr><tr><td>A3</td><td>Juul, J.</td><td><em>The Art of Failure: An Essay on the Pain of Playing Video Games</em></td><td>2013/2016 pbk</td><td>MIT Press</td><td><strong>978-0-262-52995-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990037922910107876/01NYU_INST:NYU" target="_blank" rel="noopener">单书页※</a></td><td>2 纸 + ebook</td><td>课程 Mini Project 3；方法论「自愿克服困难」</td></tr><tr><td>A4</td><td>Bogost, I.</td><td><em>Persuasive Games: The Expressive Power of Videogames</em></td><td>2010 pbk</td><td>MIT Press</td><td><strong>978-0-262-51488-0</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990005294320107876/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>课程 Finals；程序修辞；机制如何「说理」</td></tr><tr><td>A5</td><td>Sicart, M.</td><td><em>Play Matters</em></td><td>2014</td><td>MIT Press（Playful Thinking）</td><td><strong>978-0-262-02792-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990053861360107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>课程 Mini Project 3 伦理/政治（Ch.6 Politics）</td></tr><tr><td>A6</td><td>Huizinga, J.</td><td><em>Homo Ludens: A Study of the Play-Element in Culture</em></td><td>Beacon 或 Routledge 馆配现行版</td><td>Beacon Press / Routledge</td><td>Beacon <strong>978-0-8070-4681-4</strong>；Routledge <strong>978-0-415-27530-9</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990022107860107876/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸</td><td>课程 Mini Project 1「游戏的性质」；学术馆可优先 Routledge</td></tr><tr><td>A7</td><td>Csikszentmihalyi, M.</td><td><em>Flow: The Psychology of Optimal Experience</em></td><td>Harper Perennial 现行版</td><td>Harper Perennial</td><td><strong>978-0-06-133920-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990035584890107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸</td><td>课程 Mini Project 1；心流/享受条件</td></tr><tr><td>A8</td><td>Koster, R.</td><td><em>A Theory of Fun for Game Design</em></td><td><strong>第 2 版 2013</strong>（工作空间偶引 2004/2005 初版）</td><td>O’Reilly</td><td><strong>978-1-4493-6321-5</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990055679140107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>课程 Mini Project 1；好玩=学模式；循环变奏</td></tr><tr><td>A9</td><td>Dewey, J.</td><td><em>Art as Experience</em></td><td>Perigee / Penguin 现行版</td><td>Perigee</td><td><strong>978-0-399-53247-4</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990041074520107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页※</a></td><td>2 纸</td><td>课程 Finals；文献库待补笔记；「艺术源于日常经验」</td></tr><tr><td>A10</td><td>Shneiderman, B.</td><td><em>Human-Centered AI</em></td><td>2022</td><td>Oxford University Press</td><td><strong>978-0-19-284529-0</strong>（精装）</td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990085150910107871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>课程贯穿 AI 政策：AI 增强人、不替代人</td></tr><tr><td>A11</td><td>Meadows, D. H.</td><td><em>Thinking in Systems: A Primer</em></td><td>2008</td><td>Chelsea Green</td><td><strong>978-1-60358-055-7</strong></td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma990031243120107876/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>系统课核心定义（元素/连接/目的/边界）；领域学习路径</td></tr><tr><td>A12</td><td>Schell, J.</td><td><em>The Art of Game Design: A Book of Lenses</em></td><td><strong>第 3 版 2019/2020</strong>（工作空间亦引 2008 初版）</td><td>A K Peters / CRC Press</td><td><strong>978-1-138-63205-9</strong>（平装）</td><td><a href="https://search.library.nyu.edu/discovery/fulldisplay/alma99104681062007871/01NYU_INST:NYU" target="_blank" rel="noopener">单书页</a></td><td>2 纸 + ebook</td><td>信息透镜等教学工具；元素四分法</td></tr></tbody></table></div>
+<hr>
+<blockquote><p>※ A3、A9：采购清单里的 ISBN 在 NYU 目录未直接命中，链的是同名/同作者记录，贴给学生前请点开确认版本。</p></blockquote>
+<h2 id="recommended-b">B. 建议采购 — 论文、教学工作坊、情感与自传体游戏</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>作者</th><th>书名</th><th>建议采购版</th><th>出版社</th><th>ISBN-13</th><th>NYU Library</th><th>复本</th><th>在本项目中的用途</th></tr></thead><tbody><tr><td>B1</td><td>Fullerton, T.</td><td><em>Game Design Workshop: A Playcentric Approach to Creating Innovative Games</em></td><td><strong>第 5 版 2024</strong>（工作空间引第 4 版 2018）</td><td>A K Peters / CRC Press</td><td><strong>978-1-032-60700-9</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9781032607009&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>2 纸 + ebook</td><td>以玩为中心的工作坊教材；第 5 版加强情感体验目标，与本课更贴</td></tr><tr><td>B2</td><td>Murray, J. H.</td><td><em>Hamlet on the Holodeck: The Future of Narrative in Cyberspace</em></td><td><strong>2017 更新版</strong></td><td>MIT Press</td><td><strong>978-0-262-53348-5</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262533485&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸 + ebook</td><td>沉浸 / 能动性 / 变形；世界拓展的审美标准</td></tr><tr><td>B3</td><td>van Manen, M.</td><td><em>Researching Lived Experience: Human Science for an Action Sensitive Pedagogy</em></td><td><strong>第 2 版 2016</strong>（工作空间引 1990 初版）</td><td>Routledge</td><td><strong>978-1-62958-416-4</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9781629584164&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸 + ebook</td><td>文献库待补；lived experience 现象学方法</td></tr><tr><td>B4</td><td>Anthropy, A.</td><td><em>Rise of the Videogame Zinesters</em></td><td>2012</td><td>Seven Stories Press</td><td><strong>978-1-60980-372-8</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9781609803728&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸</td><td>自传体游戏宣言；生活→游戏的可行性个案</td></tr><tr><td>B5</td><td>Anthropy, A. &amp; Clark, N.</td><td><em>A Game Design Vocabulary: Exploring the Foundational Principles Behind Good Game Design</em></td><td>2014</td><td>Addison-Wesley / Pearson</td><td><strong>978-0-321-88692-7</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780321886927&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸 + ebook</td><td>方法论：动词→场景；循环=动词集</td></tr><tr><td>B6</td><td>Flanagan, M.</td><td><em>Critical Play: Radical Game Design</em></td><td>2013 pbk</td><td>MIT Press</td><td><strong>978-0-262-51647-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262516471&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸 + ebook</td><td>批判性游戏；个人经历/社会议题→机制</td></tr><tr><td>B7</td><td>Flanagan, M. &amp; Nissenbaum, H.</td><td><em>Values at Play in Digital Games</em></td><td>2014</td><td>MIT Press</td><td><strong>978-0-262-02766-3</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262027663&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1 纸 + ebook</td><td>变革性游戏；价值嵌入设计</td></tr><tr><td>B8</td><td>Isbister, K.</td><td><em>How Games Move Us: Emotion by Design</em></td><td>2016/2017</td><td>MIT Press（Playful Thinking）</td><td>精装 <strong>978-0-262-03468-5</strong>；平装 <strong>978-0-262-53445-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262034685&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1–2 纸 + ebook</td><td>游戏社交情感；论文框架高频</td></tr><tr><td>B9</td><td>Calleja, G.</td><td><em>In-Game: From Immersion to Incorporation</em></td><td>2011</td><td>MIT Press</td><td><strong>978-0-262-01546-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262015462&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1 纸 + ebook</td><td>玩家整合模型；沉浸与情感投入</td></tr><tr><td>B10</td><td>Norman, D. A.</td><td><em>Emotional Design: Why We Love (or Hate) Everyday Things</em></td><td>2004/2005</td><td>Basic Books</td><td><strong>978-0-465-05136-6</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780465051366&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1 纸</td><td>情感化设计三层次；论文情感理论部分</td></tr><tr><td>B11</td><td>Yannakakis, G. N. &amp; Togelius, J.</td><td><em>Artificial Intelligence and Games</em></td><td>2018</td><td>Springer</td><td><strong>978-3-319-63518-7</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9783319635187&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1 纸 + ebook</td><td>课程 Mini Project 3；内容生成与玩家建模。作者提供 <a href="http://gameaibook.org/book.pdf" target="_blank" rel="noopener">免费 PDF</a>，仍建议买纸质/正式电子授权</td></tr><tr><td>B12</td><td>Salen, K. &amp; Zimmerman, E. (Eds.)</td><td><em>The Game Design Reader: A Rules of Play Anthology</em></td><td>2005</td><td>MIT Press</td><td><strong>978-0-262-19536-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262195362&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1 纸 + ebook</td><td>文献库待补；经典游戏研究文选，补历史脉络</td></tr></tbody></table></div>
+<hr>
+<h2 id="as-needed-c">C. 按需采购 — 系统思维课、情感理论、设计研究基础</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>作者</th><th>书名</th><th>建议采购版</th><th>出版社</th><th>ISBN-13</th><th>NYU Library</th><th>复本</th><th>在本项目中的用途</th></tr></thead><tbody><tr><td>C1</td><td>von Bertalanffy, L.</td><td><em>General System Theory: Foundations, Development, Applications</em></td><td>Braziller 修订版</td><td>George Braziller</td><td><strong>978-0-8076-0453-3</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780807604533&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>系统课「一般系统论源头」</td></tr><tr><td>C2</td><td>Lazarus, R. S.</td><td><em>Emotion and Adaptation</em></td><td>1991</td><td>Oxford University Press</td><td><strong>978-0-19-509266-0</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780195092660&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>认知评价理论；情感=状态转移的心理学依据</td></tr><tr><td>C3</td><td>Picard, R. W.</td><td><em>Affective Computing</em></td><td>2000 pbk</td><td>MIT Press</td><td><strong>978-0-262-66115-7</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262661157&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>情感计算奠基</td></tr><tr><td>C4</td><td>Costikyan, G.</td><td><em>Uncertainty in Games</em></td><td>2013</td><td>MIT Press（Playful Thinking）</td><td><strong>978-0-262-01896-8</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262018968&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>论文框架「其他相关」</td></tr><tr><td>C5</td><td>Björk, S. &amp; Holopainen, J.</td><td><em>Patterns in Game Design</em></td><td>2005</td><td>Charles River Media</td><td><strong>978-1-58450-354-5</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9781584503545&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1（先查现货）</td><td>机制层模式库；本方法论的对照对象。<strong>可能绝版</strong>，请确认可配后再订</td></tr><tr><td>C6</td><td>Wiener, N.</td><td><em>Cybernetics: Or Control and Communication in the Animal and the Machine</em></td><td>第 2 版</td><td>MIT Press</td><td><strong>978-0-262-73009-9</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262730099&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>系统课第二讲：反馈循环</td></tr><tr><td>C7</td><td>Sterman, J. D.</td><td><em>Business Dynamics: Systems Thinking and Modeling for a Complex World</em></td><td>2000</td><td>McGraw-Hill</td><td><strong>978-0-07-231135-8</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780072311358&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>系统课第三讲：存量与流量（现行标准教材，优先于 Forrester 原典）</td></tr><tr><td>C8</td><td>Holland, J. H.</td><td><em>Emergence: From Chaos to Order</em></td><td>1998</td><td>Basic Books / OUP</td><td>Basic <strong>978-0-465-01906-9</strong>；OUP <strong>978-0-19-286211-2</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780465019069&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>系统课第四讲：涌现</td></tr><tr><td>C9</td><td>Wardrip-Fruin, N.</td><td><em>Expressive Processing: Digital Fictions, Computer Games, and Software Studies</em></td><td>2009/2012 pbk</td><td>MIT Press</td><td><strong>978-0-262-51753-9</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262517539&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>程序过程即表达；机制即媒介</td></tr><tr><td>C10</td><td>Bogost, I.</td><td><em>Play Anything: The Pleasure of Limits, the Uses of Boredom, and the Secret of Games</em></td><td>2016</td><td>Basic Books</td><td><strong>978-0-465-09650-3</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780465096503&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>1</td><td>把日常约束当作玩；与「游戏是艺术」对话</td></tr></tbody></table></div>
+<hr>
+<h2 id="background-d">D. 背景馆藏 — 工作空间有引用、但非课程刚需</h2>
+<p>预算紧时可缓购。研究深化现象学、博弈论史、游戏理论文选时再买。</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>作者</th><th>书名</th><th>建议采购版</th><th>出版社</th><th>ISBN-13</th><th>NYU Library</th><th>备注</th></tr></thead><tbody><tr><td>D1</td><td>Wolf, M. J. P. &amp; Perron, B. (Eds.)</td><td><em>The Video Game Theory Reader</em></td><td>2003</td><td>Routledge</td><td><strong>978-0-415-96579-8</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780415965798&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>文献综述开篇引用</td></tr><tr><td>D2</td><td>Wardrip-Fruin, N. &amp; Harrigan, P. (Eds.)</td><td><em>First Person: New Media as Story, Performance, and Game</em></td><td>2004</td><td>MIT Press</td><td><strong>978-0-262-23227-2</strong> / pbk <strong>978-0-262-73175-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780262232272&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>方法论引用 Jenkins「叙事建筑」所在文集</td></tr><tr><td>D3</td><td>von Neumann, J. &amp; Morgenstern, O.</td><td><em>Theory of Games and Economic Behavior</em></td><td>60 周年纪念版</td><td>Princeton University Press</td><td><strong>978-0-691-13061-3</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780691130613&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>系统课：完全/不完全信息。部头大，1 册即可</td></tr><tr><td>D4</td><td>Forrester, J. W.</td><td><em>Industrial Dynamics</em></td><td>确认可配的重印版</td><td>原 MIT Press</td><td>馆方检索后下单</td><td>—</td><td>系统动力学原典；教学上 Sterman（C7）已够用</td></tr><tr><td>D5</td><td>Husserl, E.</td><td><em>The Crisis of European Sciences and Transcendental Phenomenology</em></td><td>英译 1970</td><td>Northwestern University Press</td><td><strong>978-0-8101-0458-7</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780810104587&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>论文现象学部分；教学不用</td></tr><tr><td>D6</td><td>Schutz, A.</td><td><em>The Phenomenology of the Social World</em></td><td>1967 英译</td><td>Northwestern University Press</td><td><strong>978-0-8101-0390-0</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9780810103900&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>同上</td></tr></tbody></table></div>
+<hr>
+<h2 id="chinese-editions">中文对照采购（建议与英文原版成对）</h2>
+<p>适合中英双语课堂与学生预备阅读。电子工业出版社、商务印书馆、中信等均为常规馆配渠道。</p>
+<div class="table-wrap"><table><thead><tr><th>对应</th><th>中文书名</th><th>译者 / 出版社</th><th>ISBN-13</th><th>NYU Library</th><th>备注</th></tr></thead><tbody><tr><td>A11</td><td>《系统之美：决策者的系统思考》</td><td>邱昭良译，浙江教育出版社 / 湛庐，2023</td><td><strong>978-7-5722-6958-5</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787572269585&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>工作空间旧注「浙江人民出版社」；请买现行 2023 版</td></tr><tr><td>A12</td><td>《游戏设计艺术（第 3 版）》</td><td>刘嘉俊译，电子工业出版社，2021</td><td><strong>978-7-121-40927-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787121409271&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>与英文第 3 版对应</td></tr><tr><td>B1</td><td>《游戏设计梦工厂（第 5 版）》</td><td>电子工业出版社，2026</td><td><strong>978-7-121-51916-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787121519161&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>对应 Fullerton 第 5 版；旧译第 4 版 ISBN 978-7-121-28466-3 不必再买</td></tr><tr><td>A7</td><td>《心流》</td><td>张定绮译，中信出版集团</td><td><strong>978-7-5086-7553-4</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787508675534&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td></td></tr><tr><td>A9</td><td>《艺术即经验》</td><td>高建平译，商务印书馆（汉译名著）</td><td><strong>978-7-100-07033-1</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787100070331&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td></td></tr><tr><td>A6</td><td>《游戏的人》</td><td>馆方检索「赫伊津哈 / 胡伊青加」现行译本</td><td>—</td><td>—</td><td>译本较多，选学术馆常用版即可</td></tr><tr><td>B10</td><td>《情感化设计》或《设计心理学 3：情感化设计》</td><td>中信 / 电子工业</td><td>馆方检索 Norman</td><td>—</td><td></td></tr><tr><td>B8</td><td>《游戏情感设计：如何触动玩家的心灵》</td><td>电子工业出版社，2017</td><td><strong>978-7-121-30847-5</strong></td><td><a href="https://search.library.nyu.edu/discovery/search?query=isbn,contains,9787121308475&amp;tab=Everything&amp;search_scope=NYU&amp;vid=01NYU_INST:NYU&amp;lang=en&amp;offset=0" target="_blank" rel="noopener">检索</a></td><td>对应 Isbister <em>How Games Move Us</em></td></tr><tr><td>C1</td><td>《一般系统论：基础、发展和应用》</td><td>清华大学出版社</td><td>馆方检索贝塔朗菲</td><td>—</td><td>工作空间已标注清华版</td></tr><tr><td>C6</td><td>《控制论》</td><td>馆方检索维纳 / Wiener</td><td>—</td><td>—</td><td>与 MIT Press 英文第 2 版对照</td></tr></tbody></table></div>
+<p><strong>说明</strong>：<em>Rules of Play</em>、<em>Half-Real</em>、<em>Persuasive Games</em>、<em>Play Matters</em> 等 MIT Press 游戏研究核心书，目前仍以英文原版教学为宜，不必强求中译。</p>
+<hr>
+<h2 id="purchase-priority">建议馆配优先级（可直接粘贴进采购单）</h2>
+<h3>第一批（本学期课程刚需）</h3>
+<p>A1–A12 英文 + 中译《系统之美》《游戏设计艺术（第3版）》《心流》《艺术即经验》《游戏设计梦工厂（第5版）》。</p>
+<h3>第二批（论文与工作坊）</h3>
+<p>B1–B12 英文 + 中译《游戏情感设计》。</p>
+<h3>第三批（系统思维模块）</h3>
+<p>C1、C2、C6、C7、C8；C5 仅在确认可配后订。</p>
+<hr>
+<h2 id="not-books">未列入本书单的引用（避免误采）</h2>
+<p>工作空间里还有大量<strong>不是书</strong>的文献，请勿当作图书采购：</p>
+<div class="table-wrap"><table><thead><tr><th>类型</th><th>例子</th><th>获取方式</th></tr></thead><tbody><tr><td>会议/期刊论文</td><td>Hunicke et al. MDA (2004)；Zimmerman et al. RtD (CHI 2007)；Miller et al. Reflective Play (CHI 2024)；Croissant et al. (2023)；Väkevä et al. Resonance (CHI 2026)</td><td>ACM / 期刊数据库</td></tr><tr><td>研究短文</td><td>Frayling, <em>Research in Art and Design</em> (RCA Research Papers, 1993/1994)</td><td>机构库 / 复印</td></tr><tr><td>学位论文</td><td>Harrer (2019)；Chen, <em>Flow in Games</em> (2007)</td><td>大学仓储</td></tr><tr><td>游戏作品</td><td><em>Dys4ia</em>；<em>Depression Quest</em>；<em>That Dragon, Cancer</em></td><td>游戏平台，非图书</td></tr></tbody></table></div>
+<hr>
+<h2 id="for-librarians">给采访馆员的三句话</h2>
+<ol><li>1. 这是一门<strong>游戏设计 + 生活经验转化 + 人机 AI 协作</strong>课程的核心书单，不是休闲游戏攻略。  </li><li>2. <strong>MIT Press 游戏研究线</strong>（Salen &amp; Zimmerman、Juul、Bogost、Sicart、Murray、Isbister、Flanagan）是馆藏主干，建议电子授权与纸质预备书同时开通。  </li><li>3. 系统思维补 <strong>Meadows + Sterman</strong>；情感与经验补 <strong>Dewey + van Manen + Norman</strong>；教学实务补 <strong>Schell 第 3 版 + Fullerton 第 5 版</strong>。</li></ol>
+<hr>
+<p class='muted'>书目来源：本仓库 <code>course-materials/syllabus-revision-2026.md</code>、<code>literature/</code>、<code>PAPER_FRAMEWORK.md</code>、<code>methodology/</code>、<code>system-design-learning/</code>。ISBN 已按出版社现行版核对；下单前请馆方再核一次可配状态与电子授权。</p>
+  </main>
+</body>
+</html>
