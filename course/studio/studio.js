@@ -80,6 +80,8 @@
     const sub = week.submission || {};
     const game = sub.pipelineGame || {};
     const report = sub.surveyReport || {};
+    const flows = sub.flowOptions || {};
+    const compare = sub.modeCompare || {};
 
     function slot(title, inner) {
       return `<article class="submit-slot"><h4>${escapeHtml(title)}</h4>${inner}</article>`;
@@ -90,6 +92,21 @@
         return `<p><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)} ↗</a></p>`;
       }
       return `<p class="submit-pending">${escapeHtml(emptyLabel)}</p>`;
+    }
+
+    if (week.id === "02" && (sub.flowOptions || sub.modeCompare)) {
+      const flowInner =
+        urlLine(flows.url, "Not submitted yet — paste a doc / FigJam / path into submission.flowOptions.url") +
+        (flows.note ? `<p>${escapeHtml(flows.note)}</p>` : "");
+      const compareInner =
+        urlLine(compare.url, "Optional link — or write the 1a/1b/1c note in submission.modeCompare.body") +
+        (compare.body ? `<pre class="submit-body">${escapeHtml(compare.body)}</pre>` : "");
+      return `
+        <div class="submit-slots">
+          ${slot("Flow options (after Class 02)", flowInner)}
+          ${slot("1a / 1b / 1c compare note", compareInner)}
+        </div>
+        <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 02 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
     }
 
     const gameInner =
@@ -111,6 +128,39 @@
     }
 
     return `<p class="submit-hint">Hand in by editing this Submit section: add a <code>submission</code> object on this week in <code>course/studio/weeks-data.js</code> (same pattern as Week 01), then push. What appears here is the official hand-in.</p>`;
+  }
+
+  function renderClassNotes() {
+    const notes = week.classNotes;
+    if (!notes) return "";
+
+    const sources = (notes.sources || [])
+      .map(
+        (item) =>
+          `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener">${escapeHtml(item.label)} ↗</a>`
+      )
+      .join(" · ");
+
+    const modes = (notes.modes || [])
+      .map(
+        (mode) =>
+          `<li><strong>${escapeHtml(mode.id)}</strong> · ${escapeHtml(mode.label)} — <span class="muted">${escapeHtml(mode.note)}</span></li>`
+      )
+      .join("");
+
+    return `
+      <section class="panel notes-panel">
+        <h2>00 · Class notes · ${escapeHtml(notes.held || "")}</h2>
+        <p class="notes-sources">${sources}</p>
+        <h3>Problem we named</h3>
+        ${renderList(notes.problem || [], "agenda-list")}
+        <h3>Direction (not yet an implementation)</h3>
+        ${renderList(notes.decisions || [], "agenda-list")}
+        <h3>Guidance modes to compare next</h3>
+        <ul class="mode-list">${modes}</ul>
+        <h3>Who does what</h3>
+        ${renderList(notes.owners || [], "agenda-list")}
+      </section>`;
   }
 
   function sessionMenuItems(base) {
@@ -150,7 +200,9 @@
         </div>
         <h1>${escapeHtml(week.title)}</h1>
         <p class="lead">${
-          week.readings && week.readings.length
+          week.classNotes
+            ? "Class notes from the Monday meeting, plus readings, questions, assignment, and on-page submission."
+            : week.readings && week.readings.length
             ? "Readings, guided questions, assignment, and on-page submission for this Monday studio."
             : "Agenda, assignment, and on-page submission for this Monday studio. No assigned reading this week."
         }</p>
@@ -158,6 +210,7 @@
     </section>
     <main>
       <div class="shell">
+        ${renderClassNotes()}
         <section class="panel">
           <h2>01 · Class agenda</h2>
           ${renderList(week.agenda, "agenda-list")}
