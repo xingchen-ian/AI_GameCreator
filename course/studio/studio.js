@@ -148,6 +148,16 @@
       )
       .join("");
 
+    const uiBlock = notes.uiMustShow && notes.uiMustShow.length
+      ? `<h3>Keep visible in the UI</h3>${renderList(notes.uiMustShow, "agenda-list")}`
+      : "";
+    const laterBlock = notes.laterTogether && notes.laterTogether.length
+      ? `<h3>Later together (not started this week)</h3>${renderList(notes.laterTogether, "agenda-list")}`
+      : "";
+    const notBlock = notes.notThisWeek && notes.notThisWeek.length
+      ? `<h3>Explicitly not this week</h3>${renderList(notes.notThisWeek, "agenda-list")}`
+      : "";
+
     return `
       <section class="panel notes-panel">
         <h2>00 · Class notes · ${escapeHtml(notes.held || "")}</h2>
@@ -156,10 +166,13 @@
         ${renderList(notes.problem || [], "agenda-list")}
         <h3>Direction (not yet an implementation)</h3>
         ${renderList(notes.decisions || [], "agenda-list")}
+        ${uiBlock}
         <h3>Guidance modes to compare next</h3>
         <ul class="mode-list">${modes}</ul>
-        <h3>Who does what</h3>
+        <h3>Who does what next</h3>
         ${renderList(notes.owners || [], "agenda-list")}
+        ${laterBlock}
+        ${notBlock}
       </section>`;
   }
 

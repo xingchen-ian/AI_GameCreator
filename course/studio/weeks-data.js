@@ -62,10 +62,10 @@ window.WEEKS_DATA = [
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "Held · Pipeline-game reflection + why linear Q&A fails for novices",
-      "Held · Guidance modes 1a / 1b / 1c — compare, do not lock 1b yet",
-      "Held · Direction: people lead; overview first; minimum loop early; win/lose early; life as material",
-      "Carry · Readings (MDA + Rules of Play Ch. 3) still frame how translation succeeds or fails"
+      "Held · Diagnosed linear Q&A: novices need a full game idea too early; hard to revise earlier answers",
+      "Held · Direction: people lead; overview → deepen; minimum playable loop; win/lose early; life as material to expand",
+      "Held · Compare guidance modes 1a / 1b / 1c next — do not lock 1b; no per-question feedback yet",
+      "Carry · MDA + Rules of Play Ch. 3 still name translation success vs failure"
     ],
     classNotes: {
       held: "2026-09-14",
@@ -80,17 +80,24 @@ window.WEEKS_DATA = [
         }
       ],
       problem: [
-        "Linear Q&A assumes the user already has a full game in mind.",
-        "Hard to revise earlier answers once the chain has moved on.",
-        "Little room to pause and think; questions can pin people to a 1:1 life-to-game copy."
+        "Linear Q&A forces users to invent a complete game concept before they can answer later questions.",
+        "Once the chain moves on, revising earlier answers breaks the flow and leaves little room to pause and think.",
+        "Questions lean too hard on 1:1 life-to-game copying, so novices struggle to extract elements and expand creatively.",
+        "Full AI control of the flow risks rambling or fixation; full human control without structure risks missing prompts for invention."
       ],
       decisions: [
-        "People lead; AI does not own the whole process.",
-        "Show an overview first (loop, challenge, win/lose), then go deeper — not one long question line.",
-        "Get a minimum playable loop early; revise earlier inputs when play shows a problem.",
-        "Name win/lose (or success/fail) conditions early.",
-        "Treat lived experience as material to extract and expand — not a finished product to copy.",
-        "Next: small qualitative test of 1a / 1b / 1c only. Do not lock 1b this week. No per-question feedback yet."
+        "People lead the design; AI proposes and records — it does not own the whole process.",
+        "Restructure Q&A: show a game overview first (loop / challenge / win–lose), then deepen by section — not one long line of questions.",
+        "Aim for a minimum playable loop after one round of answers; later play problems should trigger revision of earlier inputs (modification history matters).",
+        "Name win / lose (or success / fail) conditions early — they shape the loop and challenges.",
+        "Mine lived process along two paths — emotional impact and knowledge learning — then expand; do not 1:1 recreate the real event.",
+        "UI should keep visible: actions, challenges, win/lose. Group questions (core loop / challenge / narrative) so users are not asked everything at once.",
+        "Next class: simplify testing to 1a / 1b / 1c only, qualitative. Do not lock 1b. Do not collect per-question feedback yet (questions and flow are still coupled)."
+      ],
+      uiMustShow: [
+        "Player actions / operations",
+        "Challenges",
+        "Win / lose (or success / fail) conditions"
       ],
       modes: [
         { id: "1a", label: "AI asks and runs the full flow", note: "Control case. Authorship is easy to lose." },
@@ -98,8 +105,20 @@ window.WEEKS_DATA = [
         { id: "1c", label: "Write the whole thing, then AI review", note: "Useful as verification — not a substitute for guidance." }
       ],
       owners: [
-        "Josie · write interaction-flow options (chain / mesh / outline-first / progressive unlock); put win/lose early in each.",
-        "Xingchen · fold “lived process → loop” into engine prompts; consent before any INTM-SHU 247 trial."
+        "Josie · design / refine the design flow so win–lose is prompted early; output clear interaction-flow options (chain, mesh, outline-first, progressive unlock) for Class 03 comparison.",
+        "Xingchen · integrate methods for AI-guided mining of lived experience (emotion / learning) into engine prompts; before any INTM-SHU 247 trial, send and collect consent, then gather qualitative feedback on flow options."
+      ],
+      laterTogether: [
+        "Rebuild Q&A around overview → deepen; support editing earlier answers during multi-round chat.",
+        "Minimum-playable-loop generation after one answer round; auto-backtrack when later stages expose problems.",
+        "A creativity / expansion module so life material is not only copied.",
+        "Pull usable findings from existing papers on human–AI division of labor and template-based guidance."
+      ],
+      notThisWeek: [
+        "Do not treat the long collaboration list as a started feature backlog.",
+        "Do not collect per-question feedback yet.",
+        "Do not mix education trials and full product features in one push.",
+        "Open World Narratives remains dropped."
       ]
     },
     readings: [
@@ -107,49 +126,50 @@ window.WEEKS_DATA = [
         title: "Hunicke, LeBlanc & Zubek · MDA",
         href: "https://users.cs.northwestern.edu/~hunicke/MDA.pdf",
         access: "Open PDF",
-        note: "Still the translation lens: intent → mechanics → dynamics → aesthetics."
+        note: "Translation lens: intent → mechanics → dynamics → aesthetics."
       },
       {
         title: "Salen & Zimmerman · Rules of Play, Ch. 3 Meaningful Play",
         href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
         access: "Preview",
-        note: "Assigned full chapter via NYU Library (pp. 30–37). Use for designer-user meaning, not only end-player fun."
+        note: "Assigned via NYU Library (pp. 30–37). Meaningful for the designer-user of the engine, not only the end player."
       },
       {
         title: "Summer demos gallery",
         href: "https://xingchen-ian.github.io/game-design-from-life/summer-camp.html",
         access: "Course material",
-        note: "Examples of lived process → playable loop (not 1:1 copies)."
+        note: "Lived process → playable loop (expansion, not 1:1 copy)."
       },
       {
         title: "Emotion path",
         href: "https://xingchen-ian.github.io/game-design-from-life/practice.html",
         access: "Course material",
-        note: "Lived event → emotional structure → playable mechanics."
+        note: "Emotional impact as one mining path into structure and mechanics."
       },
       {
         title: "Domain-learning path",
         href: "https://xingchen-ian.github.io/game-design-from-life/domain-learning.html",
         access: "Course material",
-        note: "Novice/expert gap → skill loop → challenge space."
+        note: "Knowledge / skill learning as the other mining path into challenge space."
       }
     ],
     questions: [
-      "Where did the pipeline game’s Q&A force a full game idea too early — and what would an overview-first flow change?",
-      "For each of 1a / 1b / 1c: who proposes, who commits, and where can the designer revise an earlier answer?",
-      "How early must win/lose (or success/fail) appear so the minimum loop is actually playable?",
-      "What would “meaningful play” mean for the designer using the engine, rather than the eventual player?",
-      "Can an AI-generated game function correctly but still lack meaningful play? What evidence would reveal this?"
+      "Where does linear Q&A force a full game idea too early — and what changes if overview (loop, challenge, win/lose) comes first?",
+      "For 1a / 1b / 1c: who proposes, who commits, and where can the designer revise an earlier answer with history kept?",
+      "How early must win/lose appear so a minimum playable loop is actually testable after one round?",
+      "How should questions pull concrete lived events (emotion or learning) without freezing the design into a 1:1 life remake?",
+      "Which UI surfaces must stay visible (actions, challenges, win/lose), and how should question groups reduce repeated rethinking?",
+      "What would “meaningful play” mean for the designer using the engine, rather than only for the eventual player?"
     ],
     assignment: {
-      summary: "After Class 02: draft interaction-flow options for the engine (do not lock a single guidance mode yet).",
+      summary: "After Class 02: produce interaction-flow options that make overview, win/lose, and revision visible — without locking a single guidance mode.",
       deliverables: [
-        "2–4 flow sketches we can discuss next class (examples: chain, mesh, outline-first, progressive unlock)",
-        "In each sketch: where overview appears, where win/lose is named, where the designer can revise earlier answers",
-        "A short note comparing 1a / 1b / 1c against those sketches (qualitative; no per-question feedback scheme yet)",
+        "2–4 flow sketches for Class 03 (examples: chain, mesh, outline-first / overview-then-deepen, progressive unlock)",
+        "In each sketch: where overview appears; where win/lose is named early; where earlier answers can be revised; whether AI keeps a change history",
+        "A short qualitative note mapping those sketches onto 1a / 1b / 1c (no per-question feedback plan yet)",
         "Optional carry: one M/D/A map of the pipeline game or a summer demo marking at least one translation failure"
       ],
-      criteria: "Flows are concrete enough to compare in Class 03; win/lose appears early; 1b is not treated as already chosen."
+      criteria: "Flows are concrete enough to compare in Class 03; win/lose appears early; people lead; 1b is not treated as already chosen."
     },
     submission: {
       flowOptions: {
