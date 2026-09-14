@@ -8,8 +8,9 @@ Live: [xingchen-ian.github.io/AI_GameCreator](https://xingchen-ian.github.io/AI_
 
 - [Syllabus](https://xingchen-ian.github.io/AI_GameCreator/syllabus.html)
 - [Studio · Week 01](https://xingchen-ian.github.io/AI_GameCreator/studio/week-01.html)
+- [Studio · Week 02](https://xingchen-ian.github.io/AI_GameCreator/studio/week-02.html)
 - [Josie’s student folder](https://xingchen-ian.github.io/AI_GameCreator/student/)
-- [Josie’s research map](https://xingchen-ian.github.io/AI_GameCreator/student/research/llm_agent_game_design_research_map.html)
+- [Josie’s literature review](https://xingchen-ian.github.io/AI_GameCreator/student/research/scope_first_game_design_literature_review.html)
 - [Course hub](https://xingchen-ian.github.io/AI_GameCreator/)
 
 Local preview from the repo root: `npx serve .` then open `/course/syllabus.html`.
