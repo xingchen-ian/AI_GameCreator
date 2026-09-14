@@ -187,63 +187,105 @@ window.WEEKS_DATA = [
   },
   {
     id: "03",
-    title: "Test plan and technical prep",
+    title: "Cases, frameworks, v0 plan",
     phase: "Frame",
     phaseKey: "frame",
     agenda: [
-      "Review Week 02 homework — guidance frame a/b/c + investigation answers",
-      "Design the test activity: what we run, with whom, what we observe",
-      "Data collection — reasonableness and scientific care (consent, questions, bias, what counts as evidence)",
-      "In parallel · explore technical prep so a small trial can actually run"
+      "Review the two one-pagers: case studies + design-framework review",
+      "Walk the v0 static scaffold and the next-week milestones (mode B)",
+      "Keep today's A / B / C separate from Week 02's 1a / 1b / 1c",
+      "Flag any case that involves minors; student tests wait until after v0"
     ],
+    classNotes: {
+      held: "2026-09-14",
+      problemTitle: "What we settled today",
+      decisionsTitle: "Build order",
+      modesTitle: "A / B / C · today's labels (not Week 02)",
+      ownersTitle: "This week's work",
+      sources: [
+        {
+          label: "Meeting note in repo",
+          href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-09-14-week03-meeting.md"
+        }
+      ],
+      problem: [
+        "Build a staged, mostly static scaffold first. AI helps the user imagine and fill stages — it does not generate a whole game.",
+        "Today's A / B / C is an implementation order. It is not Class 02's 1a / 1b / 1c (those stay on the Week 02 page)."
+      ],
+      decisions: [
+        "Do B first: the user starts with ideas; AI gives feedback and prompts inside a visible scaffold.",
+        "A later: AI drafts first, the user revises. Comparison, not this week's build.",
+        "C is out for now. The transcript mixed 'AI does everything' and 'no AI' — do not implement C.",
+        "Stages are real; inside a stage, AI may adjust follow-up questions from what it already collected.",
+        "After a usable static v0, find student testers. Not this week."
+      ],
+      modes: [
+        { id: "B", label: "User starts; AI feedback inside stages", note: "Build this first. Balances support with user control." },
+        { id: "A", label: "AI drafts first, user revises", note: "Later comparison." },
+        { id: "C", label: "Dropped this week", note: "Transcript mixed two meanings. Out." }
+      ],
+      owners: [
+        "Josie · 0 one-page case studies; 1 one-page design-framework review; 2 v0 development plan + tech research.",
+        "If a surveyed case involves minors, mark it on the case page. Do not recruit minors."
+      ],
+      notThisWeek: [
+        "Student user tests (after v0).",
+        "Implementing mode A or C.",
+        "GitHub permissions, rb meeting, Albert grading — instructor logistics."
+      ]
+    },
     readings: [
       {
-        title: "Week 02 studio · homework + Class notes",
+        title: "Week 02 studio · 1a / 1b / 1c notes",
         href: "week-02.html",
         access: "Prior session",
-        note: "Start here: preferred frame among a/b/c and the three investigation answers."
+        note: "Different labels. Do not rename today's B as last week's 1b without checking."
       },
       {
-        title: "Week 02 meeting note",
-        href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-09-14-week02-meeting.md",
+        title: "Hunicke, LeBlanc & Zubek · MDA",
+        href: "https://users.cs.northwestern.edu/~hunicke/MDA.pdf",
+        access: "Open PDF",
+        note: "Mechanics / Dynamics / Aesthetics. Use it to reverse a lived process into a small loop and challenges."
+      },
+      {
+        title: "Schell · The Art of Game Design (Book of Lenses)",
+        href: "https://search.library.nyu.edu/discovery/search?query=any,contains,Art%20of%20Game%20Design%20Schell&tab=Unified_NYUSH&search_scope=NYUSH&vid=01NYU_INST:NYUSH",
+        access: "NYU Shanghai Library",
+        note: "Practical lenses / handbook, not a philosophy text. E-book purchase is in progress; paper may be what you can open this week."
+      },
+      {
+        title: "Course theoretical framework v0.2",
+        href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/course/theoretical-framework.md",
         access: "Repo",
-        note: "People lead; simplify to 1a / 1b / 1c; no per-question feedback yet; consent before 247."
-      },
-      {
-        title: "Rules of Play · Ch. 5 Systems (background)",
-        href: "https://books.google.com/books?id=UM-xyczrZuQC&printsec=frontcover",
-        access: "Preview",
-        note: "Optional carry if the test needs a shared vocabulary for objects / relationships. Not the main Week 03 deliverable."
+        note: "Four layers + scaffold. Background for the one-page review; do not copy the whole file onto the page."
       }
     ],
     questions: [
-      "From the Week 02 homework: which guidance frame (a / b / c) should we trial first, and why?",
-      "What is one concrete test activity we can run next — steps, materials, time box, and role of AI vs human?",
-      "What data will we collect, from whom, and with what consent? What would make that plan unreasonable or unscientific?",
-      "Which threats to validity matter here (leading prompts, tiny N, selection bias, conflating flow with question wording)?",
-      "What technical prep is required before the trial (prototype surface, logging, prompt pack, staging of a/b/c)?",
-      "How do we keep education trials separate from shipping full product features in this same week?"
+      "For each case: what does the human decide, what does the AI decide, and is that closer to today's A or B?",
+      "Which design-framework pieces (MDA, lenses, workshop steps) should the static scaffold actually show?",
+      "What is in v0 of mode B, and what waits for a later milestone?",
+      "If a case involves minors, what do we mark, and what do we not do?"
     ],
     assignment: {
-      summary: "Week 03: review Week 02 homework → design a small test + data plan (reasonable and careful) → start technical prep in parallel.",
+      summary: "Three documents this week. Submit on this page.",
       deliverables: [
-        "1 · Homework review note: which of a / b / c to trial first; what from the investigation answers (elaborate / load / playability) must the test check",
-        "2 · Test activity design: procedure, participants, time box, what AI does vs what the designer does",
-        "2 · Data collection plan: instruments, consent path, what counts as evidence, known limits (N, bias, flow↔question coupling)",
-        "3 · Technical prep notes: what must exist before the trial can run (even a paper / Wizard-of-Oz / thin prototype is fine if named)"
+        "0 · Case studies — one page. Compare related AI + game-design systems: what they do, pros / cons, fit for this engine.",
+        "1 · Design-framework review — one page. MDA plus at least one handbook (Schell lenses or Fullerton workshop). Say what becomes a stage on our scaffold.",
+        "2 · v0 development plan + tech research — document. A static staged scaffold for mode B, plus milestones for the next weeks."
       ],
-      criteria: "The trial is small and comparable; data plan states consent and limits; tech prep is concrete enough to start. Do not collect 247 class data before consent."
+      criteria: "Each item is one readable page or a short doc, not a dump. Cases that involve minors are flagged. Plan assumes mode B, not a full game generator. Student tests are not due this week."
     },
     submission: {
-      homeworkReview: {
+      caseStudies: {
+        url: "",
+        body: "",
+        note: "One page. Flag minors if they appear in a case."
+      },
+      theoryReview: {
         url: "",
         body: ""
       },
-      testAndDataPlan: {
-        url: "",
-        body: ""
-      },
-      techPrep: {
+      devPlan: {
         url: "",
         body: ""
       }

@@ -116,24 +116,22 @@
         <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 02 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
     }
 
-    if (week.id === "03" && (sub.homeworkReview || sub.testAndDataPlan || sub.techPrep)) {
-      const review = sub.homeworkReview || {};
-      const plan = sub.testAndDataPlan || {};
-      const tech = sub.techPrep || {};
-      const reviewInner =
-        urlLine(review.url, "Not submitted yet — submission.homeworkReview.url or .body") +
-        (review.body ? `<pre class="submit-body">${escapeHtml(review.body)}</pre>` : "");
-      const planInner =
-        urlLine(plan.url, "Not submitted yet — submission.testAndDataPlan.url or .body") +
-        (plan.body ? `<pre class="submit-body">${escapeHtml(plan.body)}</pre>` : "");
-      const techInner =
-        urlLine(tech.url, "Not submitted yet — submission.techPrep.url or .body") +
-        (tech.body ? `<pre class="submit-body">${escapeHtml(tech.body)}</pre>` : "");
+    if (week.id === "03" && (sub.caseStudies || sub.theoryReview || sub.devPlan)) {
+      const cases = sub.caseStudies || {};
+      const theory = sub.theoryReview || {};
+      const plan = sub.devPlan || {};
+      function slotInner(obj, empty) {
+        return (
+          urlLine(obj.url, empty) +
+          (obj.body ? `<pre class="submit-body">${escapeHtml(obj.body)}</pre>` : "") +
+          (obj.note ? `<p>${escapeHtml(obj.note)}</p>` : "")
+        );
+      }
       return `
         <div class="submit-slots">
-          ${slot("1 · Week 02 homework review", reviewInner)}
-          ${slot("2 · Test activity + data plan", planInner)}
-          ${slot("3 · Technical prep notes", techInner)}
+          ${slot("0 · Case studies (one page)", slotInner(cases, "Not submitted yet — submission.caseStudies.url or .body"))}
+          ${slot("1 · Design-framework review (one page)", slotInner(theory, "Not submitted yet — submission.theoryReview.url or .body"))}
+          ${slot("2 · v0 plan + tech research", slotInner(plan, "Not submitted yet — submission.devPlan.url or .body"))}
         </div>
         <p class="submit-hint">To submit: edit the <code>submission</code> object for Week 03 in <code>course/studio/weeks-data.js</code>, then push. The live page is the official hand-in.</p>`;
     }
@@ -177,6 +175,22 @@
       )
       .join("");
 
+    const problemTitle = notes.problemTitle || "Problem we named";
+    const decisionsTitle = notes.decisionsTitle || "Direction (not yet an implementation)";
+    const modesTitle = notes.modesTitle || "Guidance modes to compare next";
+    const ownersTitle = notes.ownersTitle || "Who does what next";
+    const problemBlock = notes.problem && notes.problem.length
+      ? `<h3>${escapeHtml(problemTitle)}</h3>${renderList(notes.problem, "agenda-list")}`
+      : "";
+    const decisionsBlock = notes.decisions && notes.decisions.length
+      ? `<h3>${escapeHtml(decisionsTitle)}</h3>${renderList(notes.decisions, "agenda-list")}`
+      : "";
+    const modesBlock = notes.modes && notes.modes.length
+      ? `<h3>${escapeHtml(modesTitle)}</h3><ul class="mode-list">${modes}</ul>`
+      : "";
+    const ownersBlock = notes.owners && notes.owners.length
+      ? `<h3>${escapeHtml(ownersTitle)}</h3>${renderList(notes.owners, "agenda-list")}`
+      : "";
     const uiBlock = notes.uiMustShow && notes.uiMustShow.length
       ? `<h3>Keep visible in the UI</h3>${renderList(notes.uiMustShow, "agenda-list")}`
       : "";
@@ -191,15 +205,11 @@
       <section class="panel notes-panel">
         <h2>00 · Class notes · ${escapeHtml(notes.held || "")}</h2>
         <p class="notes-sources">${sources}</p>
-        <h3>Problem we named</h3>
-        ${renderList(notes.problem || [], "agenda-list")}
-        <h3>Direction (not yet an implementation)</h3>
-        ${renderList(notes.decisions || [], "agenda-list")}
+        ${problemBlock}
+        ${decisionsBlock}
         ${uiBlock}
-        <h3>Guidance modes to compare next</h3>
-        <ul class="mode-list">${modes}</ul>
-        <h3>Who does what next</h3>
-        ${renderList(notes.owners || [], "agenda-list")}
+        ${modesBlock}
+        ${ownersBlock}
         ${laterBlock}
         ${notBlock}
       </section>`;

@@ -22,7 +22,7 @@ Independent study + engine research: structured **blueprint** as shared design l
 |------|---------|
 | 🟠 High | Fall 2026 course running; theory aimed at **CHI PLAY 2027 WiP** |
 
-This week: Josie finishes Week 02 homework; Class 03 plans a small trial (data care + tech prep). Do not collect 247 class data before consent.
+This week: Josie three pages (cases / framework review / v0 plan). Build mode B (user starts, AI feedback). No student tests yet.
 
 ---
 
@@ -31,20 +31,20 @@ This week: Josie finishes Week 02 homework; Class 03 plans a small trial (data c
 | Area | Status | Notes |
 |------|:------:|-------|
 | Course site + Pages | ✅ | https://xingchen-ian.github.io/AI_GameCreator/ |
-| Syllabus / studio | 🟡 | Week 03 = homework review · test/data plan · tech prep |
+| Syllabus / studio | 🟡 | Week 03 = cases + framework review + v0 plan (mode B) |
 | Blueprint schema v0 | 🟡 | `blueprint-schema-v0.md` + sailing sample |
 | Theoretical framework | 🟡 | `course/theoretical-framework.md` |
 | Student engine / report | 🟡 | Josie owns `student/`; *Boil an Egg* is the Week 01 pipeline game |
-| Guidance-mode decision | 🟡 | Class 02: people lead; test 1a / 1b / 1c (do not lock 1b yet) |
+| Guidance-mode decision | 🟡 | Class 02 1a/1b/1c stay as research labels. Today: **implement B first** (user starts; AI feedback). A later. C out. |
 | CHI PLAY WiP draft | ⬜ | Framework first; draft later |
 
 ---
 
 ## Next steps (≤3)
 
-1. **Josie · finish Week 02 homework** (guidance frame a/b/c + three investigation Qs).
-2. **Class 03 · test + data + tech**: review homework → design small trial with careful data plan → start technical prep in parallel.
-3. **Xingchen · consent before 247**: no class data without consent; fold “lived process → loop” into engine prompts when prep starts.
+1. **Josie · three documents**: one-page case studies; one-page design-framework review; v0 development plan + tech research (mode B).
+2. **Xingchen · access + rb**: GitHub write access for Josie; talk with rb Wed or Fri.
+3. **After v0**: student tests. Consent first. Flag any case that involves minors; do not recruit minors.
 
 ---
 
@@ -56,11 +56,22 @@ This week: Josie finishes Week 02 homework; Class 03 plans a small trial (data c
 | Week 02 studio | `course/studio/week-02.html` |
 | Week 03 studio | `course/studio/week-03.html` |
 | Week 02 notes | `shared/meeting-notes/2026-09-14-week02-meeting.md` |
+| Week 03 notes | `shared/meeting-notes/2026-09-14-week03-meeting.md` |
 | Student work | `student/` |
 
 ---
 
 ## Weekly log (newest first)
+
+### 2026-09-14 · Week 03 meeting (today's notes)
+
+- Static staged scaffold first; AI helps fill stages, does not generate a whole game.
+- Today's A/B/C ≠ Week 02's 1a/1b/1c. **Implement B first.** A later. C out (transcript mixed two meanings).
+- Josie homework: 0 case studies (one page); 1 framework review (one page); 2 v0 plan + tech research.
+- Studio page rewritten; submit slots are caseStudies / theoryReview / devPlan.
+- Note: `shared/meeting-notes/2026-09-14-week03-meeting.md`.
+- Instructor-only: GitHub permissions; rb Wed/Fri; Albert grading needs no extra review after Jack.
+
 
 ### 2026-09-14 · Reading list page trimmed to English catalog
 
