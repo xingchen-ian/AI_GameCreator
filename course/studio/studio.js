@@ -234,6 +234,7 @@
         <nav class="nav" aria-label="Studio navigation">
           <a href="../syllabus.html">Syllabus</a>
           <a href="../syllabus.html#schedule">14 Weeks</a>
+          <a href="../student/research/scope_first_game_design_literature_review.html">Literature review</a>
           <details class="nav-drop" id="sessions-drop">
             <summary>Sessions</summary>
             <div class="nav-menu" role="menu">${sessionMenuItems("")}</div>

@@ -617,6 +617,7 @@
         <a href="#schedule">14 Weeks</a>
         <a href="#outputs">Outputs</a>
         <a href="#workshop">Workshop</a>
+        <a href="student/research/scope_first_game_design_literature_review.html">Literature review</a>
         <details class="nav-drop" id="sessions-drop">
           <summary>Sessions</summary>
           <div class="nav-menu" role="menu">
@@ -1004,7 +1005,9 @@
       expandButton.textContent = expanded ? "Collapse all" : "Expand all";
     });
 
-    const sectionLinks = [...document.querySelectorAll(".nav > a")];
+    const sectionLinks = [...document.querySelectorAll(".nav > a")].filter((link) =>
+      (link.getAttribute("href") || "").startsWith("#")
+    );
     const observed = sectionLinks
       .map((link) => document.querySelector(link.getAttribute("href")))
       .filter(Boolean);
