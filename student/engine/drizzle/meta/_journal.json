@@ -57,6 +57,13 @@
       "when": 1792418064454,
       "tag": "0007_research_data_logging",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792422647156,
+      "tag": "0008_low_the_spike",
+      "breakpoints": true
     }
   ]
 }

@@ -14,8 +14,9 @@ import {
   questionAnswers,
   stageSummaries,
 } from "@/db/schema";
+import { ensureResearchParticipant } from "@/lib/server/research-participant";
 
-export const RESEARCH_EXPORT_FORMAT_VERSION = 1;
+export const RESEARCH_EXPORT_FORMAT_VERSION = 2;
 
 type TimelineEvent = {
   at: string;
@@ -48,6 +49,7 @@ export async function buildResearchExport(projectId: string) {
   const db = getDb();
   const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project) return null;
+  const participant = await ensureResearchParticipant(project.ownerId);
 
   const [answerRows, revisionRows, suggestionRows, messageRows, callRows, runRows, issueRows, changeRows, summaryRows, gddRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, projectId)).orderBy(asc(questionAnswers.questionId)),
@@ -86,10 +88,14 @@ export async function buildResearchExport(projectId: string) {
     formatVersion: RESEARCH_EXPORT_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
     notes: [
-      "不包含账号邮箱或用户 ID；项目标题、对话和答案可能包含个人信息，用于研究前请人工检查。",
+      "不包含账号邮箱或用户 ID；participant.id 是系统生成的匿名稳定研究编号。项目标题、对话和答案可能包含个人信息，用于研究前请人工检查。",
       "answer_revisions 中 source=backfill 的行来自记录功能上线时的现有答案，更早的修订没有保存。",
-      "记录功能上线前的 AI 建议和模型调用不存在。",
+      "记录功能上线前的 AI 建议和模型调用不存在；旧 model_calls 的版本参数使用 legacy、unknown 或默认值标记。",
     ],
+    participant: {
+      id: participant.id,
+      createdAt: participant.createdAt,
+    },
     project: {
       id: project.id,
       title: project.title,
@@ -105,7 +111,23 @@ export async function buildResearchExport(projectId: string) {
     answerRevisions: revisionRows.map((row) => ({ id: row.id, questionId: row.questionId, revision: row.revision, source: row.source, adoption: row.adoption, suggestionId: row.suggestionId, answer: row.answer, createdAt: row.createdAt })),
     aiSuggestions: suggestionRows.map((row) => ({ id: row.id, questionId: row.questionId, source: row.source, messageId: row.messageId, model: row.model, suggestedAnswer: row.suggestedAnswer, structuredData: parseJson(row.structuredJson), createdAt: row.createdAt })),
     messages: messageRows.map((row) => ({ id: row.id, questionId: row.questionId, role: row.role, content: row.content, createdAt: row.createdAt })),
-    modelCalls: callRows.map((row) => ({ id: row.id, operation: row.operation, role: row.role, model: row.model, outcome: row.outcome, strictFallback: row.strictFallback, inputTokens: row.inputTokens, outputTokens: row.outputTokens, durationMs: row.durationMs, createdAt: row.createdAt })),
+    modelCalls: callRows.map((row) => ({
+      id: row.id,
+      operation: row.operation,
+      role: row.role,
+      model: row.model,
+      appVersion: row.appVersion,
+      promptVersion: row.promptVersion,
+      schemaVersion: row.schemaVersion,
+      temperature: row.temperature,
+      thinkingEnabled: row.thinkingEnabled,
+      outcome: row.outcome,
+      strictFallback: row.strictFallback,
+      inputTokens: row.inputTokens,
+      outputTokens: row.outputTokens,
+      durationMs: row.durationMs,
+      createdAt: row.createdAt,
+    })),
     designReview: {
       runs: runRows.map((row) => ({ id: row.id, version: row.version, status: row.status, snapshotKey: row.snapshotKey, answers: parseJson(row.answersJson), createdAt: row.createdAt, updatedAt: row.updatedAt, completedAt: row.completedAt })),
       issues: issueRows.map((row) => ({ id: row.id, firstSeenRunId: row.firstSeenRunId, lastSeenRunId: row.lastSeenRunId, severity: row.severity, status: row.status, title: row.title, evidence: row.evidence, whyItMatters: row.whyItMatters, questionIds: parseJson(row.questionIdsJson), options: parseJson(row.optionsJson), resolutionNote: row.resolutionNote, createdAt: row.createdAt, updatedAt: row.updatedAt })),

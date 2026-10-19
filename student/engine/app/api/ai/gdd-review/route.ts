@@ -76,12 +76,14 @@ export async function POST(request: Request) {
 
     const { result, meta } = await createStructuredResponseWithMeta<ReviewResponse>({
       name: "design_review_conversation",
+      promptVersion: "design-review-conversation-v2",
+      schemaVersion: "design-review-response-v1",
       projectId: project.id,
       schema: designReviewResponseSchema,
-      role: "gdd",
+      role: "review",
       strictSchema: true,
       repairInvalidOutput: true,
-      timeoutMs: 36_000,
+      timeoutMs: 60_000,
       instructions: [
         "你是 Design State 冲突处理助手。当前只处理一个稳定问题，不扩展到其他问题。",
         "reply 用简短语言说明相关题号、矛盾点和修改策略，不超过 220 个中文字。",

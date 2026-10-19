@@ -3,11 +3,16 @@ import { getDb } from "@/db";
 import { modelCalls } from "@/db/schema";
 
 type JsonSchema = Record<string, unknown>;
-type ModelRole = "chat" | "gdd" | "build";
+type ModelRole = "chat" | "review" | "gdd" | "build";
 type TokenUsage = { inputTokens: number | null; outputTokens: number | null };
 
 export type ModelCallMeta = {
   model: string;
+  appVersion: string;
+  promptVersion: string;
+  schemaVersion: string;
+  temperature: number;
+  thinkingEnabled: boolean;
   outcome: "success" | "repaired" | "failed";
   strictFallback: boolean;
   durationMs: number;
@@ -40,9 +45,14 @@ function getProviderConfig(role: ModelRole) {
     baseUrl: baseUrl!,
     model: role === "build"
       ? env.DASHSCOPE_BUILD_MODEL?.trim() || "qwen3.8-27b"
+      : role === "review"
+        ? env.DASHSCOPE_REVIEW_MODEL?.trim() || "qwen3.8-27b"
       : role === "gdd"
         ? env.DASHSCOPE_GDD_MODEL?.trim() || "qwen3.8-flash"
         : env.DASHSCOPE_CHAT_MODEL?.trim() || "qwen3.8-flash",
+    temperature: role === "chat" ? 0.45 : 0.25,
+    thinkingEnabled: role === "review",
+    appVersion: env.APP_COMMIT?.trim() || "local-dev",
   };
 }
 
@@ -151,9 +161,9 @@ async function requestCompletion({
           { role: "system", content: `${instructions}\n只返回 JSON，不要使用 Markdown 代码块。` },
           { role: "user", content: input },
         ],
-        enable_thinking: false,
-        temperature: role === "chat" ? 0.45 : 0.25,
-        ...(strict ? {} : { max_tokens: maxTokens ?? (role === "gdd" ? 7200 : role === "build" ? 2200 : 1100) }),
+        enable_thinking: config.thinkingEnabled,
+        temperature: config.temperature,
+        ...(strict ? {} : { max_tokens: maxTokens ?? (role === "gdd" ? 7200 : role === "review" ? 2600 : role === "build" ? 2200 : 1100) }),
         response_format: strict
           ? { type: "json_schema", json_schema: { name, strict: true, schema } }
           : { type: "json_object" },
@@ -203,6 +213,11 @@ async function recordModelCall(projectId: string | undefined, operation: string,
       operation,
       role,
       model: meta.model,
+      appVersion: meta.appVersion,
+      promptVersion: meta.promptVersion,
+      schemaVersion: meta.schemaVersion,
+      temperature: meta.temperature,
+      thinkingEnabled: meta.thinkingEnabled,
       outcome: meta.outcome,
       strictFallback: meta.strictFallback,
       inputTokens: meta.inputTokens,
@@ -219,6 +234,10 @@ type StructuredRequest = {
   instructions: string;
   input: string;
   name: string;
+  /** 人工维护的提示词版本；提示词语义变化时必须递增。 */
+  promptVersion: string;
+  /** 本次结构化输出契约版本；字段或约束变化时必须递增。 */
+  schemaVersion: string;
   schema: JsonSchema;
   role?: ModelRole;
   strictSchema?: boolean;
@@ -237,6 +256,8 @@ export async function createStructuredResponseWithMeta<T>({
   instructions,
   input,
   name,
+  promptVersion,
+  schemaVersion,
   schema,
   role = "chat",
   strictSchema = true,
@@ -246,11 +267,23 @@ export async function createStructuredResponseWithMeta<T>({
   projectId,
 }: StructuredRequest): Promise<{ result: T; meta: ModelCallMeta }> {
   const startedAt = Date.now();
-  const model = getProviderConfig(role).model;
+  const config = getProviderConfig(role);
+  const model = config.model;
   let usage: TokenUsage = { inputTokens: null, outputTokens: null };
   let strictRejected = false;
   const finish = async (outcome: ModelCallMeta["outcome"]) => {
-    const meta: ModelCallMeta = { model, outcome, strictFallback: strictRejected, durationMs: Date.now() - startedAt, ...usage };
+    const meta: ModelCallMeta = {
+      model,
+      appVersion: config.appVersion,
+      promptVersion,
+      schemaVersion,
+      temperature: config.temperature,
+      thinkingEnabled: config.thinkingEnabled,
+      outcome,
+      strictFallback: strictRejected,
+      durationMs: Date.now() - startedAt,
+      ...usage,
+    };
     await recordModelCall(projectId, name, role, meta);
     return meta;
   };

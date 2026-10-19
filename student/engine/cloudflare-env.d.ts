@@ -5,7 +5,9 @@ declare namespace Cloudflare {
     DASHSCOPE_API_KEY?: string;
     DASHSCOPE_BASE_URL?: string;
     DASHSCOPE_CHAT_MODEL?: string;
+    DASHSCOPE_REVIEW_MODEL?: string;
     DASHSCOPE_GDD_MODEL?: string;
     DASHSCOPE_BUILD_MODEL?: string;
+    APP_COMMIT?: string;
   }
 }

@@ -77,12 +77,14 @@ export async function POST(request: Request) {
     if (body.action === "start") {
       const result = await createStructuredResponse<{ issues: GeneratedIssue[] }>({
         name: "design_state_consistency_review",
+        promptVersion: "design-state-review-v2",
+        schemaVersion: "design-review-scan-v1",
         projectId: project.id,
         schema: designReviewScanSchema,
-        role: "gdd",
+        role: "review",
         strictSchema: true,
         repairInvalidOutput: true,
-        timeoutMs: 40_000,
+        timeoutMs: 75_000,
         instructions: [
           "你是游戏设计一致性审查员。只检查 23 道已确认设计答案之间真正不能同时成立的决定，不审查 GDD 文案。",
           "每个冲突必须引用至少两个真实题号，并明确概括各答案的主张以及为什么无法同时实现。",
@@ -135,12 +137,14 @@ export async function POST(request: Request) {
     const issueIds = verifiableIssues.map((issue) => issue.id);
     const result = await createStructuredResponse<VerificationResult>({
       name: "design_state_consistency_verification",
+      promptVersion: "design-state-verification-v2",
+      schemaVersion: "design-review-verification-v1",
       projectId: project.id,
       schema: designReviewVerificationSchema(issueIds),
-      role: "gdd",
+      role: "review",
       strictSchema: true,
       repairInvalidOutput: true,
-      timeoutMs: 42_000,
+      timeoutMs: 75_000,
       instructions: [
         "你是游戏设计修改验证员。根据最新 Design State，逐条验证既有冲突，而不是从零重写一份问题清单。",
         "existingIssueResults 必须恰好为每个给定 issueId 返回一次结论：resolved、still_open 或 changed。",

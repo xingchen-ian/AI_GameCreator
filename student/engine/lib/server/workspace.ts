@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
 import type { AnswerStatus, ChatMessage, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
+import { ensureResearchParticipant } from "@/lib/server/research-participant";
 
 function parseObject(value: string): Record<string, unknown> {
   try {
@@ -61,6 +62,7 @@ export async function requireAnyOwnedProject(projectId: string, user: ChatGPTUse
 
 export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: string | null): Promise<WorkspacePayload> {
   const db = getDb();
+  await ensureResearchParticipant(user.userId);
   const project = await ensureOwnedProject(user, preferredProjectId);
   const [answerRows, messageRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, project.id)).orderBy(asc(questionAnswers.questionId)),

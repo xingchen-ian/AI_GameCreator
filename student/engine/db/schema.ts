@@ -1,5 +1,15 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+
+export const researchParticipants = sqliteTable(
+  "research_participants",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [uniqueIndex("research_participants_owner_unique").on(table.ownerId)],
+);
 
 export const projects = sqliteTable(
   "projects",
@@ -244,6 +254,11 @@ export const modelCalls = sqliteTable(
     operation: text("operation").notNull(),
     role: text("role").notNull(),
     model: text("model").notNull(),
+    appVersion: text("app_version").notNull().default("unknown"),
+    promptVersion: text("prompt_version").notNull().default("legacy"),
+    schemaVersion: text("schema_version").notNull().default("legacy"),
+    temperature: real("temperature").notNull().default(0),
+    thinkingEnabled: integer("thinking_enabled", { mode: "boolean" }).notNull().default(false),
     outcome: text("outcome", { enum: ["success", "repaired", "failed"] }).notNull(),
     strictFallback: integer("strict_fallback", { mode: "boolean" }).notNull().default(false),
     inputTokens: integer("input_tokens"),
