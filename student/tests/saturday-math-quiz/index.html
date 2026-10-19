@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>周六下午的数学小测</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 开始 -->
+<div id="startScreen" class="overlay">
+  <div class="paper sheet-intro">
+    <p class="kicker">周六 · 14:00 · 高二（3）班</p>
+    <h1>周六下午的数学小测</h1>
+    <p class="lede">一张卷子，一个小时，满分 100。你不会知道哪道题要花多久，也不会知道自己做对了没有。</p>
+    <div class="rules">
+      <div><b>选择题 ×10</b>（每题 5 分）：在四个色块里找出和题干一致的那个。想得越久看得越清。</div>
+      <div><b>大题 ×4</b>（11–14 分）：观察符号规律，一步一步推出后面几项。全对才得分。</div>
+      <div><b>按住</b>解题键 = 稳健思考；<b>连点</b> = 激进推进，更快，但随时可能思路一乱、进度回退。</div>
+      <div><b>验算</b>能抓出部分错误，但不能保证全对。<b>跳过</b>会留下注意力残留，回来时要重新读题。</div>
+      <div>表不会一直摆在眼前——想知道时间，就得<b>看表</b>。最后 5 分钟，一切都会变难。</div>
+    </div>
+    <div class="keys">
+      <span><kbd>Space</kbd> 按住/连点解题</span>
+      <span><kbd>1</kbd>–<kbd>4</kbd> 作答</span>
+      <span><kbd>V</kbd> 按住验算</span>
+      <span><kbd>S</kbd> 跳过</span>
+      <span><kbd>R</kbd> 重读</span>
+      <span><kbd>T</kbd> 看表</span>
+    </div>
+    <fieldset class="speed">
+      <legend>考试时长（游戏内始终是 60 分钟）</legend>
+      <label><input type="radio" name="speed" value="fast"> 快速 · 现实 3 分钟</label>
+      <label><input type="radio" name="speed" value="std" checked> 标准 · 现实 6 分钟</label>
+      <label><input type="radio" name="speed" value="real"> 真实 · 现实 60 分钟</label>
+    </fieldset>
+    <button id="startBtn" class="primary">开始考试</button>
+  </div>
+</div>
+
+<!-- 游玩 -->
+<div id="app" class="hidden">
+  <header>
+    <div class="title">周六下午的数学小测</div>
+    <button id="clockBtn" class="clock" title="看表（T）">看表 <kbd>T</kbd></button>
+    <div class="est" title="你心里觉得自己能拿的分数，不代表真实对错">心里估分 <b id="est">0</b></div>
+    <button id="muteBtn" class="ghost" title="声音">声音 开</button>
+    <button id="submitBtn" class="submit">交卷</button>
+  </header>
+  <main>
+    <aside id="sheet">
+      <h2>答题卡</h2>
+      <div class="cards"></div>
+      <p class="legend">难度标签是<b>你的感觉</b>，不是真实难度。</p>
+    </aside>
+    <section id="workWrap">
+      <div id="work"></div>
+      <div id="fog"></div>
+      <div id="blockMsg">思路中断……</div>
+    </section>
+  </main>
+  <footer id="controls">
+    <button id="solvePad" class="pad"><span class="padTitle">解题</span><span class="padSub">按住 = 稳健 · 连点 = 激进 <kbd>Space</kbd></span></button>
+    <button id="verifyBtn" class="act">验算<small>按住 <kbd>V</kbd></small></button>
+    <button id="rereadBtn" class="act">重读<small><kbd>R</kbd></small></button>
+    <button id="skipBtn" class="act">跳过 →<small><kbd>S</kbd></small></button>
+  </footer>
+</div>
+
+<div id="vignette"></div>
+<div id="toasts"></div>
+
+<!-- 交卷确认 -->
+<div id="confirmScreen" class="overlay hidden">
+  <div class="paper small">
+    <h2>确定交卷？</h2>
+    <p>交上去就不能改了。没写的题都算 0 分。</p>
+    <div class="row">
+      <button id="confirmNo" class="ghost">再看看</button>
+      <button id="confirmYes" class="primary">交卷</button>
+    </div>
+  </div>
+</div>
+
+<!-- 结束 -->
+<div id="endScreen" class="overlay hidden">
+  <div class="paper result">
+    <p class="kicker" id="endReason">铃响了</p>
+    <div class="scoreLine"><span id="finalScore">0</span><span class="of">/ 100</span><span id="gradeStamp" class="stamp">及格</span></div>
+    <ul id="reflections"></ul>
+    <h3>试卷讲评</h3>
+    <div class="tableWrap"><table id="review"></table></div>
+    <div class="row">
+      <button id="backBtn" class="ghost">返回开始</button>
+      <button id="againBtn" class="primary">再考一次</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
