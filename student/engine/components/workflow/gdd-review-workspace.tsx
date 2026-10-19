@@ -24,7 +24,6 @@ type Props = {
   onVerifyReview: () => void;
   onAcceptIssue: (issueId: string, note: string) => void;
   onReopenIssue: (issueId: string) => void;
-  onGenerateGdd: () => void;
   onOpenQuestion: (questionId: string) => void;
 };
 
@@ -77,7 +76,7 @@ function ChangeCard({ change, saving, onApply, onDismiss, onOpenQuestion }: {
 }
 
 export function GddReviewWorkspace(props: Props) {
-  const { workspace, selectedIssueId, draft, thinking, saving, onSelectIssue, onDraftChange, onSend, onAnalyze, onRefine, onApply, onDismiss, onStartReview, onVerifyReview, onAcceptIssue, onReopenIssue, onGenerateGdd, onOpenQuestion } = props;
+  const { workspace, selectedIssueId, draft, thinking, saving, onSelectIssue, onDraftChange, onSend, onAnalyze, onRefine, onApply, onDismiss, onStartReview, onVerifyReview, onAcceptIssue, onReopenIssue, onOpenQuestion } = props;
   const review = workspace.latestDesignReview;
   const issues = sortedIssues(review?.issues ?? []);
   const selectedIssue = issues.find((issue) => issue.id === selectedIssueId) ?? issues[0] ?? null;
@@ -101,9 +100,9 @@ export function GddReviewWorkspace(props: Props) {
     <div className="scrollbar-none flex gap-2 overflow-x-auto border-b border-[#d9e2e4] bg-[#10252d] px-3 py-2 xl:hidden">{stages.map((stage) => <button key={stage.id} onClick={() => onOpenQuestion(stage.questions[0].id)} className="shrink-0 rounded-lg px-3 py-2 text-[12px] text-[#9db5bb]">{stage.id}. {stage.name}</button>)}<span className="shrink-0 rounded-lg bg-[#6b4b20] px-3 py-2 text-[12px] text-white">全局审查</span></div>
     <div className="border-b border-[#d9e2e4] px-5 py-4 sm:px-7"><div className="flex items-center justify-between gap-3"><div><p className="font-mono text-[10px] uppercase tracking-[.14em] text-[#0c7489]">DESIGN STATE REVIEW</p><h2 className="mt-1 text-[21px] font-semibold tracking-[-.015em] text-[#14232b]">Design State 全局审查</h2></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${review?.status === "ready" ? "bg-[#e5f2ed] text-[#42735d]" : review ? "bg-[#fff1d8] text-[#91651f]" : "bg-[#eceff0] text-[#6d7d82]"}`}>{!review ? "尚未审查" : review.status === "ready" ? "审查已通过" : `${activeIssues.length} 个待处理`}</span></div><p className="mt-2 text-[11px] leading-5 text-[#71858c]">先稳定 23 道设计答案，再生成 GDD。修改可以集中完成，系统只在你点击验证时重新调用全局审查。</p></div>
     <div className="scrollbar-thin flex-1 overflow-y-auto px-5 py-5 sm:px-7"><div className="mx-auto max-w-3xl space-y-5">
-      {!review && <section className="rounded-2xl border border-[#c7dfe3] bg-[#f2fafb] p-5 text-center"><ShieldCheck className="mx-auto size-8 text-[#0c7489]" /><h3 className="mt-3 text-[15px] font-semibold">先检查 Design State，再生成 GDD</h3><p className="mx-auto mt-2 max-w-lg text-[12px] leading-5 text-[#63777e]">AI 只检查答案之间真正不能同时成立的决定，不会因为信息缺失或措辞不同制造问题。</p><Button onClick={onStartReview} disabled={saving || workspace.issues.length > 0} className="mt-4">{saving ? <Loader2 className="animate-spin" /> : <Play />}开始全局审查</Button></section>}
+      {!review && <section className="rounded-2xl border border-[#c7dfe3] bg-[#f2fafb] p-5 text-center"><ShieldCheck className="mx-auto size-8 text-[#0c7489]" /><h3 className="mt-3 text-[15px] font-semibold">先检查 Design State，再生成 GDD</h3><p className="mx-auto mt-2 max-w-lg text-[12px] leading-5 text-[#63777e]">AI 只检查答案之间真正不能同时成立的决定，不会因为信息缺失或措辞不同制造问题。</p><Button onClick={onStartReview} disabled={saving} className="mt-4">{saving ? <Loader2 className="animate-spin" /> : <Play />}开始全局审查</Button></section>}
 
-      {review?.status === "ready" && <section className="flex items-center justify-between gap-3 rounded-2xl border border-[#bed9c3] bg-[#f1f8f2] p-4 text-[#3d6744]"><div className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0" /><div><p className="text-[12px] font-semibold">当前 Design State 已通过审查</p><p className="mt-1 text-[11px] leading-5">所有冲突均已验证解决或由你明确选择保留。现在生成的 GDD 会绑定这一版答案快照。</p></div></div><Button size="sm" onClick={onGenerateGdd} disabled={saving} className="shrink-0"><WandSparkles />生成 GDD</Button></section>}
+      {review?.status === "ready" && <section className="rounded-2xl border border-[#bed9c3] bg-[#f1f8f2] p-4 text-[#3d6744]"><div className="flex gap-3"><CheckCircle2 className="mt-0.5 size-5 shrink-0" /><div><p className="text-[12px] font-semibold">当前 Design State 已通过审查</p><p className="mt-1 text-[11px] leading-5">所有冲突均已验证解决或由你明确选择保留。GDD 的生成与版本管理统一放在右侧 GDD 面板。</p></div></div></section>}
 
       {review && review.status !== "ready" && <section className="flex items-center justify-between gap-3 rounded-2xl border border-[#ecd39f] bg-[#fff9ed] p-4 text-[#755625]"><div className="flex gap-3"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><div><p className="text-[12px] font-semibold">{review.status === "dirty" ? "本轮答案已经修改，等待统一验证" : "本轮审查仍有待处理问题"}</p><p className="mt-1 text-[11px] leading-5">可以继续处理多个问题；准备好后只验证问题清单，不会重写 GDD。</p></div></div><Button size="sm" onClick={onVerifyReview} disabled={saving} className="shrink-0">{saving ? <Loader2 className="animate-spin" /> : <ShieldCheck />}验证本轮修改</Button></section>}
 

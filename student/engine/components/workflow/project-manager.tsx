@@ -31,7 +31,7 @@ type ProjectManagerProps = {
 };
 
 function projectMeta(project: ProjectSummary) {
-  const outputs = [project.gddVersion ? `GDD v${project.gddVersion}` : null, project.buildBriefVersion ? `Brief v${project.buildBriefVersion}` : null, project.prototypeVersion ? `Prototype v${project.prototypeVersion}` : null].filter(Boolean);
+  const outputs = [project.gddVersion ? `GDD v${project.gddVersion}` : null, project.buildBriefVersion ? `Brief v${project.buildBriefVersion}` : null].filter(Boolean);
   return `${project.confirmedAnswerCount}/23 已确认${outputs.length ? ` · ${outputs.join(" · ")}` : ""}`;
 }
 
@@ -83,7 +83,7 @@ export function ProjectManager(props: ProjectManagerProps) {
         <DialogHeader>
           <div className="mb-2 grid size-11 place-items-center rounded-2xl bg-[#e1f1f3] text-[#0c7489]"><FolderOpen className="size-5" /></div>
           <DialogTitle>项目工作区</DialogTitle>
-          <DialogDescription>创建并切换多个独立游戏设计。每个项目分别保存答案、对话、GDD、Build Brief 和 Prototype。</DialogDescription>
+          <DialogDescription>创建并切换多个独立游戏设计。每个项目分别保存答案、对话、GDD 和 Build Brief。</DialogDescription>
         </DialogHeader>
 
         <section className="rounded-2xl border border-[#cddde0] bg-[#f5f9fa] p-3">
@@ -121,7 +121,7 @@ export function ProjectManager(props: ProjectManagerProps) {
 
     <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(next) => { if (!next) setDeleteTarget(null); }}>
       <AlertDialogContent>
-        <AlertDialogHeader><AlertDialogTitle>永久删除这个项目？</AlertDialogTitle><AlertDialogDescription>“{deleteTarget?.title}”及其答案、聊天、GDD、Brief 和 Prototype 将永久删除，无法恢复。</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogHeader><AlertDialogTitle>永久删除这个项目？</AlertDialogTitle><AlertDialogDescription>“{deleteTarget?.title}”及其答案、聊天、GDD、Brief 和历史生成记录将永久删除，无法恢复。</AlertDialogDescription></AlertDialogHeader>
         <AlertDialogFooter><AlertDialogCancel disabled={busy}>取消</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={busy} onClick={() => { if (deleteTarget) onDelete(deleteTarget.id, deleteTarget.title); setDeleteTarget(null); }}>永久删除</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -46,6 +46,7 @@
 | [ADR-0016](0016-design-review-before-gdd.md) | 先审查 Design State，再生成与确认 GDD | Accepted | 2026-10-19 |
 | [ADR-0017](0017-multi-project-workspace.md) | 多项目工作区与两阶段删除 | Accepted | 2026-10-19 |
 | [ADR-0018](0018-research-data-logging.md) | 记录 AI 建议、答案修订历史与模型调用 | Accepted | 2026-10-19 |
+| [ADR-0019](0019-separate-prototype-implementation-agent.md) | Workflow 停止内建 Prototype，交由独立实现 Agent | Accepted | 2026-10-19 |
 
 ## 后续工作约定
 

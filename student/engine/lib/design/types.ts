@@ -15,21 +15,6 @@ export type ChatMessage = {
   createdAt: string;
 };
 
-export type GameSpec = {
-  title: string;
-  objective: string;
-  playerVerb: "collect" | "sort" | "avoid" | "balance";
-  timeLimit: number;
-  targetScore: number;
-  stressDrain: number;
-  rewardPerAction: number;
-  primaryColor: string;
-  accentColor: string;
-  itemLabels: string[];
-  progression: string;
-  experienceClaim: string;
-};
-
 export type StageSummary = {
   stageId: number;
   version: number;
@@ -146,7 +131,6 @@ export type ProjectSummary = {
   title: string;
   status: "active" | "archived";
   confirmedAnswerCount: number;
-  prototypeVersion: number;
   gddVersion: number;
   buildBriefVersion: number;
   createdAt: string;
@@ -159,7 +143,6 @@ export type WorkspacePayload = {
     id: string;
     title: string;
     activeQuestionId: string;
-    prototypeVersion: number;
     gddVersion: number;
     buildBriefVersion: number;
     updatedAt: string;
@@ -167,12 +150,10 @@ export type WorkspacePayload = {
   projects: ProjectSummary[];
   answers: Record<string, StoredAnswer>;
   chats: Record<string, ChatMessage[]>;
-  latestPrototype: { version: number; spec: GameSpec; createdAt: string } | null;
   stageSummaries: Record<number, StageSummary>;
   latestDesignReview: DesignReviewRun | null;
   designReviewChanges: DesignReviewChange[];
   latestGdd: GddVersion | null;
   gddReviewChanges: GddReviewChange[];
   latestBuildBrief: BuildBrief | null;
-  issues: Array<{ type: "missing"; questionId: string; message: string }>;
 };

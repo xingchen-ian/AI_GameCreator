@@ -12,12 +12,11 @@
 - `lib/design/`：答案类型、依赖图、失效传播和原型生成门槛。
 - `app/api/workspace`：个人项目、答案和云端状态。
 - `app/api/ai/*`：服务端 AI 对话与答案提炼。
-- `app/api/prototypes`：Design State → 结构化 Game Specification。
 - `app/api/gdd`：冻结 Design Snapshot，生成阶段总结、版本化 GDD 和全局冲突反馈。
 - `app/api/build-brief`：把已确认 GDD 编译成可复制或下载的 Codex 实现合同。
 - `db/schema.ts`：D1 项目、消息、答案、快照、GDD、冲突、Build Brief 和原型版本。
 
-模型只生成符合 JSON Schema 的规格，不生成或执行任意 JavaScript。浏览器中的有限状态机解释该规格，从而把 AI 输出与宿主应用隔离。
+当前项目负责从问题协作到已确认 GDD 与 Build Brief。Prototype implementation 将由后续独立 Agent 承担，不在本 Workflow 中生成或运行。
 
 ## Required runtime values
 
@@ -37,7 +36,7 @@ DASHSCOPE_BUILD_MODEL=qwen3.8-27b
 2. 生成 GDD：系统同时冻结答案修订号、生成六个阶段总结，并执行全局一致性审查。
 3. 处理冲突：blocker 必须解决或由用户说明为有意设计，系统不会自动改写答案。
 4. 确认 GDD，生成 Build Brief。
-5. 第一版通过复制或下载 Markdown，人工交给 Codex 创建独立游戏项目。自动启动 Codex、导入游戏包和内嵌试玩属于后续版本。
+5. 通过复制或下载 Markdown，把 Build Brief 交给独立的 Prototype Implementation Agent。
 
 工作台提供“重建项目”：当前项目会被归档保留，并创建一个从 Q1 开始的新空白项目；不会永久删除旧记录。
 

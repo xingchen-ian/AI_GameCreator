@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   BookmarkPlus,
@@ -12,18 +12,14 @@ import {
   Cloud,
   FileText,
   FolderOpen,
-  Gamepad2,
   GitCompareArrows,
   Loader2,
-  Play,
-  RotateCcw,
   Send,
   Sparkles,
   WandSparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,66 +101,6 @@ function readParkedInsights(data?: Record<string, unknown>): ParkedInsight[] {
   });
 }
 
-function PrototypeGame({ prototype }: { prototype: WorkspacePayload["latestPrototype"] }) {
-  const spec = prototype?.spec;
-  const [running, setRunning] = useState(false);
-  const [time, setTime] = useState(spec?.timeLimit ?? 30);
-  const [score, setScore] = useState(0);
-  const [focus, setFocus] = useState(100);
-  const [positions, setPositions] = useState([16, 38, 62, 82]);
-
-  useEffect(() => {
-    if (!running || !spec) return;
-    const timer = window.setInterval(() => {
-      setTime((value) => {
-        if (value <= 1) {
-          setRunning(false);
-          return 0;
-        }
-        return value - 1;
-      });
-      setFocus((value) => Math.max(0, value - spec.stressDrain));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [running, spec]);
-
-  if (!spec || !prototype) {
-    return <div className="grid h-full min-h-[500px] place-items-center bg-[#07191f] p-8 text-center text-white"><div><Gamepad2 className="mx-auto size-10 text-[#72d2dd]" /><h3 className="mt-3 text-lg font-semibold">还没有可玩的版本</h3><p className="mt-2 max-w-[260px] text-sm leading-6 text-[#91adb4]">完成 Q6、Q10、Q13 和 Q16，并确认所有受影响答案后即可生成。</p></div></div>;
-  }
-
-  const restart = () => {
-    setTime(spec.timeLimit);
-    setScore(0);
-    setFocus(100);
-    setPositions([16, 38, 62, 82]);
-    setRunning(true);
-  };
-  const labels = spec.itemLabels.length ? spec.itemLabels.slice(0, 4) : ["行动", "选择", "观察", "应对"];
-  while (labels.length < 4) labels.push(`行动${labels.length + 1}`);
-  const actionLabel = { collect: "收集", sort: "归类", avoid: "应对", balance: "调整" }[spec.playerVerb];
-  const handleAction = (index: number) => {
-    if (!running) return;
-    setScore((value) => value + spec.rewardPerAction);
-    setFocus((value) => Math.min(100, value + Math.max(5, spec.stressDrain * 2)));
-    setPositions((value) => value.map((position, itemIndex) => itemIndex === index ? 10 + ((position * 7 + score / 10 + index * 17) % 78) : position));
-  };
-  const won = score >= spec.targetScore;
-
-  return (
-    <div className="flex h-full min-h-[500px] flex-col bg-[#07191f] text-white">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><div><p className="font-mono text-[9px] uppercase tracking-[.16em] text-[#6ba6b1]">Generated specification · v{prototype.version}</p><h3 className="max-w-[250px] truncate text-[14px] font-semibold">{spec.title}</h3></div><Button variant="ghost" size="icon-sm" onClick={restart} className="text-white hover:bg-white/10 hover:text-white" aria-label="重新开始"><RotateCcw /></Button></div>
-      <div className="grid grid-cols-3 gap-px bg-white/10 text-center"><div className="bg-[#0b242c] py-2"><p className="font-mono text-[9px] text-[#78a3ac]">TIME</p><p className="font-mono text-lg" style={{ color: spec.accentColor }}>{time}</p></div><div className="bg-[#0b242c] py-2"><p className="font-mono text-[9px] text-[#78a3ac]">SCORE / TARGET</p><p className="font-mono text-lg" style={{ color: spec.primaryColor }}>{score} / {spec.targetScore}</p></div><div className="bg-[#0b242c] py-2"><p className="font-mono text-[9px] text-[#78a3ac]">FOCUS</p><p className="font-mono text-lg">{focus}%</p></div></div>
-      <div className="relative m-4 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_50%_10%,#184553_0,#0d2932_38%,#07191f_78%)]">
-        <div className="absolute inset-x-0 top-0 h-1 bg-white/10"><div className="h-full transition-all" style={{ width: `${(time / spec.timeLimit) * 100}%`, background: spec.primaryColor }} /></div>
-        <div className="absolute left-4 top-5 max-w-[84%] text-[11px] leading-4 text-[#a9c7cd]">{spec.objective}</div>
-        {positions.map((left, index) => <button key={index} onClick={() => handleAction(index)} className="absolute grid min-h-14 w-16 -translate-x-1/2 place-items-center rounded-2xl border bg-[#113843] px-1 text-center shadow-[0_8px_22px_rgba(0,0,0,.3)] transition hover:scale-105 active:scale-95" style={{ left: `${left}%`, top: `${29 + index * 14}%`, borderColor: `${spec.primaryColor}99` }}><span className="max-w-full truncate text-[11px] font-semibold">{labels[index]}</span><span className="font-mono text-[8px] text-[#91c7cf]">{actionLabel}</span></button>)}
-        {!running && <div className="absolute inset-0 grid place-items-center bg-[#07191f]/86 p-6 text-center backdrop-blur-sm"><div><Gamepad2 className="mx-auto size-9" style={{ color: spec.primaryColor }} /><h4 className="mt-3 text-lg font-semibold">{time === 0 ? (won ? "目标达成" : "本轮结束") : "规格已编译为安全原型"}</h4>{time === 0 && <p className="mt-1 font-mono text-sm" style={{ color: spec.accentColor }}>{score} / {spec.targetScore}</p>}<p className="mx-auto mt-2 max-w-[270px] text-[12px] leading-5 text-[#9bbbc1]">{spec.experienceClaim}</p><Button onClick={restart} className="mt-4 rounded-xl text-[#10252d] hover:brightness-110" style={{ background: spec.accentColor }}><Play className="fill-current" />开始试玩</Button></div></div>}
-      </div>
-      <p className="px-4 pb-4 text-center text-[10px] text-[#5f8992]">进程假设：{spec.progression}</p>
-    </div>
-  );
-}
-
 export function WorkflowApp({ displayName }: { displayName: string }) {
   const [workspace, setWorkspace] = useState<WorkspacePayload | null>(null);
   const [selectedId, setSelectedId] = useState("Q1");
@@ -173,8 +109,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   const [draft, setDraft] = useState("");
   const [answerDraft, setAnswerDraft] = useState("");
   const [suggestions, setSuggestions] = useState<Record<string, Suggestion>>({});
-  const [view, setView] = useState<"design" | "gdd" | "build" | "prototype">("design");
-  const [runDialog, setRunDialog] = useState(false);
+  const [view, setView] = useState<"design" | "gdd" | "build">("design");
   const [projectManagerOpen, setProjectManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [thinking, setThinking] = useState(false);
@@ -405,23 +340,6 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     }
   };
 
-  const runPrototype = async () => {
-    if (!workspace) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const prototype = await readJson<NonNullable<WorkspacePayload["latestPrototype"]>>(await fetch("/api/prototypes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id }) }));
-      setWorkspace((current) => current ? { ...current, project: { ...current.project, prototypeVersion: prototype.version }, latestPrototype: prototype } : current);
-      setView("prototype");
-      setRunDialog(false);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "原型生成失败。");
-      setRunDialog(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const generateGdd = async () => {
     if (!workspace || saving) return;
     setSaving(true);
@@ -522,7 +440,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     <main className="flex min-h-screen flex-col bg-[#f4f7f8] xl:h-screen xl:overflow-hidden">
       <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-[#cfdadd] bg-white px-4 shadow-[0_1px_0_rgba(16,37,45,.04)] sm:px-5">
         <button onClick={() => setProjectManagerOpen(true)} className="flex min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-[#f2f6f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c7489]/30"><div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#10252d] text-[#72d2dd]"><Sparkles className="size-[18px]" /></div><div className="min-w-0 pr-2"><div className="flex items-center gap-2"><h1 className="max-w-[220px] truncate text-[16px] font-semibold">{workspace.project.title}</h1><ChevronDown className="size-3.5 text-[#74868c]" /></div><p className="text-[12px] text-[#6a7c83]">{displayName} · {workspace.projects.filter((project) => project.status === "active").length} 个项目</p></div></button>
-        <div className="flex items-center gap-2 sm:gap-3"><div className="hidden w-44 md:block"><div className="mb-1 flex justify-between text-[11px] text-[#60747c]"><span>已确认设计</span><span>{progress}%</span></div><Progress value={progress} className="h-1.5 bg-[#dfe8ea]" /></div><span className="hidden items-center gap-1.5 text-[12px] text-[#60747c] lg:flex"><Cloud className="size-3.5 text-[#6b8f4e]" />{saving ? "同步中" : "云端已保存"}</span><Button variant="outline" size="sm" aria-label="管理项目" onClick={() => setProjectManagerOpen(true)} disabled={saving} className="h-9 rounded-xl px-2.5 sm:px-3"><FolderOpen className="size-3.5" /><span className="hidden lg:inline">项目</span></Button><Button onClick={() => setRunDialog(true)} className="h-9 rounded-xl bg-[#f0a63a] px-3 text-[#253039] shadow-[0_3px_0_#c9821d] hover:bg-[#f5b34b] sm:px-4"><Play className="size-4 fill-current" /><span className="hidden sm:inline">Run prototype</span><span className="sm:hidden">Run</span></Button></div>
+        <div className="flex items-center gap-2 sm:gap-3"><div className="hidden w-44 md:block"><div className="mb-1 flex justify-between text-[11px] text-[#60747c]"><span>已确认设计</span><span>{progress}%</span></div><Progress value={progress} className="h-1.5 bg-[#dfe8ea]" /></div><span className="hidden items-center gap-1.5 text-[12px] text-[#60747c] lg:flex"><Cloud className="size-3.5 text-[#6b8f4e]" />{saving ? "同步中" : "云端已保存"}</span><Button variant="outline" size="sm" aria-label="管理项目" onClick={() => setProjectManagerOpen(true)} disabled={saving} className="h-9 rounded-xl px-2.5 sm:px-3"><FolderOpen className="size-3.5" /><span className="hidden lg:inline">项目</span></Button></div>
       </header>
 
       {error && <div className="flex items-center justify-between gap-3 border-b border-[#e9c889] bg-[#fff7e7] px-4 py-2 text-[12px] text-[#725321]"><span className="flex items-center gap-2"><AlertTriangle className="size-4 shrink-0" />{error}</span><button onClick={() => setError(null)} className="font-semibold">关闭</button></div>}
@@ -544,7 +462,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
           </div>
         </aside>
 
-        {isGlobalReview ? <GddReviewWorkspace workspace={workspace} selectedIssueId={selectedGddIssueId} draft={draft} thinking={thinking} saving={saving} onSelectIssue={selectGddIssue} onDraftChange={setDraft} onSend={() => void sendGddReview("chat")} onAnalyze={(issueId) => void sendGddReview("analyze", issueId)} onRefine={(issueId) => void sendGddReview("chat", issueId, "请根据我们对这个冲突的全部讨论，提炼出最合适的最终答案。给出完整替换文本，并让我决定是否接受；不要直接修改。")} onApply={(change, content) => void updateReviewChange(change, "apply", content)} onDismiss={(change) => void updateReviewChange(change, "dismiss")} onStartReview={() => void runDesignReview("start")} onVerifyReview={() => void runDesignReview("verify")} onAcceptIssue={(issueId, note) => void setDesignIssueAccepted(issueId, true, note)} onReopenIssue={(issueId) => void setDesignIssueAccepted(issueId, false)} onGenerateGdd={() => void generateGdd()} onOpenQuestion={(questionId) => { const question = allQuestions.find((item) => item.id === questionId); if (question) selectQuestion(question.id, question.stageId); }} /> : <section className="flex min-h-[720px] min-w-0 flex-col bg-white xl:min-h-0">
+        {isGlobalReview ? <GddReviewWorkspace workspace={workspace} selectedIssueId={selectedGddIssueId} draft={draft} thinking={thinking} saving={saving} onSelectIssue={selectGddIssue} onDraftChange={setDraft} onSend={() => void sendGddReview("chat")} onAnalyze={(issueId) => void sendGddReview("analyze", issueId)} onRefine={(issueId) => void sendGddReview("chat", issueId, "请根据我们对这个冲突的全部讨论，提炼出最合适的最终答案。给出完整替换文本，并让我决定是否接受；不要直接修改。")} onApply={(change, content) => void updateReviewChange(change, "apply", content)} onDismiss={(change) => void updateReviewChange(change, "dismiss")} onStartReview={() => void runDesignReview("start")} onVerifyReview={() => void runDesignReview("verify")} onAcceptIssue={(issueId, note) => void setDesignIssueAccepted(issueId, true, note)} onReopenIssue={(issueId) => void setDesignIssueAccepted(issueId, false)} onOpenQuestion={(questionId) => { const question = allQuestions.find((item) => item.id === questionId); if (question) selectQuestion(question.id, question.stageId); }} /> : <section className="flex min-h-[720px] min-w-0 flex-col bg-white xl:min-h-0">
           <div className="scrollbar-none flex gap-2 overflow-x-auto border-b border-[#d9e2e4] bg-[#10252d] px-3 py-2 xl:hidden">{stages.map((stage) => <button key={stage.id} onClick={() => selectQuestion(stage.questions[0].id, stage.id)} className={`shrink-0 rounded-lg px-3 py-2 text-[12px] ${selected.stageId === stage.id ? "bg-[#2b5360] text-white" : "text-[#9db5bb]"}`}>{stage.id}. {stage.name}</button>)}<button onClick={selectGlobalReview} className="shrink-0 rounded-lg px-3 py-2 text-[12px] text-[#ffd07a]">全局审查</button></div>
           <div className="border-b border-[#d9e2e4] px-5 py-4 sm:px-7"><div className="mb-2 flex items-center justify-between gap-3"><div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.12em] text-[#0c7489]"><span>Stage {selected.stageId}</span><span className="text-[#a4b2b7]">/</span><span>{selected.id} · {selected.short}</span></div></div><h2 className="max-w-3xl text-[20px] font-semibold leading-[1.45] tracking-[-.015em] text-[#14232b] sm:text-[21px]">{selected.prompt}</h2><p className="mt-2 flex max-w-3xl items-start gap-2 text-[11px] leading-5 text-[#71858c]"><span className="mt-0.5 shrink-0 rounded bg-[#e7f2f4] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[#0c7489]">本题边界</span>{selectedScope.focus}</p></div>
           <div className="scrollbar-thin flex-1 overflow-y-auto px-5 py-6 sm:px-7"><div className="mx-auto max-w-3xl space-y-5">
@@ -555,9 +473,8 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
           <div className="border-t border-[#d9e2e4] bg-[#fbfcfc] p-4 sm:px-7"><div className="mx-auto max-w-3xl"><div className="relative rounded-2xl border border-[#bccdd1] bg-white shadow-[0_6px_22px_rgba(27,57,66,.07)] focus-within:border-[#0c7489] focus-within:ring-2 focus-within:ring-[#0c7489]/10"><Textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="与真实 AI 设计教练讨论当前问题……" className="min-h-[82px] resize-none border-0 bg-transparent px-4 py-3.5 pr-14 text-[14px] shadow-none focus-visible:ring-0" /><Button aria-label="发送" size="icon" onClick={() => void send()} disabled={!draft.trim() || thinking} className="absolute bottom-3 right-3 size-9 rounded-xl"><Send className="size-4" /></Button></div><div className="mt-2 flex items-center justify-between text-[11px] text-[#829198]"><span>Enter 发送 · Shift + Enter 换行</span><span className="max-w-[55%] truncate">{selected.guide}</span></div></div></div>
         </section>}
 
-        <aside className="flex min-h-[620px] min-w-0 flex-col border-l border-[#d3dee0] bg-[#f4f7f8] xl:min-h-0"><div className="flex items-center justify-between border-b border-[#d3dee0] px-3 py-[14px]"><Tabs value={view} onValueChange={(value) => setView(value as "design" | "gdd" | "build" | "prototype")} className="w-full"><TabsList className="grid h-10 w-full grid-cols-4 bg-[#e2eaec]"><TabsTrigger value="design" className="px-1 text-[10px]"><FileText />状态</TabsTrigger><TabsTrigger value="gdd" className="px-1 text-[10px]">GDD</TabsTrigger><TabsTrigger value="build" className="px-1 text-[10px]">Build</TabsTrigger><TabsTrigger value="prototype" className="px-1 text-[10px]"><Gamepad2 />试玩</TabsTrigger></TabsList></Tabs></div>
+        <aside className="flex min-h-[620px] min-w-0 flex-col border-l border-[#d3dee0] bg-[#f4f7f8] xl:min-h-0"><div className="flex items-center justify-between border-b border-[#d3dee0] px-3 py-[14px]"><Tabs value={view} onValueChange={(value) => setView(value as "design" | "gdd" | "build")} className="w-full"><TabsList className="grid h-10 w-full grid-cols-3 bg-[#e2eaec]"><TabsTrigger value="design" className="px-1 text-[10px]"><FileText />状态</TabsTrigger><TabsTrigger value="gdd" className="px-1 text-[10px]">GDD</TabsTrigger><TabsTrigger value="build" className="px-1 text-[10px]">Build</TabsTrigger></TabsList></Tabs></div>
           {view === "design" ? <div className="scrollbar-thin flex-1 overflow-y-auto p-4"><div className="mb-4 flex items-start justify-between"><div><p className="font-mono text-[10px] uppercase tracking-[.15em] text-[#71858c]">Persistent design state</p><h2 className="text-[15px] font-semibold">结构化设计方案</h2></div><span className="rounded-full border border-[#d3dee0] bg-white px-2.5 py-1 text-[11px] text-[#63777e]">{confirmedCount}/23 已确认</span></div>
-            {workspace.issues.length > 0 && <section className="mb-3 rounded-2xl border border-[#ecd39f] bg-[#fff9ed] p-4"><p className="flex items-center gap-2 text-[12px] font-semibold text-[#755625]"><AlertTriangle className="size-4" />{workspace.issues.length} 个设计检查项</p><div className="mt-2 space-y-1.5">{workspace.issues.slice(0, 5).map((issue) => <button key={`${issue.type}-${issue.questionId}`} onClick={() => { const question = allQuestions.find((item) => item.id === issue.questionId)!; selectQuestion(question.id, question.stageId); }} className="block text-left text-[11px] leading-4 text-[#816738] hover:underline">{issue.message}</button>)}</div></section>}
             {confirmedCount === 0 && <section className="rounded-2xl border border-dashed border-[#b9c9cd] bg-white/60 p-5 text-center"><div className="mx-auto grid size-10 place-items-center rounded-full bg-[#e6f0f2] text-[#0c7489]"><Check className="size-5" /></div><h3 className="mt-3 text-[14px] font-semibold">从第一个确认答案开始</h3><p className="mt-1 text-[12px] leading-5 text-[#6d7f86]">对话和正式答案会保存到云端个人项目。</p></section>}
             <div className="space-y-3">{stages.map((stage) => {
               const stageAnswers = stage.questions.filter((question) => workspace.answers[question.id]);
@@ -568,11 +485,10 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
                 return <button key={question.id} onClick={() => selectQuestion(question.id, stage.id)} className="w-full border-l-2 border-[#86c3cb] pl-3 text-left"><p className="text-[10px] font-semibold text-[#0c7489]">{question.id} · {question.short}</p><p className="mt-1 line-clamp-3 text-[12px] leading-5 text-[#4c6269]">{answer.answer}</p></button>;
               })}</div>{stageSummary && <div className={`mt-3 rounded-xl border p-3 ${stageSummary.status === "stale" ? "border-[#ecd39f] bg-[#fff9ed]" : "border-[#c7dfe3] bg-[#f2fafb]"}`}><p className="text-[10px] font-semibold text-[#35636d]">AI 阶段总结{stageSummary.status === "stale" ? " · 已过期" : ""}</p><p className="mt-1 text-[11px] leading-5 text-[#536970]">{stageSummary.summary}</p>{stageSummary.keyDecisions.length > 0 && <p className="mt-1 text-[10px] leading-4 text-[#71858c]">关键决定：{stageSummary.keyDecisions.join("；")}</p>}</div>}<p className="mt-3 border-t border-[#edf1f2] pt-3 text-[10px] leading-4 text-[#839399]">阶段产出：{stage.output}</p></section>;
             })}</div><section className="mt-3 rounded-2xl border border-[#d6e0e2] bg-white p-4"><p className="font-mono text-[10px] uppercase tracking-[.13em] text-[#789099]">Current stage output</p><h3 className="mt-1 text-[14px] font-semibold">{selectedStage.output.split("：")[0]}</h3><p className="mt-2 text-[12px] leading-5 text-[#6f8187]">{selectedStage.output}</p></section>
-          </div> : view === "gdd" ? <GddPanel key={workspace.latestGdd ? `${workspace.latestGdd.id}:${workspace.latestGdd.updatedAt}` : "empty-gdd"} workspace={workspace} busy={saving} progress={gddProgress} onGenerate={() => void generateGdd()} onConfirm={() => void updateGdd({ action: "confirm" })} onBuildBrief={() => void createBuildBrief()} onSaveSection={(key, content) => void updateGdd({ action: "edit_section", sectionKey: key, content })} onVerifyFidelity={() => void updateGdd({ action: "verify_fidelity" })} /> : view === "build" ? <BuildBriefPanel workspace={workspace} busy={saving} onCreate={() => void createBuildBrief()} /> : <PrototypeGame key={workspace.latestPrototype?.version ?? 0} prototype={workspace.latestPrototype} />}
+          </div> : view === "gdd" ? <GddPanel key={workspace.latestGdd ? `${workspace.latestGdd.id}:${workspace.latestGdd.updatedAt}` : "empty-gdd"} workspace={workspace} busy={saving} progress={gddProgress} onGenerate={() => void generateGdd()} onConfirm={() => void updateGdd({ action: "confirm" })} onBuildBrief={() => void createBuildBrief()} onSaveSection={(key, content) => void updateGdd({ action: "edit_section", sectionKey: key, content })} onVerifyFidelity={() => void updateGdd({ action: "verify_fidelity" })} /> : <BuildBriefPanel workspace={workspace} busy={saving} onCreate={() => void createBuildBrief()} />}
         </aside>
       </section>
 
-      <Dialog open={runDialog} onOpenChange={setRunDialog}><DialogContent className="rounded-2xl border-[#cedadd] sm:max-w-[540px]"><DialogHeader><div className="mb-2 grid size-11 place-items-center rounded-2xl bg-[#e1f1f3] text-[#0c7489]"><WandSparkles className="size-5" /></div><DialogTitle>编译新的可玩 Prototype</DialogTitle><DialogDescription className="leading-6">AI 会把已确认的 Design State 转换成严格的 Game Specification；安全运行时只解释规格，不执行模型生成的代码。</DialogDescription></DialogHeader><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-[#d8e2e4] bg-[#f6f9fa] p-3"><p className="text-[11px] text-[#71858c]">已确认问题</p><p className="mt-1 text-xl font-semibold">{confirmedCount}<span className="text-sm font-normal text-[#71858c]"> / 23</span></p></div><div className="rounded-xl border border-[#d8e2e4] bg-[#f6f9fa] p-3"><p className="text-[11px] text-[#71858c]">下一个版本</p><p className="mt-1 text-xl font-semibold">v{workspace.project.prototypeVersion + 1}</p></div></div>{workspace.issues.length ? <div className="rounded-xl border border-[#efd6a6] bg-[#fff8ea] p-3 text-[12px] leading-5 text-[#745725]"><p className="flex items-center gap-2 font-semibold"><AlertTriangle className="size-4" />暂时不能生成</p><ul className="mt-2 space-y-1 pl-5">{workspace.issues.map((issue) => <li key={`${issue.type}-${issue.questionId}`} className="list-disc">{issue.message}</li>)}</ul></div> : <div className="flex gap-3 rounded-xl border border-[#bed9c3] bg-[#f1f8f2] p-3 text-[12px] leading-5 text-[#3d6744]"><CheckCircle2 className="mt-0.5 size-4 shrink-0" /><p>核心信息完整，可以生成新的规格和版本快照。</p></div>}<DialogFooter><DialogClose asChild><Button variant="outline">继续设计</Button></DialogClose><Button onClick={() => void runPrototype()} disabled={workspace.issues.length > 0 || saving} className="bg-[#f0a63a] text-[#253039] hover:bg-[#f5b34b]">{saving ? <Loader2 className="animate-spin" /> : <Play className="fill-current" />}生成并试玩</Button></DialogFooter></DialogContent></Dialog>
       <ProjectManager workspace={workspace} open={projectManagerOpen} busy={saving} onOpenChange={setProjectManagerOpen} onSelect={(projectId) => void switchProject(projectId)} onCreate={(title) => void projectMutation("POST", { action: "create_project", title }, true)} onRename={(projectId, title) => void projectMutation("PATCH", { action: "rename_project", projectId, title, returnProjectId: workspace.project.id })} onArchive={(projectId) => void projectMutation("PATCH", { action: "archive_project", projectId, returnProjectId: workspace.project.id })} onRestore={(projectId) => void projectMutation("PATCH", { action: "restore_project", projectId }, true)} onDelete={(projectId, confirmTitle) => void projectMutation("DELETE", { projectId, confirmTitle, returnProjectId: workspace.project.id })} />
     </main>
   );

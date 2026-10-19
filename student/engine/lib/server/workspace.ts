@@ -1,9 +1,8 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
-import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, prototypeVersions, questionAnswers, stageSummaries } from "@/db/schema";
+import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
-import { getDesignIssues } from "@/lib/design/readiness";
-import type { AnswerStatus, ChatMessage, GameSpec, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
+import type { AnswerStatus, ChatMessage, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
 
 function parseObject(value: string): Record<string, unknown> {
   try {
@@ -63,10 +62,9 @@ export async function requireAnyOwnedProject(projectId: string, user: ChatGPTUse
 export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: string | null): Promise<WorkspacePayload> {
   const db = getDb();
   const project = await ensureOwnedProject(user, preferredProjectId);
-  const [answerRows, messageRows, latestRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
+  const [answerRows, messageRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, project.id)).orderBy(asc(questionAnswers.questionId)),
     db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
-    db.select().from(prototypeVersions).where(eq(prototypeVersions.projectId, project.id)).orderBy(desc(prototypeVersions.version)).limit(1),
     db.select().from(stageSummaries).where(eq(stageSummaries.projectId, project.id)).orderBy(desc(stageSummaries.version)),
     db.select().from(designReviewRuns).where(eq(designReviewRuns.projectId, project.id)).orderBy(desc(designReviewRuns.version)).limit(1),
     db.select().from(gddVersions).where(eq(gddVersions.projectId, project.id)).orderBy(desc(gddVersions.version)).limit(1),
@@ -89,16 +87,6 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
   const chats: Record<string, ChatMessage[]> = {};
   for (const row of messageRows) {
     (chats[row.questionId] ??= []).push({ id: row.id, role: row.role, text: row.content, createdAt: row.createdAt });
-  }
-
-  const latest = latestRows[0];
-  let latestPrototype: WorkspacePayload["latestPrototype"] = null;
-  if (latest) {
-    try {
-      latestPrototype = { version: latest.version, spec: JSON.parse(latest.gameSpecJson) as GameSpec, createdAt: latest.createdAt };
-    } catch {
-      latestPrototype = null;
-    }
   }
 
   const summaries: WorkspacePayload["stageSummaries"] = {};
@@ -240,7 +228,6 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
       id: project.id,
       title: project.title,
       activeQuestionId: project.activeQuestionId,
-      prototypeVersion: project.prototypeVersion,
       gddVersion: project.gddVersion,
       buildBriefVersion: project.buildBriefVersion,
       updatedAt: project.updatedAt,
@@ -250,7 +237,6 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
       title: row.title,
       status: row.status,
       confirmedAnswerCount: answerCounts.get(row.id) ?? 0,
-      prototypeVersion: row.prototypeVersion,
       gddVersion: row.gddVersion,
       buildBriefVersion: row.buildBriefVersion,
       createdAt: row.createdAt,
@@ -259,14 +245,12 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
     })),
     answers,
     chats,
-    latestPrototype,
     stageSummaries: summaries,
     latestDesignReview,
     designReviewChanges: designChanges,
     latestGdd,
     gddReviewChanges: reviewChanges,
     latestBuildBrief,
-    issues: getDesignIssues(answers),
   };
 }
 

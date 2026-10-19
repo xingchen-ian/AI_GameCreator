@@ -343,26 +343,6 @@ export const coachResponseSchema: JsonSchema = {
   additionalProperties: false,
 };
 
-export const gameSpecSchema: JsonSchema = {
-  type: "object",
-  properties: {
-    title: { type: "string" },
-    objective: { type: "string" },
-    playerVerb: { type: "string", enum: ["collect", "sort", "avoid", "balance"] },
-    timeLimit: { type: "integer", minimum: 15, maximum: 120 },
-    targetScore: { type: "integer", minimum: 100, maximum: 10000 },
-    stressDrain: { type: "integer", minimum: 1, maximum: 12 },
-    rewardPerAction: { type: "integer", minimum: 10, maximum: 500 },
-    primaryColor: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" },
-    accentColor: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" },
-    itemLabels: { type: "array", items: { type: "string" } },
-    progression: { type: "string" },
-    experienceClaim: { type: "string" },
-  },
-  required: ["title", "objective", "playerVerb", "timeLimit", "targetScore", "stressDrain", "rewardPerAction", "primaryColor", "accentColor", "itemLabels", "progression", "experienceClaim"],
-  additionalProperties: false,
-};
-
 export const stageSummarySchema: JsonSchema = {
   type: "object",
   properties: {
