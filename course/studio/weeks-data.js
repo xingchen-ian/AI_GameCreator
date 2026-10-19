@@ -379,6 +379,10 @@ window.WEEKS_DATA = [
       ownersTitle: "Next actions",
       sources: [
         {
+          label: "Meeting PDF (download)",
+          href: "../meeting-notes/2026-10-12-week06-meeting.pdf"
+        },
+        {
           label: "Meeting note in repo",
           href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-12-week06-meeting.md"
         }
@@ -407,6 +411,12 @@ window.WEEKS_DATA = [
       ]
     },
     readings: [
+      {
+        title: "Week 06 meeting PDF",
+        href: "../meeting-notes/2026-10-12-week06-meeting.pdf",
+        access: "Download",
+        note: "Full smart-minutes export from 2026-10-12."
+      },
       {
         title: "Week 06 meeting note",
         href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-12-week06-meeting.md",
@@ -448,6 +458,10 @@ window.WEEKS_DATA = [
       ownersTitle: "Next actions",
       sources: [
         {
+          label: "Meeting PDF (download)",
+          href: "../meeting-notes/2026-10-19-week07-meeting.pdf"
+        },
+        {
           label: "Meeting note in repo",
           href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-19-week07-meeting.md"
         },
@@ -481,6 +495,12 @@ window.WEEKS_DATA = [
       ]
     },
     readings: [
+      {
+        title: "Week 07 meeting PDF",
+        href: "../meeting-notes/2026-10-19-week07-meeting.pdf",
+        access: "Download",
+        note: "Full smart-minutes export from 2026-10-19."
+      },
       {
         title: "Week 07 meeting note",
         href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-19-week07-meeting.md",

@@ -74,12 +74,18 @@ This week: Week 07 — stabilize review + polish exam prototype; milestone human
 | Week 03 notes | `shared/meeting-notes/2026-09-14-week03-meeting.md` |
 | Week 06 notes | `shared/meeting-notes/2026-10-12-week06-meeting.md` |
 | Week 07 notes | `shared/meeting-notes/2026-10-19-week07-meeting.md` |
+| Meeting PDFs | `course/meeting-notes/` (Pages) |
 | Student work | `student/` |
 | IRB usability drafts | `irb-usability-2026/` |
 
 ---
 
 ## Weekly log (newest first)
+
+### 2026-10-19 · Meeting PDFs on course site
+
+- Uploaded Week 06 / Week 07 smart-minutes PDFs to `course/meeting-notes/` (Pages-downloadable).
+- Index: https://xingchen-ian.github.io/AI_GameCreator/meeting-notes/
 
 ### 2026-10-19 · Week 07 on course site
 
