@@ -363,35 +363,71 @@ window.WEEKS_DATA = [
   },
   {
     id: "06",
-    title: "Visible gaps and the first protocol",
+    title: "Engine preview · math-quiz pass",
     phase: "Sprint 1",
     phaseKey: "s1",
     agenda: [
-      "8:30–9:15 · Negotiable scaffolds and anti-wizard design",
-      "9:15–10:15 · Blueprint → demo path; gap visibility",
-      "10:15–11:00 · Draft Test 1 protocol; begin recruitment"
+      "Preview Josie’s current engine",
+      "In-class pass: high-school math quiz / exam-game seed → structured GDD",
+      "Name issues that showed up while making",
+      "Agree next actions (prefill · system map · smart revise)"
     ],
+    classNotes: {
+      held: "2026-10-12",
+      problemTitle: "What we did",
+      decisionsTitle: "Issues raised while making",
+      ownersTitle: "Next actions",
+      sources: [
+        {
+          label: "Meeting note in repo",
+          href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-12-week06-meeting.md"
+        }
+      ],
+      problem: [
+        "Previewed Josie’s engine build.",
+        "In class, Josie ran a full design pass with a high-school math quiz / exam-game seed (weekly math quiz). The flow ends in a structured GDD for now — no playable prototype generator yet."
+      ],
+      decisions: [
+        "The full question list is long; fatigue shows up after a long fill session.",
+        "No mid-flow view of the emerging core system — the GDD appears only at the end.",
+        "Guidance fits concrete mechanic games better than emotion / narrative / abstract experience.",
+        "UX friction: long model calls can time out; revising an earlier answer still means jumping away.",
+        "Very vague starting ideas can stall on a single question with the AI."
+      ],
+      owners: [
+        "AI gray-box prefill for later questions from what is already filled — user edits and confirms.",
+        "While filling, show a live map of the emerging core system.",
+        "After an edit, flag linked questions and allow revise on the current page.",
+        "After bugfix: upload the math-quiz GDD and the session change log (MD) to the project site.",
+        "Defer the end-to-end playable harness and a design RAG KB. Invite users after these core features; research tests still need consent / IRB."
+      ],
+      notThisWeek: [
+        "Side projects and industry chat (not course scope).",
+        "Building the playable-prototype harness now."
+      ]
+    },
     readings: [
       {
-        title: "Instructor note · negotiable scaffolds and anti-wizard design",
-        href: "../theoretical-framework.md",
-        access: "Course material",
-        note: "Any entry; missing structure stays visible; prompts are offers."
+        title: "Week 06 meeting note",
+        href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-12-week06-meeting.md",
+        access: "Repo",
+        note: "Short public summary of the 2026-10-12 studio."
       }
     ],
     questions: [
-      "How does the UI show what is missing without blocking progress?",
-      "Where would a wizard silently decide for the designer, and how do you refuse that pattern?",
-      "What must Test 1 observe that a demo video cannot prove?"
+      "Which mid-flow signal would have made the core system readable before the final GDD?",
+      "Where did the math-quiz pass stay too vague for too long — and would gray-box prefill have helped?",
+      "What should wait until after prefill + system map + smart revise before inviting outside testers?"
     ],
     assignment: {
-      summary: "Playable blueprint → demo path; Test 1 protocol; recruit 1–2 designer-users.",
+      summary: "Ship the three next-action items from Class 06; then post the math-quiz GDD and change log.",
       deliverables: [
-        "Working path from blueprint to minimum demo",
-        "Test 1 protocol (tasks, prompts, observation foci)",
-        "Recruitment note for 1–2 designer-users"
+        "Gray-box prefill for later questions from prior answers",
+        "Live core-system visualization during the fill flow",
+        "Smart revise prompts for linked questions (edit without jumping away where possible)",
+        "Upload the high-school math quiz GDD + session change log (MD) after bugfix"
       ],
-      criteria: "Gaps are visible in the UI; the protocol is runnable without you improvising."
+      criteria: "The three interaction upgrades are visible in the engine; GDD and log are on the project site."
     }
   },
   {
