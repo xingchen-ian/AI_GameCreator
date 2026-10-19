@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       createdAt: now,
     });
     await db.update(projects).set({ buildBriefVersion: version, updatedAt: now }).where(eq(projects.id, project.id));
-    return Response.json(await getWorkspace(user), { status: 201 });
+    return Response.json(await getWorkspace(user, project.id), { status: 201 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Build Brief 生成失败。" }, { status: 500 });
   }

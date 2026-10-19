@@ -1,21 +1,50 @@
 import { and, desc, eq, gte } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddReviewChanges, gddVersions, projects, questionAnswers, stageSummaries } from "@/db/schema";
+import { aiSuggestions, answerRevisions, buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddReviewChanges, gddVersions, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
-import { getWorkspace, requireOwnedProject } from "@/lib/server/workspace";
+import { getWorkspace, requireAnyOwnedProject, requireOwnedProject } from "@/lib/server/workspace";
 
 function unauthorized() {
   return Response.json({ error: "请先使用 ChatGPT 账号登录。", signIn: "/signin-with-chatgpt?return_to=%2F" }, { status: 401 });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getChatGPTUser();
     if (!user) return unauthorized();
-    return Response.json(await getWorkspace(user));
+    const projectId = new URL(request.url).searchParams.get("projectId");
+    return Response.json(await getWorkspace(user, projectId));
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "无法读取项目。" }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const user = await getChatGPTUser();
+    if (!user) return unauthorized();
+    const body = await request.json() as { action?: "create_project"; title?: string };
+    if (body.action !== "create_project") return Response.json({ error: "不支持的操作。" }, { status: 400 });
+    const title = body.title?.trim().slice(0, 80) || "未命名游戏";
+    const now = new Date().toISOString();
+    const id = crypto.randomUUID();
+    await getDb().insert(projects).values({
+      id,
+      ownerId: user.userId,
+      ownerEmail: user.email,
+      title,
+      status: "active",
+      activeQuestionId: "Q1",
+      prototypeVersion: 0,
+      gddVersion: 0,
+      buildBriefVersion: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return Response.json(await getWorkspace(user, id), { status: 201 });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "项目创建失败。" }, { status: 500 });
   }
 }
 
@@ -24,18 +53,26 @@ export async function PATCH(request: Request) {
     const user = await getChatGPTUser();
     if (!user) return unauthorized();
     const body = await request.json() as {
-      action?: "save_answer" | "set_active" | "rename_project" | "rebuild_project";
+      action?: "save_answer" | "set_active" | "rename_project" | "rebuild_project" | "archive_project" | "restore_project";
       projectId?: string;
       questionId?: string;
       answer?: string;
       structuredData?: Record<string, unknown>;
+      suggestionId?: string;
       title?: string;
+      returnProjectId?: string;
     };
     if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
-    const project = await requireOwnedProject(body.projectId, user);
-    if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
     const db = getDb();
     const now = new Date().toISOString();
+    if (body.action === "restore_project") {
+      const archivedProject = await requireAnyOwnedProject(body.projectId, user);
+      if (!archivedProject || archivedProject.status !== "archived") return Response.json({ error: "归档项目不存在或无权访问。" }, { status: 404 });
+      await db.update(projects).set({ status: "active", archivedAt: null, updatedAt: now }).where(eq(projects.id, archivedProject.id));
+      return Response.json(await getWorkspace(user, archivedProject.id));
+    }
+    const project = await requireOwnedProject(body.projectId, user);
+    if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
 
     if (body.action === "rebuild_project") {
       const newProjectId = crypto.randomUUID();
@@ -53,6 +90,10 @@ export async function PATCH(request: Request) {
         createdAt: now,
         updatedAt: now,
       });
+      return Response.json(await getWorkspace(user, newProjectId));
+    } else if (body.action === "archive_project") {
+      await db.update(projects).set({ status: "archived", archivedAt: now, updatedAt: now }).where(eq(projects.id, project.id));
+      return Response.json(await getWorkspace(user, body.returnProjectId));
     } else if (body.action === "set_active") {
       if (body.questionId !== "GDD_GLOBAL" && !allQuestions.some((question) => question.id === body.questionId)) return Response.json({ error: "无效问题编号。" }, { status: 400 });
       await db.update(projects).set({ activeQuestionId: body.questionId!, updatedAt: now }).where(eq(projects.id, project.id));
@@ -68,6 +109,9 @@ export async function PATCH(request: Request) {
 
       const [existing] = await db.select().from(questionAnswers).where(and(eq(questionAnswers.projectId, project.id), eq(questionAnswers.questionId, questionId))).limit(1);
       const changed = existing?.answer !== answer;
+      const [suggestion] = body.suggestionId
+        ? await db.select().from(aiSuggestions).where(and(eq(aiSuggestions.id, body.suggestionId), eq(aiSuggestions.projectId, project.id), eq(aiSuggestions.questionId, questionId))).limit(1)
+        : [];
       if (existing) {
         await db.update(questionAnswers).set({
           answer,
@@ -89,6 +133,17 @@ export async function PATCH(request: Request) {
         });
       }
       if (changed) {
+        await db.insert(answerRevisions).values({
+          id: crypto.randomUUID(),
+          projectId: project.id,
+          questionId,
+          revision: existing ? existing.revision + 1 : 1,
+          answer,
+          source: "user",
+          suggestionId: suggestion?.id ?? null,
+          adoption: !suggestion ? "manual" : suggestion.suggestedAnswer.trim() === answer ? "verbatim" : "edited",
+          createdAt: now,
+        }).onConflictDoNothing();
         const stageId = allQuestions.find((question) => question.id === questionId)!.stageId;
         const [activeReview] = await db.select().from(designReviewRuns).where(eq(designReviewRuns.projectId, project.id)).orderBy(desc(designReviewRuns.version)).limit(1);
         const relatedIssueIds: string[] = [];
@@ -129,8 +184,25 @@ export async function PATCH(request: Request) {
       return Response.json({ error: "不支持的操作。" }, { status: 400 });
     }
 
-    return Response.json(await getWorkspace(user));
+    return Response.json(await getWorkspace(user, body.returnProjectId ?? project.id));
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "保存失败。" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getChatGPTUser();
+    if (!user) return unauthorized();
+    const body = await request.json() as { projectId?: string; confirmTitle?: string; returnProjectId?: string };
+    if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
+    const project = await requireAnyOwnedProject(body.projectId, user);
+    if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
+    if (project.status !== "archived") return Response.json({ error: "请先把项目移到回收站，再永久删除。" }, { status: 409 });
+    if (body.confirmTitle !== project.title) return Response.json({ error: "项目名称确认不匹配。" }, { status: 400 });
+    await getDb().delete(projects).where(eq(projects.id, project.id));
+    return Response.json(await getWorkspace(user, body.returnProjectId));
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "项目删除失败。" }, { status: 500 });
   }
 }

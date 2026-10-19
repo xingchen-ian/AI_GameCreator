@@ -31,7 +31,7 @@
 | [ADR-0001](0001-separate-workflow-product.md) | Workflow 与 Agent 分离为独立项目 | Accepted | 2026-10-11 |
 | [ADR-0002](0002-versioned-design-to-build-pipeline.md) | 使用版本化 Design State → GDD → Build Brief 链路 | Accepted | 2026-10-12 |
 | [ADR-0003](0003-question-scope-and-parking-lot.md) | 单题范围合同与“稍后讨论”机制 | Accepted | 2026-10-12 |
-| [ADR-0004](0004-rebuild-by-archiving-current-project.md) | 通过归档当前项目来重建空白项目 | Accepted | 2026-10-12 |
+| [ADR-0004](0004-rebuild-by-archiving-current-project.md) | 通过归档当前项目来重建空白项目 | Superseded | 2026-10-12 |
 | [ADR-0005](0005-chunked-atomic-gdd-generation.md) | 分步生成并原子保存完整 GDD | Accepted | 2026-10-12 |
 | [ADR-0006](0006-global-gdd-review-node-and-confirmed-patches.md) | 全局 GDD 审查节点与确认式 Patch | Accepted | 2026-10-13 |
 | [ADR-0007](0007-conflict-driven-global-gdd-review.md) | 冲突驱动的逐项全局 GDD 审查工作区 | Superseded | 2026-10-17 |
@@ -44,6 +44,8 @@
 | [ADR-0014](0014-normalize-non-strict-model-json.md) | 普通 JSON 模型输出先归一化再进入安全边界 | Superseded | 2026-10-18 |
 | [ADR-0015](0015-strict-structured-output-with-one-repair.md) | 严格结构化输出、语义校验与一次有限修复 | Accepted | 2026-10-18 |
 | [ADR-0016](0016-design-review-before-gdd.md) | 先审查 Design State，再生成与确认 GDD | Accepted | 2026-10-19 |
+| [ADR-0017](0017-multi-project-workspace.md) | 多项目工作区与两阶段删除 | Accepted | 2026-10-19 |
+| [ADR-0018](0018-research-data-logging.md) | 记录 AI 建议、答案修订历史与模型调用 | Accepted | 2026-10-19 |
 
 ## 后续工作约定
 

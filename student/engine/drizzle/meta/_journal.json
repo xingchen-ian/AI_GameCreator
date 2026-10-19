@@ -50,6 +50,13 @@
       "when": 1792339517535,
       "tag": "0006_lazy_namor",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792418064454,
+      "tag": "0007_research_data_logging",
+      "breakpoints": true
     }
   ]
 }

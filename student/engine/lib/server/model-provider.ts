@@ -1,7 +1,17 @@
 import { env } from "cloudflare:workers";
+import { getDb } from "@/db";
+import { modelCalls } from "@/db/schema";
 
 type JsonSchema = Record<string, unknown>;
 type ModelRole = "chat" | "gdd" | "build";
+type TokenUsage = { inputTokens: number | null; outputTokens: number | null };
+
+export type ModelCallMeta = {
+  model: string;
+  outcome: "success" | "repaired" | "failed";
+  strictFallback: boolean;
+  durationMs: number;
+} & TokenUsage;
 
 export class AIConfigurationError extends Error {
   constructor(missing: string[]) {
@@ -168,20 +178,44 @@ async function requestCompletion({
   }
   const content = extractMessageContent(payload);
   if (!content) throw new Error("模型没有返回可解析的结构化结果。");
-  return content;
+  const usage = payload.usage && typeof payload.usage === "object" ? payload.usage as { prompt_tokens?: unknown; completion_tokens?: unknown } : {};
+  return {
+    content,
+    model: config.model,
+    inputTokens: typeof usage.prompt_tokens === "number" ? usage.prompt_tokens : null,
+    outputTokens: typeof usage.completion_tokens === "number" ? usage.completion_tokens : null,
+  };
 }
 
-export async function createStructuredResponse<T>({
-  instructions,
-  input,
-  name,
-  schema,
-  role = "chat",
-  strictSchema = true,
-  repairInvalidOutput = false,
-  maxTokens,
-  timeoutMs,
-}: {
+function addUsage(total: TokenUsage, next: TokenUsage): TokenUsage {
+  return {
+    inputTokens: total.inputTokens === null && next.inputTokens === null ? null : (total.inputTokens ?? 0) + (next.inputTokens ?? 0),
+    outputTokens: total.outputTokens === null && next.outputTokens === null ? null : (total.outputTokens ?? 0) + (next.outputTokens ?? 0),
+  };
+}
+
+// 研究数据记录不能影响主流程：写入失败只打日志。
+async function recordModelCall(projectId: string | undefined, operation: string, role: ModelRole, meta: ModelCallMeta) {
+  try {
+    await getDb().insert(modelCalls).values({
+      id: crypto.randomUUID(),
+      projectId: projectId ?? null,
+      operation,
+      role,
+      model: meta.model,
+      outcome: meta.outcome,
+      strictFallback: meta.strictFallback,
+      inputTokens: meta.inputTokens,
+      outputTokens: meta.outputTokens,
+      durationMs: meta.durationMs,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.warn(JSON.stringify({ event: "model_call_record_failed", operation, reason: error instanceof Error ? error.message.slice(0, 240) : "unknown" }));
+  }
+}
+
+type StructuredRequest = {
   instructions: string;
   input: string;
   name: string;
@@ -191,59 +225,96 @@ export async function createStructuredResponse<T>({
   repairInvalidOutput?: boolean;
   maxTokens?: number;
   timeoutMs?: number;
-}): Promise<T> {
+  /** 写入 model_calls 时关联的项目；不提供时仍会记录，但不关联项目。 */
+  projectId?: string;
+};
+
+export async function createStructuredResponse<T>(request: StructuredRequest): Promise<T> {
+  return (await createStructuredResponseWithMeta<T>(request)).result;
+}
+
+export async function createStructuredResponseWithMeta<T>({
+  instructions,
+  input,
+  name,
+  schema,
+  role = "chat",
+  strictSchema = true,
+  repairInvalidOutput = false,
+  maxTokens,
+  timeoutMs,
+  projectId,
+}: StructuredRequest): Promise<{ result: T; meta: ModelCallMeta }> {
   const startedAt = Date.now();
-  let content: string;
+  const model = getProviderConfig(role).model;
+  let usage: TokenUsage = { inputTokens: null, outputTokens: null };
   let strictRejected = false;
-  if (!strictSchema) {
-    content = await requestCompletion({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
-  } else {
-    try {
-      content = await requestCompletion({ instructions, input, name, schema, role, strict: true, maxTokens, timeoutMs });
-    } catch (error) {
-      const status = error && typeof error === "object" && "status" in error ? (error as { status?: unknown }).status : null;
-      if (status !== 400) throw error;
-      strictRejected = true;
-      console.warn(JSON.stringify({ event: "structured_output_strict_fallback", name, role, status }));
-      content = await requestCompletion({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
+  const finish = async (outcome: ModelCallMeta["outcome"]) => {
+    const meta: ModelCallMeta = { model, outcome, strictFallback: strictRejected, durationMs: Date.now() - startedAt, ...usage };
+    await recordModelCall(projectId, name, role, meta);
+    return meta;
+  };
+  const complete = async (options: Parameters<typeof requestCompletion>[0]) => {
+    const response = await requestCompletion(options);
+    usage = addUsage(usage, response);
+    return response.content;
+  };
+
+  try {
+    let content: string;
+    if (!strictSchema) {
+      content = await complete({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
+    } else {
+      try {
+        content = await complete({ instructions, input, name, schema, role, strict: true, maxTokens, timeoutMs });
+      } catch (error) {
+        const status = error && typeof error === "object" && "status" in error ? (error as { status?: unknown }).status : null;
+        if (status !== 400) throw error;
+        strictRejected = true;
+        console.warn(JSON.stringify({ event: "structured_output_strict_fallback", name, role, status }));
+        content = await complete({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
+      }
     }
-  }
 
-  try {
-    const parsed = parseJson(content);
-    assertSchema(parsed, schema);
-    console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: false, durationMs: Date.now() - startedAt }));
-    return parsed as T;
-  } catch (error) {
-    const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
-    console.warn(JSON.stringify({ event: "structured_output_validation_failed", name, role, strictFallback: strictRejected, repairEnabled: repairInvalidOutput, reason, durationMs: Date.now() - startedAt }));
-    if (!repairInvalidOutput) throw new Error("模型返回的数据没有通过安全结构校验，请重试。");
-  }
+    try {
+      const parsed = parseJson(content);
+      assertSchema(parsed, schema);
+      console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: false, durationMs: Date.now() - startedAt }));
+      return { result: parsed as T, meta: await finish("success") };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
+      console.warn(JSON.stringify({ event: "structured_output_validation_failed", name, role, strictFallback: strictRejected, repairEnabled: repairInvalidOutput, reason, durationMs: Date.now() - startedAt }));
+      if (!repairInvalidOutput) throw new Error("模型返回的数据没有通过安全结构校验，请重试。");
+    }
 
-  const repairInstructions = [
-    "你是 JSON 格式修复器。只修复字段名、缺失字段、数据类型和 JSON 语法，使内容符合给定 Schema。",
-    "不得新增、删除或改写原输出中的实质判断；无法恢复的可选内容使用空字符串或空数组。",
-    `目标 JSON Schema：${JSON.stringify(schema)}`,
-  ].join("\n");
-  const repairedContent = await requestCompletion({
-    instructions: repairInstructions,
-    input: `待修复的 JSON：\n${content}`,
-    name: `${name}_repair`,
-    schema,
-    role,
-    strict: strictSchema && !strictRejected,
-    maxTokens,
-    timeoutMs,
-  });
-  try {
-    const repaired = parseJson(repairedContent);
-    assertSchema(repaired, schema);
-    console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: true, durationMs: Date.now() - startedAt }));
-    return repaired as T;
+    const repairInstructions = [
+      "你是 JSON 格式修复器。只修复字段名、缺失字段、数据类型和 JSON 语法，使内容符合给定 Schema。",
+      "不得新增、删除或改写原输出中的实质判断；无法恢复的可选内容使用空字符串或空数组。",
+      `目标 JSON Schema：${JSON.stringify(schema)}`,
+    ].join("\n");
+    const repairedContent = await complete({
+      instructions: repairInstructions,
+      input: `待修复的 JSON：\n${content}`,
+      name: `${name}_repair`,
+      schema,
+      role,
+      strict: strictSchema && !strictRejected,
+      maxTokens,
+      timeoutMs,
+    });
+    try {
+      const repaired = parseJson(repairedContent);
+      assertSchema(repaired, schema);
+      console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: true, durationMs: Date.now() - startedAt }));
+      return { result: repaired as T, meta: await finish("repaired") };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
+      console.error(JSON.stringify({ event: "structured_output_repair_failed", name, role, strictFallback: strictRejected, reason, durationMs: Date.now() - startedAt }));
+      throw new Error("模型两次返回的结构都不符合要求，请重试当前步骤。");
+    }
   } catch (error) {
-    const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
-    console.error(JSON.stringify({ event: "structured_output_repair_failed", name, role, strictFallback: strictRejected, reason, durationMs: Date.now() - startedAt }));
-    throw new Error("模型两次返回的结构都不符合要求，请重试当前步骤。");
+    await finish("failed");
+    throw error;
   }
 }
 

@@ -141,6 +141,19 @@ export type BuildBrief = {
   createdAt: string;
 };
 
+export type ProjectSummary = {
+  id: string;
+  title: string;
+  status: "active" | "archived";
+  confirmedAnswerCount: number;
+  prototypeVersion: number;
+  gddVersion: number;
+  buildBriefVersion: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
 export type WorkspacePayload = {
   project: {
     id: string;
@@ -151,6 +164,7 @@ export type WorkspacePayload = {
     buildBriefVersion: number;
     updatedAt: string;
   };
+  projects: ProjectSummary[];
   answers: Record<string, StoredAnswer>;
   chats: Record<string, ChatMessage[]>;
   latestPrototype: { version: number; spec: GameSpec; createdAt: string } | null;

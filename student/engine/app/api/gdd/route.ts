@@ -36,10 +36,11 @@ type GenerationRequest = {
   sections?: GddSection[];
 };
 
-async function checkGddFidelity(projectTitle: string, designInput: string, sections: GddSection[]) {
+async function checkGddFidelity(projectId: string, projectTitle: string, designInput: string, sections: GddSection[]) {
   const gddText = sections.map((section) => `## ${section.key}｜${section.title}\n${section.content}\n来源：${section.sourceQuestionIds.join("/")}`).join("\n\n");
   return createStructuredResponse<FidelityResult>({
     name: "gdd_fidelity_check",
+    projectId,
     schema: gddFidelitySchema,
     role: "gdd",
     strictSchema: true,
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
     if (body.action === "stage_summaries") {
       const result = await createStructuredResponse<GeneratedSummary>({
         name: "gdd_stage_summaries",
+        projectId: project.id,
         schema: gddSummarySchema,
         role: "gdd",
         maxTokens: 1900,
@@ -124,6 +126,7 @@ export async function POST(request: Request) {
       const sectionContract = sectionRows.map(([key, title, purpose, sources]) => `${key}｜${title}｜${purpose}｜主要证据 ${sources.join("/")}`).join("\n");
       const result = await createStructuredResponse<GeneratedSections>({
         name: `gdd_sections_${sectionRows[0][0]}`,
+        projectId: project.id,
         schema: gddSectionsSchema,
         role: "gdd",
         maxTokens: 3200,
@@ -140,7 +143,7 @@ export async function POST(request: Request) {
 
     if (body.action === "fidelity") {
       const sections = validateStructuredValue<GeneratedSections>({ sections: body.sections }, gddSectionsSchema).sections;
-      const result = await checkGddFidelity(project.title, designInput, sections);
+      const result = await checkGddFidelity(project.id, project.title, designInput, sections);
       return Response.json({ snapshotKey: currentSnapshotKey, result: { sections: applyFidelityPatches(sections, result), patches: result.patches } });
     }
 
@@ -220,7 +223,7 @@ export async function POST(request: Request) {
       })),
       db.update(projects).set({ gddVersion: version, updatedAt: now }).where(eq(projects.id, project.id)),
     ]);
-    return Response.json(await getWorkspace(user), { status: 201 });
+    return Response.json(await getWorkspace(user, project.id), { status: 201 });
   } catch (error) {
     const status = requestStatus(error);
     return Response.json({ error: error instanceof Error ? error.message : "GDD 生成失败。", configurationRequired: status === 503 }, { status });
@@ -270,13 +273,13 @@ export async function PATCH(request: Request) {
       const [review] = await db.select().from(designReviewRuns).where(eq(designReviewRuns.projectId, project.id)).orderBy(desc(designReviewRuns.version)).limit(1);
       if (!review || review.status !== "ready" || review.snapshotKey !== answerSnapshotKey(snapshot)) return Response.json({ error: "最新 Design State 尚未通过审查。" }, { status: 409 });
       const sections = JSON.parse(gdd.sectionsJson) as GddSection[];
-      const result = await checkGddFidelity(project.title, designStateText(snapshot), sections);
+      const result = await checkGddFidelity(project.id, project.title, designStateText(snapshot), sections);
       const correctedSections = applyFidelityPatches(sections, result);
       await db.update(gddVersions).set({ sectionsJson: JSON.stringify(correctedSections), fidelityStatus: "ready", status: "draft", confirmedAt: null, updatedAt: now }).where(eq(gddVersions.id, gdd.id));
     } else {
       return Response.json({ error: "不支持的操作。" }, { status: 400 });
     }
-    return Response.json(await getWorkspace(user));
+    return Response.json(await getWorkspace(user, project.id));
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "GDD 更新失败。" }, { status: 500 });
   }

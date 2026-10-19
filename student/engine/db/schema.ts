@@ -201,6 +201,59 @@ export const messages = sqliteTable(
   (table) => [index("messages_project_question_idx").on(table.projectId, table.questionId, table.createdAt)],
 );
 
+export const aiSuggestions = sqliteTable(
+  "ai_suggestions",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    questionId: text("question_id").notNull(),
+    source: text("source", { enum: ["chat", "synthesize", "design_review"] }).notNull(),
+    messageId: text("message_id").references(() => messages.id, { onDelete: "set null" }),
+    suggestedAnswer: text("suggested_answer").notNull(),
+    structuredJson: text("structured_json").notNull().default("{}"),
+    model: text("model"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("ai_suggestions_project_question_idx").on(table.projectId, table.questionId, table.createdAt)],
+);
+
+export const answerRevisions = sqliteTable(
+  "answer_revisions",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    questionId: text("question_id").notNull(),
+    revision: integer("revision").notNull(),
+    answer: text("answer").notNull(),
+    source: text("source", { enum: ["user", "design_review", "backfill"] }).notNull(),
+    suggestionId: text("suggestion_id").references(() => aiSuggestions.id, { onDelete: "set null" }),
+    adoption: text("adoption", { enum: ["verbatim", "edited", "manual"] }),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("answer_revisions_project_question_revision_unique").on(table.projectId, table.questionId, table.revision),
+    index("answer_revisions_project_idx").on(table.projectId),
+  ],
+);
+
+export const modelCalls = sqliteTable(
+  "model_calls",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+    operation: text("operation").notNull(),
+    role: text("role").notNull(),
+    model: text("model").notNull(),
+    outcome: text("outcome", { enum: ["success", "repaired", "failed"] }).notNull(),
+    strictFallback: integer("strict_fallback", { mode: "boolean" }).notNull().default(false),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    durationMs: integer("duration_ms").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("model_calls_project_idx").on(table.projectId, table.createdAt)],
+);
+
 export const gddReviewChanges = sqliteTable(
   "gdd_review_changes",
   {

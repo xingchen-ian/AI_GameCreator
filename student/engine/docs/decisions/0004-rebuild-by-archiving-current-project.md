@@ -1,6 +1,6 @@
 # ADR-0004：通过归档当前项目来重建空白项目
 
-- 状态：Accepted
+- 状态：Superseded by [ADR-0017](0017-multi-project-workspace.md)
 - 日期：2026-10-12
 - 决策者：产品负责人 / Codex
 - 关联：用户要求“只做重建项目”

@@ -1,10 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { messages } from "@/db/schema";
+import { aiSuggestions, messages } from "@/db/schema";
 import { allQuestions, stages } from "@/lib/protocol/stages";
 import { describeParkingTargets, getQuestionScope } from "@/lib/protocol/question-scope";
-import { AIConfigurationError, coachResponseSchema, createStructuredResponse } from "@/lib/server/model-provider";
+import { AIConfigurationError, coachResponseSchema, createStructuredResponseWithMeta } from "@/lib/server/model-provider";
 import { loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
 type CoachResponse = {
@@ -42,8 +42,9 @@ export async function POST(request: Request) {
     const relevantHistory = history.filter((item) => item.questionId === question.id).slice(-12).map((item) => `${item.role === "user" ? "用户" : "设计教练"}：${item.content}`).join("\n");
     const designContext = Object.entries(snapshot).map(([id, value]) => `${id} [${value.status}]：${value.answer}`).join("\n") || "尚无已确认答案";
 
-    const result = await createStructuredResponse<CoachResponse>({
+    const { result, meta } = await createStructuredResponseWithMeta<CoachResponse>({
       name: "game_design_coach_response",
+      projectId: project.id,
       schema: coachResponseSchema,
       instructions: [
         "你是一名面向游戏设计新手的专业设计教练。",
@@ -62,11 +63,16 @@ export async function POST(request: Request) {
 
     const assistantMessageId = crypto.randomUUID();
     const assistantCreatedAt = new Date().toISOString();
-    await db.insert(messages).values({ id: assistantMessageId, projectId: project.id, questionId: question.id, role: "assistant", content: result.reply, createdAt: assistantCreatedAt });
+    const suggestionId = crypto.randomUUID();
+    const structuredData = { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights: result.parkedInsights };
+    await db.batch([
+      db.insert(messages).values({ id: assistantMessageId, projectId: project.id, questionId: question.id, role: "assistant", content: result.reply, createdAt: assistantCreatedAt }),
+      db.insert(aiSuggestions).values({ id: suggestionId, projectId: project.id, questionId: question.id, source: "chat", messageId: assistantMessageId, suggestedAnswer: result.suggestedAnswer, structuredJson: JSON.stringify(structuredData), model: meta.model, createdAt: assistantCreatedAt }),
+    ]);
     return Response.json({
       userMessage: { id: userMessageId, role: "user", text: content, createdAt: now },
       assistantMessage: { id: assistantMessageId, role: "assistant", text: result.reply, createdAt: assistantCreatedAt },
-      suggestion: { answer: result.suggestedAnswer, structuredData: { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights: result.parkedInsights } },
+      suggestion: { id: suggestionId, answer: result.suggestedAnswer, structuredData },
     });
   } catch (error) {
     const status = error instanceof AIConfigurationError ? 503 : 500;

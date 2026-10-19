@@ -1,10 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { messages } from "@/db/schema";
+import { aiSuggestions, messages } from "@/db/schema";
 import { allQuestions, stages } from "@/lib/protocol/stages";
 import { describeParkingTargets, getQuestionScope } from "@/lib/protocol/question-scope";
-import { AIConfigurationError, coachResponseSchema, createStructuredResponse } from "@/lib/server/model-provider";
+import { AIConfigurationError, coachResponseSchema, createStructuredResponseWithMeta } from "@/lib/server/model-provider";
 import { loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
 type Synthesis = {
@@ -36,8 +36,9 @@ export async function POST(request: Request) {
     const conversation = history.filter((item) => item.questionId === question.id).slice(-20).map((item) => `${item.role === "user" ? "用户" : "教练"}：${item.content}`).join("\n");
     if (!conversation) return Response.json({ error: "请先与 AI 讨论，再提炼正式答案。" }, { status: 409 });
     const context = Object.entries(snapshot).map(([id, value]) => `${id} [${value.status}]：${value.answer}`).join("\n") || "尚无已确认答案";
-    const result = await createStructuredResponse<Synthesis>({
+    const { result, meta } = await createStructuredResponseWithMeta<Synthesis>({
       name: "game_design_answer_synthesis",
+      projectId: project.id,
       schema: coachResponseSchema,
       instructions: [
         "你是游戏设计编辑。根据对话整理一份忠于用户意图、具体、可执行的正式答案。",
@@ -47,7 +48,10 @@ export async function POST(request: Request) {
       ].join("\n"),
       input: `阶段：${stage.name}\n问题：${question.prompt}\n本题必须完成：${scope.focus}\n本题不要决定：${scope.defer}\n可以暂存到：${parkingTargets.length ? parkingTargets.join("；") : "没有后续题"}\n\n全局状态（仅作为一致性背景）：\n${context}\n\n本题对话：\n${conversation}`,
     });
-    return Response.json({ answer: result.suggestedAnswer, structuredData: { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights: result.parkedInsights } });
+    const suggestionId = crypto.randomUUID();
+    const structuredData = { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights: result.parkedInsights };
+    await db.insert(aiSuggestions).values({ id: suggestionId, projectId: project.id, questionId: question.id, source: "synthesize", suggestedAnswer: result.suggestedAnswer, structuredJson: JSON.stringify(structuredData), model: meta.model, createdAt: new Date().toISOString() });
+    return Response.json({ id: suggestionId, answer: result.suggestedAnswer, structuredData });
   } catch (error) {
     const status = error instanceof AIConfigurationError ? 503 : 500;
     return Response.json({ error: error instanceof Error ? error.message : "无法提炼答案。", configurationRequired: status === 503 }, { status });

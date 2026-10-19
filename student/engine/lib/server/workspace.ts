@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, prototypeVersions, questionAnswers, stageSummaries } from "@/db/schema";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
@@ -27,8 +27,12 @@ function normalizeAnswerStatus(status: string): AnswerStatus {
   return status === "draft" ? "draft" : "confirmed";
 }
 
-export async function ensureOwnedProject(user: ChatGPTUser) {
+export async function ensureOwnedProject(user: ChatGPTUser, preferredProjectId?: string | null) {
   const db = getDb();
+  if (preferredProjectId) {
+    const [preferred] = await db.select().from(projects).where(and(eq(projects.id, preferredProjectId), eq(projects.ownerId, user.userId), eq(projects.status, "active"))).limit(1);
+    if (preferred) return preferred;
+  }
   const [existing] = await db.select().from(projects).where(and(eq(projects.ownerId, user.userId), eq(projects.status, "active"))).orderBy(desc(projects.createdAt)).limit(1);
   if (existing) return existing;
 
@@ -50,9 +54,15 @@ export async function requireOwnedProject(projectId: string, user: ChatGPTUser) 
   return project ?? null;
 }
 
-export async function getWorkspace(user: ChatGPTUser): Promise<WorkspacePayload> {
+export async function requireAnyOwnedProject(projectId: string, user: ChatGPTUser) {
   const db = getDb();
-  const project = await ensureOwnedProject(user);
+  const [project] = await db.select().from(projects).where(and(eq(projects.id, projectId), eq(projects.ownerId, user.userId))).limit(1);
+  return project ?? null;
+}
+
+export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: string | null): Promise<WorkspacePayload> {
+  const db = getDb();
+  const project = await ensureOwnedProject(user, preferredProjectId);
   const [answerRows, messageRows, latestRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, project.id)).orderBy(asc(questionAnswers.questionId)),
     db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
@@ -215,6 +225,16 @@ export async function getWorkspace(user: ChatGPTUser): Promise<WorkspacePayload>
     updatedAt: change.updatedAt,
   }));
 
+  const projectRows = await db.select().from(projects).where(eq(projects.ownerId, user.userId)).orderBy(desc(projects.updatedAt));
+  const projectIds = projectRows.map((row) => row.id);
+  const allAnswerRows = projectIds.length
+    ? await db.select({ projectId: questionAnswers.projectId, status: questionAnswers.status }).from(questionAnswers).where(inArray(questionAnswers.projectId, projectIds))
+    : [];
+  const answerCounts = new Map<string, number>();
+  for (const answer of allAnswerRows) {
+    if (normalizeAnswerStatus(answer.status) === "confirmed") answerCounts.set(answer.projectId, (answerCounts.get(answer.projectId) ?? 0) + 1);
+  }
+
   return {
     project: {
       id: project.id,
@@ -225,6 +245,18 @@ export async function getWorkspace(user: ChatGPTUser): Promise<WorkspacePayload>
       buildBriefVersion: project.buildBriefVersion,
       updatedAt: project.updatedAt,
     },
+    projects: projectRows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      confirmedAnswerCount: answerCounts.get(row.id) ?? 0,
+      prototypeVersion: row.prototypeVersion,
+      gddVersion: row.gddVersion,
+      buildBriefVersion: row.buildBriefVersion,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      archivedAt: row.archivedAt,
+    })),
     answers,
     chats,
     latestPrototype,

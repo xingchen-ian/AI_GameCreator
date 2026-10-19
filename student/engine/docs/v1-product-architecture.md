@@ -1,8 +1,8 @@
 # Game Design Workflow — V1 产品与技术架构
 
-> 状态：Draft for review
-> 日期：2026-10-12
-> 范围：仅描述独立项目 `game-workflow`，不包含 `game-agent` 方案。
+> 状态：Draft for review  
+> 日期：2026-10-12  
+> 范围：仅描述独立项目 `game-workflow`，不包含 `game-agent` 方案。  
 > 本文目标：先确认产品边界、信息流和版本关系，再继续实现。
 
 ## 1. 一句话定义

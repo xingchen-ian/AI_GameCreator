@@ -11,6 +11,7 @@ import {
   Circle,
   Cloud,
   FileText,
+  FolderOpen,
   Gamepad2,
   GitCompareArrows,
   Loader2,
@@ -28,12 +29,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { BuildBriefPanel, GddPanel } from "@/components/workflow/gdd-panels";
 import { GddReviewWorkspace } from "@/components/workflow/gdd-review-workspace";
+import { ProjectManager } from "@/components/workflow/project-manager";
 import type { DesignReviewChange, GddSection, WorkspacePayload } from "@/lib/design/types";
 import { gddSectionPlan } from "@/lib/design/gdd";
 import { allQuestions, stages, type Question } from "@/lib/protocol/stages";
 import { getQuestionScope } from "@/lib/protocol/question-scope";
 
-type Suggestion = { answer: string; structuredData: Record<string, unknown> };
+type Suggestion = { id?: string; answer: string; structuredData: Record<string, unknown> };
 type GddProgress = { label: string; percent: number };
 type GeneratedStageSummary = { stageId: number; summary: string; keyDecisions: string[]; openQuestions: string[] };
 const GDD_REVIEW_ID = "GDD_GLOBAL";
@@ -173,26 +175,34 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   const [suggestions, setSuggestions] = useState<Record<string, Suggestion>>({});
   const [view, setView] = useState<"design" | "gdd" | "build" | "prototype">("design");
   const [runDialog, setRunDialog] = useState(false);
-  const [rebuildDialog, setRebuildDialog] = useState(false);
+  const [projectManagerOpen, setProjectManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [thinking, setThinking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gddProgress, setGddProgress] = useState<GddProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadWorkspace = async () => {
+  const applyWorkspace = (payload: WorkspacePayload) => {
+    setWorkspace(payload);
+    window.localStorage.setItem("game-workflow.active-project", payload.project.id);
+    const activeQuestionId = payload.project.activeQuestionId || "Q1";
+    setSelectedId(activeQuestionId);
+    setSelectedGddIssueId(defaultGddIssueId(payload));
+    setAnswerDraft(payload.answers[activeQuestionId]?.answer ?? "");
+    setDraft("");
+    setSuggestions({});
+    const question = allQuestions.find((item) => item.id === activeQuestionId);
+    if (question) setOpenStages(new Set([question.stageId]));
+    setError(null);
+  };
+
+  const loadWorkspace = async (projectId?: string | null) => {
     setLoading(true);
     try {
-      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { cache: "no-store" }));
-      setWorkspace(payload);
-      const activeQuestionId = payload.project.activeQuestionId || "Q1";
-      setSelectedId(activeQuestionId);
-      setSelectedGddIssueId(defaultGddIssueId(payload));
-      setAnswerDraft(payload.answers[activeQuestionId]?.answer ?? suggestions[activeQuestionId]?.answer ?? "");
-      setDraft("");
-      const question = allQuestions.find((item) => item.id === payload.project.activeQuestionId);
-      if (question) setOpenStages(new Set([question.stageId]));
-      setError(null);
+      const requestedId = projectId ?? window.localStorage.getItem("game-workflow.active-project");
+      const query = requestedId ? `?projectId=${encodeURIComponent(requestedId)}` : "";
+      const payload = await readJson<WorkspacePayload>(await fetch(`/api/workspace${query}`, { cache: "no-store" }));
+      applyWorkspace(payload);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "无法载入项目。");
     } finally {
@@ -206,6 +216,34 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     // Initial hydration only; subsequent refreshes are explicit user actions.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const projectMutation = async (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>, closeAfter = false) => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }));
+      applyWorkspace(payload);
+      if (closeAfter) setProjectManagerOpen(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "项目操作失败。");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const switchProject = async (projectId: string) => {
+    if (saving || projectId === workspace?.project.id) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await loadWorkspace(projectId);
+      setView("design");
+      setProjectManagerOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const selected = allQuestions.find((question) => question.id === selectedId) ?? allQuestions[0];
   const isGlobalReview = selectedId === GDD_REVIEW_ID;
@@ -358,7 +396,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setSaving(true);
     setError(null);
     try {
-      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_answer", projectId: workspace.project.id, questionId: selectedId, answer: answerDraft.trim(), structuredData: suggestions[selectedId]?.structuredData ?? {} }) }));
+      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_answer", projectId: workspace.project.id, questionId: selectedId, answer: answerDraft.trim(), structuredData: suggestions[selectedId]?.structuredData ?? {}, suggestionId: suggestions[selectedId]?.id }) }));
       setWorkspace(payload);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "保存失败。");
@@ -379,29 +417,6 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "原型生成失败。");
       setRunDialog(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const rebuildProject = async () => {
-    if (!workspace || saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "rebuild_project", projectId: workspace.project.id }) }));
-      setWorkspace(payload);
-      setSelectedId("Q1");
-      setSelectedGddIssueId(null);
-      setOpenStages(new Set([1]));
-      setDraft("");
-      setAnswerDraft("");
-      setSuggestions({});
-      setView("design");
-      setRunDialog(false);
-      setRebuildDialog(false);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "项目重建失败。");
     } finally {
       setSaving(false);
     }
@@ -506,8 +521,8 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   return (
     <main className="flex min-h-screen flex-col bg-[#f4f7f8] xl:h-screen xl:overflow-hidden">
       <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-[#cfdadd] bg-white px-4 shadow-[0_1px_0_rgba(16,37,45,.04)] sm:px-5">
-        <div className="flex min-w-0 items-center gap-3"><div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#10252d] text-[#72d2dd]"><Sparkles className="size-[18px]" /></div><div className="min-w-0"><div className="flex items-center gap-2"><h1 className="max-w-[220px] truncate text-[16px] font-semibold">{workspace.project.title}</h1><span className="rounded-md bg-[#e5f2ed] px-1.5 py-0.5 font-mono text-[10px] text-[#42735d]">FORMAL</span></div><p className="text-[12px] text-[#6a7c83]">{displayName} · 云端项目</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-3"><div className="hidden w-44 md:block"><div className="mb-1 flex justify-between text-[11px] text-[#60747c]"><span>已确认设计</span><span>{progress}%</span></div><Progress value={progress} className="h-1.5 bg-[#dfe8ea]" /></div><span className="hidden items-center gap-1.5 text-[12px] text-[#60747c] lg:flex"><Cloud className="size-3.5 text-[#6b8f4e]" />{saving ? "同步中" : "云端已保存"}</span><Button variant="outline" size="sm" aria-label="重建项目" onClick={() => setRebuildDialog(true)} disabled={saving} className="h-9 rounded-xl px-2.5 sm:px-3"><RotateCcw className="size-3.5" /><span className="hidden lg:inline">重建项目</span></Button><Button onClick={() => setRunDialog(true)} className="h-9 rounded-xl bg-[#f0a63a] px-3 text-[#253039] shadow-[0_3px_0_#c9821d] hover:bg-[#f5b34b] sm:px-4"><Play className="size-4 fill-current" /><span className="hidden sm:inline">Run prototype</span><span className="sm:hidden">Run</span></Button></div>
+        <button onClick={() => setProjectManagerOpen(true)} className="flex min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-[#f2f6f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c7489]/30"><div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#10252d] text-[#72d2dd]"><Sparkles className="size-[18px]" /></div><div className="min-w-0 pr-2"><div className="flex items-center gap-2"><h1 className="max-w-[220px] truncate text-[16px] font-semibold">{workspace.project.title}</h1><ChevronDown className="size-3.5 text-[#74868c]" /></div><p className="text-[12px] text-[#6a7c83]">{displayName} · {workspace.projects.filter((project) => project.status === "active").length} 个项目</p></div></button>
+        <div className="flex items-center gap-2 sm:gap-3"><div className="hidden w-44 md:block"><div className="mb-1 flex justify-between text-[11px] text-[#60747c]"><span>已确认设计</span><span>{progress}%</span></div><Progress value={progress} className="h-1.5 bg-[#dfe8ea]" /></div><span className="hidden items-center gap-1.5 text-[12px] text-[#60747c] lg:flex"><Cloud className="size-3.5 text-[#6b8f4e]" />{saving ? "同步中" : "云端已保存"}</span><Button variant="outline" size="sm" aria-label="管理项目" onClick={() => setProjectManagerOpen(true)} disabled={saving} className="h-9 rounded-xl px-2.5 sm:px-3"><FolderOpen className="size-3.5" /><span className="hidden lg:inline">项目</span></Button><Button onClick={() => setRunDialog(true)} className="h-9 rounded-xl bg-[#f0a63a] px-3 text-[#253039] shadow-[0_3px_0_#c9821d] hover:bg-[#f5b34b] sm:px-4"><Play className="size-4 fill-current" /><span className="hidden sm:inline">Run prototype</span><span className="sm:hidden">Run</span></Button></div>
       </header>
 
       {error && <div className="flex items-center justify-between gap-3 border-b border-[#e9c889] bg-[#fff7e7] px-4 py-2 text-[12px] text-[#725321]"><span className="flex items-center gap-2"><AlertTriangle className="size-4 shrink-0" />{error}</span><button onClick={() => setError(null)} className="font-semibold">关闭</button></div>}
@@ -558,7 +573,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
       </section>
 
       <Dialog open={runDialog} onOpenChange={setRunDialog}><DialogContent className="rounded-2xl border-[#cedadd] sm:max-w-[540px]"><DialogHeader><div className="mb-2 grid size-11 place-items-center rounded-2xl bg-[#e1f1f3] text-[#0c7489]"><WandSparkles className="size-5" /></div><DialogTitle>编译新的可玩 Prototype</DialogTitle><DialogDescription className="leading-6">AI 会把已确认的 Design State 转换成严格的 Game Specification；安全运行时只解释规格，不执行模型生成的代码。</DialogDescription></DialogHeader><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-[#d8e2e4] bg-[#f6f9fa] p-3"><p className="text-[11px] text-[#71858c]">已确认问题</p><p className="mt-1 text-xl font-semibold">{confirmedCount}<span className="text-sm font-normal text-[#71858c]"> / 23</span></p></div><div className="rounded-xl border border-[#d8e2e4] bg-[#f6f9fa] p-3"><p className="text-[11px] text-[#71858c]">下一个版本</p><p className="mt-1 text-xl font-semibold">v{workspace.project.prototypeVersion + 1}</p></div></div>{workspace.issues.length ? <div className="rounded-xl border border-[#efd6a6] bg-[#fff8ea] p-3 text-[12px] leading-5 text-[#745725]"><p className="flex items-center gap-2 font-semibold"><AlertTriangle className="size-4" />暂时不能生成</p><ul className="mt-2 space-y-1 pl-5">{workspace.issues.map((issue) => <li key={`${issue.type}-${issue.questionId}`} className="list-disc">{issue.message}</li>)}</ul></div> : <div className="flex gap-3 rounded-xl border border-[#bed9c3] bg-[#f1f8f2] p-3 text-[12px] leading-5 text-[#3d6744]"><CheckCircle2 className="mt-0.5 size-4 shrink-0" /><p>核心信息完整，可以生成新的规格和版本快照。</p></div>}<DialogFooter><DialogClose asChild><Button variant="outline">继续设计</Button></DialogClose><Button onClick={() => void runPrototype()} disabled={workspace.issues.length > 0 || saving} className="bg-[#f0a63a] text-[#253039] hover:bg-[#f5b34b]">{saving ? <Loader2 className="animate-spin" /> : <Play className="fill-current" />}生成并试玩</Button></DialogFooter></DialogContent></Dialog>
-      <Dialog open={rebuildDialog} onOpenChange={(open) => { if (!saving) setRebuildDialog(open); }}><DialogContent className="rounded-2xl border-[#cedadd] sm:max-w-[500px]"><DialogHeader><div className="mb-2 grid size-11 place-items-center rounded-2xl bg-[#fff1d8] text-[#9a6719]"><RotateCcw className="size-5" /></div><DialogTitle>重建一个全新项目？</DialogTitle><DialogDescription className="leading-6">当前项目“{workspace.project.title}”会被归档保留，然后创建一个完全空白的新项目并从 Q1 开始。现有答案、对话、GDD、Build Brief 和 Prototype 不会复制到新项目。</DialogDescription></DialogHeader><div className="rounded-xl border border-[#ecd39f] bg-[#fff9ed] p-3 text-[12px] leading-5 text-[#755625]"><p className="font-semibold">这不是永久删除</p><p className="mt-1">旧项目仍保存在数据库中，但当前版本暂未提供归档项目恢复界面。</p></div><DialogFooter><DialogClose asChild><Button variant="outline" disabled={saving}>取消</Button></DialogClose><Button onClick={() => void rebuildProject()} disabled={saving} className="bg-[#b44b42] text-white hover:bg-[#9f3f38]">{saving ? <Loader2 className="animate-spin" /> : <RotateCcw />}归档并重建</Button></DialogFooter></DialogContent></Dialog>
+      <ProjectManager workspace={workspace} open={projectManagerOpen} busy={saving} onOpenChange={setProjectManagerOpen} onSelect={(projectId) => void switchProject(projectId)} onCreate={(title) => void projectMutation("POST", { action: "create_project", title }, true)} onRename={(projectId, title) => void projectMutation("PATCH", { action: "rename_project", projectId, title, returnProjectId: workspace.project.id })} onArchive={(projectId) => void projectMutation("PATCH", { action: "archive_project", projectId, returnProjectId: workspace.project.id })} onRestore={(projectId) => void projectMutation("PATCH", { action: "restore_project", projectId }, true)} onDelete={(projectId, confirmTitle) => void projectMutation("DELETE", { projectId, confirmTitle, returnProjectId: workspace.project.id })} />
     </main>
   );
 }

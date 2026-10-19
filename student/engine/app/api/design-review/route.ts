@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     if (body.action === "start") {
       const result = await createStructuredResponse<{ issues: GeneratedIssue[] }>({
         name: "design_state_consistency_review",
+        projectId: project.id,
         schema: designReviewScanSchema,
         role: "gdd",
         strictSchema: true,
@@ -125,7 +126,7 @@ export async function POST(request: Request) {
           updatedAt: now,
         })),
       ]);
-      return Response.json(await getWorkspace(user), { status: 201 });
+      return Response.json(await getWorkspace(user, project.id), { status: 201 });
     }
 
     if (!latestRun || latestRun.status === "superseded") return Response.json({ error: "请先开始一次全局设计审查。" }, { status: 409 });
@@ -134,6 +135,7 @@ export async function POST(request: Request) {
     const issueIds = verifiableIssues.map((issue) => issue.id);
     const result = await createStructuredResponse<VerificationResult>({
       name: "design_state_consistency_verification",
+      projectId: project.id,
       schema: designReviewVerificationSchema(issueIds),
       role: "gdd",
       strictSchema: true,
@@ -203,7 +205,7 @@ export async function POST(request: Request) {
         updatedAt: now,
       }).where(eq(designReviewRuns.id, latestRun.id)),
     ]);
-    return Response.json(await getWorkspace(user));
+    return Response.json(await getWorkspace(user, project.id));
   } catch (error) {
     const status = errorStatus(error);
     return Response.json({ error: error instanceof Error ? error.message : "全局设计审查失败。", configurationRequired: status === 503 }, { status });
@@ -231,7 +233,7 @@ export async function PATCH(request: Request) {
     const currentKey = answerSnapshotKey(snapshot);
     const ready = unresolved.length === 0 && currentKey === run.snapshotKey;
     await db.update(designReviewRuns).set({ status: ready ? "ready" : run.status === "dirty" ? "dirty" : "action_required", completedAt: ready ? now : null, updatedAt: now }).where(eq(designReviewRuns.id, run.id));
-    return Response.json(await getWorkspace(user));
+    return Response.json(await getWorkspace(user, project.id));
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "问题状态更新失败。" }, { status: 500 });
   }

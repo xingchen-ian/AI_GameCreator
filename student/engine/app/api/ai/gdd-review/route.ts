@@ -1,9 +1,9 @@
 import { and, asc, desc, eq, gte } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
+import { aiSuggestions, answerRevisions, buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
-import { AIConfigurationError, AIRequestTimeoutError, createStructuredResponse, designReviewResponseSchema } from "@/lib/server/model-provider";
+import { AIConfigurationError, AIRequestTimeoutError, createStructuredResponseWithMeta, designReviewResponseSchema } from "@/lib/server/model-provider";
 import { parseStringArray } from "@/lib/server/design-review";
 import { getWorkspace, loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
@@ -19,6 +19,12 @@ function parseObject(value: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+// 本记录功能上线前生成的审查建议没有对应的 ai_suggestions 行。
+async function suggestionExists(id: string) {
+  const [row] = await getDb().select({ id: aiSuggestions.id }).from(aiSuggestions).where(eq(aiSuggestions.id, id)).limit(1);
+  return Boolean(row);
 }
 
 function errorStatus(error: unknown) {
@@ -68,8 +74,9 @@ export async function POST(request: Request) {
     const reviewHistory = history.filter((message) => message.questionId === reviewNodeId).slice(-10).map((message) => `${message.role === "user" ? "用户" : "审查助手"}：${message.content}`).join("\n");
     const userRequest = mode === "analyze" ? "简短解释这项冲突，并给出一个忠于用户意图、可以直接写入其中一道关联题的完整答案修改。" : content;
 
-    const result = await createStructuredResponse<ReviewResponse>({
+    const { result, meta } = await createStructuredResponseWithMeta<ReviewResponse>({
       name: "design_review_conversation",
+      projectId: project.id,
       schema: designReviewResponseSchema,
       role: "gdd",
       strictSchema: true,
@@ -98,6 +105,8 @@ export async function POST(request: Request) {
     const assistantCreatedAt = new Date().toISOString();
     await db.batch([
       db.insert(messages).values({ id: assistantMessageId, projectId: project.id, questionId: reviewNodeId, role: "assistant", content: result.reply.trim(), createdAt: assistantCreatedAt }),
+      // 保留 AI 的原始提议：用户编辑后写入时，designReviewChanges.proposedContent 会被覆盖。
+      ...normalized.map((change) => db.insert(aiSuggestions).values({ id: change.id, projectId: project.id, questionId: change.targetQuestionId, source: "design_review", messageId: assistantMessageId, suggestedAnswer: change.proposedContent, structuredJson: JSON.stringify({ issueId: issue.id, reviewRunId: run.id, summary: change.summary, rationale: change.rationale }), model: meta.model, createdAt: assistantCreatedAt })),
       ...normalized.map((change) => db.insert(designReviewChanges).values({ id: change.id, projectId: project.id, messageId: assistantMessageId, reviewRunId: run.id, issueId: issue.id, targetQuestionId: change.targetQuestionId, summary: change.summary, rationale: change.rationale, beforeContent: change.beforeContent, beforeRevision: change.beforeRevision, proposedContent: change.proposedContent, status: "proposed", createdAt: assistantCreatedAt, updatedAt: assistantCreatedAt })),
     ]);
     return Response.json({
@@ -128,7 +137,7 @@ export async function PATCH(request: Request) {
     const now = new Date().toISOString();
     if (body.action === "dismiss") {
       await db.update(designReviewChanges).set({ status: "dismissed", updatedAt: now }).where(eq(designReviewChanges.id, change.id));
-      return Response.json(await getWorkspace(user));
+      return Response.json(await getWorkspace(user, project.id));
     }
 
     const question = allQuestions.find((item) => item.id === change.targetQuestionId);
@@ -142,8 +151,10 @@ export async function PATCH(request: Request) {
     const audit = { ...parseObject(existing.structuredJson), updatedByDesignReview: { changeId: change.id, issueId: change.issueId, at: now } };
     const issueRows = await db.select().from(designReviewIssues).where(eq(designReviewIssues.lastSeenRunId, change.reviewRunId));
     const affectedIssueIds = issueRows.filter((item) => item.status !== "superseded" && parseStringArray(item.questionIdsJson).includes(change.targetQuestionId)).map((item) => item.id);
+    const linkedSuggestionId = await suggestionExists(change.id) ? change.id : null;
     await db.batch([
       db.update(questionAnswers).set({ answer: finalContent, status: "confirmed", structuredJson: JSON.stringify(audit), revision: existing.revision + 1, updatedAt: now }).where(eq(questionAnswers.id, existing.id)),
+      db.insert(answerRevisions).values({ id: crypto.randomUUID(), projectId: project.id, questionId: change.targetQuestionId, revision: existing.revision + 1, answer: finalContent, source: "design_review", suggestionId: linkedSuggestionId, adoption: finalContent === change.proposedContent.trim() ? "verbatim" : "edited", createdAt: now }).onConflictDoNothing(),
       ...affectedIssueIds.map((issueId) => db.update(designReviewIssues).set({ status: "pending_verification", resolutionNote: "相关答案已修改，等待统一验证。", updatedAt: now }).where(eq(designReviewIssues.id, issueId))),
       db.update(designReviewRuns).set({ status: "dirty", completedAt: null, updatedAt: now }).where(eq(designReviewRuns.id, change.reviewRunId)),
       db.update(stageSummaries).set({ status: "stale" }).where(and(eq(stageSummaries.projectId, project.id), eq(stageSummaries.status, "current"), gte(stageSummaries.stageId, question.stageId))),
@@ -154,7 +165,7 @@ export async function PATCH(request: Request) {
     await db.update(designReviewChanges).set({ proposedContent: finalContent, status: "applied", appliedAt: now, updatedAt: now }).where(eq(designReviewChanges.id, change.id));
     const derivedTitle = change.targetQuestionId === "Q1" && project.title === "未命名游戏" ? finalContent.split(/[。；\n]/)[0].slice(0, 28) || project.title : project.title;
     await db.update(projects).set({ title: derivedTitle, updatedAt: now }).where(eq(projects.id, project.id));
-    return Response.json(await getWorkspace(user));
+    return Response.json(await getWorkspace(user, project.id));
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "修改建议处理失败。" }, { status: 500 });
   }

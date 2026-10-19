@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const designBrief = allQuestions.filter((question) => snapshot[question.id]).map((question) => `${question.id} ${question.short} [${snapshot[question.id].status}]：${snapshot[question.id].answer}`).join("\n");
     const spec = await createStructuredResponse<GameSpec>({
       name: "safe_browser_game_spec",
+      projectId: project.id,
       schema: gameSpecSchema,
       role: "build",
       instructions: [
