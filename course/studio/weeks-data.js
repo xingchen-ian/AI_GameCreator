@@ -432,35 +432,82 @@ window.WEEKS_DATA = [
   },
   {
     id: "07",
-    title: "Sprint 1 review + Test 1",
+    title: "Positioning · exam prototype · next build",
     phase: "Sprint 1 · Gate",
     phaseKey: "s1",
     agenda: [
-      "8:30–9:15 · Schön: reflection-in-action during designer-user sessions",
-      "9:15–10:15 · Run / debrief Test 1 (structural readability, any-entry)",
-      "10:15–11:00 · L1 memo against the Sprint 1 door"
+      "Name the engine’s core position vs one-click generators",
+      "Play / debrief the exam-theme prototype from the math-quiz pass",
+      "Where the GDD flow still misses play-detail and early AI inspiration",
+      "Agree near-term build, milestone write-up, and Weeks 9–10 tests"
     ],
+    classNotes: {
+      held: "2026-10-19",
+      problemTitle: "Positioning",
+      decisionsTitle: "Exam prototype · what we saw",
+      ownersTitle: "Next actions",
+      sources: [
+        {
+          label: "Meeting note in repo",
+          href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-19-week07-meeting.md"
+        },
+        {
+          label: "Saturday math-quiz prototype",
+          href: "../student/tests/saturday-math-quiz/"
+        }
+      ],
+      problem: [
+        "Human starts; human and AI divide labor inside a visible design frame — keep mature studio process, do not replace it.",
+        "Aim: turn lived experience into expressive, original play. Not one-click AAA / high-token generic games.",
+        "Difference vs market tools: combine engine craft with a studio-style creation workflow so non-experts can still express an experience."
+      ],
+      decisions: [
+        "The exam-theme prototype feels original (color blocks, hold/click modes, timer tension) and immersive.",
+        "Onboarding is weak: new players struggle with rule types; some items feel too hard. Prefer a short pre-exam explain of the two question types over a generic optional tutorial that breaks immersion.",
+        "Round length: try ~6 minutes instead of ~3; later, multiple “exam” formats with different lengths / score weights.",
+        "GDD flow still under-prompts atomic play detail; AI inspiration is piled in review — move ~3 reference play options earlier into stages.",
+        "Keep scope small and creative first. Full-agent mode and a large design toolkit / knowledge base stay later — not this week’s build."
+      ],
+      owners: [
+        "Josie · finish review-module debugging so the flow runs without hand-pasting prompts; polish the current prototype; say when a build is ready to re-check.",
+        "Xingchen · write a short milestone note that marks the human / AI boundary (for later WiP / exhibit use); optionally start a second themed demo on the same scaffold.",
+        "Together · after midterm, Weeks 9–10: invite several kinds of adult users for playtests. Research tests still need consent / IRB. No minors as research participants.",
+        "Later (not blocking now) · optional 3D first-person exam mood; education / other applied scenes — only after the current loop is solid."
+      ],
+      notThisWeek: [
+        "Rushing a full-agent version.",
+        "Aiming the engine at AAA / high-token generic generation.",
+        "Casual side talk and non-course game digressions."
+      ]
+    },
     readings: [
       {
-        title: "Schön · The Reflective Practitioner (preview / borrow)",
-        href: "https://openlibrary.org/works/OL7140277W/The_Reflective_Practitioner",
-        access: "Preview / borrow",
-        note: "Reflection-in-action and reflection-on-action."
+        title: "Week 07 meeting note",
+        href: "https://github.com/xingchen-ian/AI_GameCreator/blob/main/shared/meeting-notes/2026-10-19-week07-meeting.md",
+        access: "Repo",
+        note: "Public summary of the 2026-10-19 studio."
+      },
+      {
+        title: "Saturday math-quiz prototype",
+        href: "../student/tests/saturday-math-quiz/",
+        access: "Playable",
+        note: "Exam-theme playable from the Class 06–07 pass."
       }
     ],
     questions: [
-      "Where did you or the designer-user reflect-in-action while using the engine?",
-      "What structural gaps were readable, and which remained invisible?",
-      "Does the playable increment still express the tester’s structure, not yours?"
+      "Where does “lived experience → expressive play” stop the engine from becoming a one-click toy?",
+      "What must the GDD ask earlier so atomic play is designed before review?",
+      "What should the Weeks 9–10 playtest observe that today’s in-class play already answered?"
     ],
     assignment: {
-      summary: "Playable increment + two-page memo against the L1 door + anonymized test notes.",
+      summary: "Stabilize review + polish the exam prototype; write the human/AI milestone note; prep Weeks 9–10 tests (after midterm, with consent/IRB for research use).",
       deliverables: [
-        "Playable Sprint 1 increment",
-        "Two-page L1 memo",
-        "Anonymized Test 1 notes"
+        "Review module runs without manual per-question prompt pasting",
+        "Exam prototype polish note (onboarding explain, timing, difficulty) reflected in the build or a short change list",
+        "Milestone write-up: human vs AI boundary on the current scaffold",
+        "Draft plan for Weeks 9–10 adult playtests (tasks + what to observe)"
       ],
-      criteria: "Memo argues against the frozen L1 door; notes separate observation from interpretation."
+      criteria: "Prototype and review path are re-checkable; milestone note is explicit about authorship boundaries; test plan does not recruit minors for research."
     }
   },
   {
