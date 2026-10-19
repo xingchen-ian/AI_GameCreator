@@ -32,7 +32,7 @@ Independent study + engine research: structured **blueprint** as shared design l
 |------|---------|
 | 🟠 High | Fall 2026 course running; theory aimed at **CHI PLAY 2027 WiP** + journal track **CoDesign** |
 
-This week: Josie ships Week 06 next actions (prefill · system map · smart revise + GDD/log). IRB packet TBD → submit. **No research playtests until consent/IRB.**
+This week: Week 07 — stabilize review + polish exam prototype; milestone human/AI note; prep Weeks 9–10 adult tests. IRB TBD → submit. **No research playtests until consent/IRB. No minors.**
 
 ---
 
@@ -41,7 +41,7 @@ This week: Josie ships Week 06 next actions (prefill · system map · smart revi
 | Area | Status | Notes |
 |------|:------:|-------|
 | Course site + Pages | ✅ | https://xingchen-ian.github.io/AI_GameCreator/ |
-| Syllabus / studio | 🟡 | Week 06 notes live: engine preview · math-quiz pass · next actions |
+| Syllabus / studio | 🟡 | Week 07 notes live: positioning · exam prototype · next build |
 | Blueprint schema v0 | 🟡 | `blueprint-schema-v0.md` + sailing sample |
 | Theoretical framework | 🟡 | `course/theoretical-framework.md` |
 | Student engine / report | 🟡 | Josie owns `student/`; *Boil an Egg* is the Week 01 pipeline game |
@@ -54,9 +54,9 @@ This week: Josie ships Week 06 next actions (prefill · system map · smart revi
 
 ## Next steps (≤3)
 
-1. **Josie · Week 06 next actions**: gray-box prefill · live core-system map · smart revise; then upload math-quiz GDD + change log.
-2. **IRB usability · submit**: finish TBD in `irb-usability-2026/`; CITI; PDF → IRBManager Exempt. **No research tests until exemption/approval.**
-3. **After core features + IRB**: consented usability sessions → CHI PLAY 2027 WiP / CoDesign. No minors.
+1. **Josie · Week 07**: finish review-module debug + exam-prototype polish; notify when re-checkable.
+2. **Xingchen · milestone note**: short human/AI boundary write-up; optional second themed demo.
+3. **IRB + Weeks 9–10**: submit usability packet; after midterm, adult playtests only with consent/IRB. No minors.
 
 ---
 
@@ -68,15 +68,23 @@ This week: Josie ships Week 06 next actions (prefill · system map · smart revi
 | Week 02 studio | `course/studio/week-02.html` |
 | Week 03 studio | `course/studio/week-03.html` |
 | Week 06 studio | `course/studio/week-06.html` |
+| Week 07 studio | `course/studio/week-07.html` |
+| Math-quiz prototype | `student/tests/saturday-math-quiz/` |
 | Week 02 notes | `shared/meeting-notes/2026-09-14-week02-meeting.md` |
 | Week 03 notes | `shared/meeting-notes/2026-09-14-week03-meeting.md` |
 | Week 06 notes | `shared/meeting-notes/2026-10-12-week06-meeting.md` |
+| Week 07 notes | `shared/meeting-notes/2026-10-19-week07-meeting.md` |
 | Student work | `student/` |
 | IRB usability drafts | `irb-usability-2026/` |
 
 ---
 
 ## Weekly log (newest first)
+
+### 2026-10-19 · Week 07 on course site
+
+- Studio Week 07: positioning (lived experience → expressive play) · exam prototype feedback · GDD/inspiration fixes · Weeks 9–10 adult tests.
+- Note: `shared/meeting-notes/2026-10-19-week07-meeting.md`. Links playable `student/tests/saturday-math-quiz/`.
 
 ### 2026-10-19 · Week 06 on course site
 
