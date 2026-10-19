@@ -278,6 +278,24 @@ function finishVerify(q) {
   else { q.locked = true; q.conf = Math.max(q.conf, 0.9); toast(msg.length ? `${msg[0]}，验算通过` : '验算通过，心里踏实了一点', 'good'); }
   G.dirtySheet = G.dirtyWork = true;
 }
+// 改答案：选择题擦掉所选；大题从第 k 步起擦掉重推。已验算锁定的不能改。
+function erase(k) {
+  const q = curQ();
+  if (!q || !q.read || G.reading || q.locked || eff('block') > 0) return;
+  if (q.type === 'choice') {
+    if (q.picked == null) return;
+    q.picked = null;
+  } else {
+    if (k == null) k = q.chain.length - 1;
+    if (k < 0 || k >= q.chain.length) return;
+    q.chain = q.chain.slice(0, k);
+    q.progress = 0;
+    makeCands(q);
+  }
+  q.answered = false; q.careless = false; q.verifyProg = 0;
+  scribble();
+  G.dirtySheet = G.dirtyWork = true;
+}
 function reread() {
   const q = curQ();
   if (!q || G.reading || q.locked) return;
@@ -416,7 +434,8 @@ function render() {
     if (q.locked) h = '';
     else if (q.type === 'chain' && q.cands && q.progress >= 1) h = '这一步想清楚了——选一个。';
     else if (q.type === 'choice' && q.progress >= 1 && q.picked == null) h = '看得很清楚了——选一个吧。';
-    else if (q.answered) h = '已作答。可以按住验算，或者去做别的题。';
+    else if (q.answered) h = q.type === 'choice' ? '已作答。点别的选项可以改答案；也可以按住验算，或者去做别的题。' : '已作答。点链上任意一步可以擦掉重推；也可以按住验算，或者去做别的题。';
+    else if (q.type === 'chain' && q.chain.length) h = '点链上已经写的某一步，可以从那一步擦掉重推。';
     else if (G.residue > 0.05) h = '脑子里还残留着上一题……';
     if (R.hint.textContent !== h) R.hint.textContent = h;
   }
@@ -482,12 +501,14 @@ function renderWork() {
       `<div class="targetBox"><div class="swatch" style="background:hsl(${q.target.h},${q.target.s}%,${q.target.l}%)"></div><small>题干</small></div>` +
       `<div class="opts">` + q.options.map((_, k) =>
         `<button class="opt ${q.picked === k ? 'picked' : ''}" data-k="${k}" ${q.locked ? 'disabled' : ''}><span class="sw"></span><b>${LETTERS[k]}</b></button>`).join('') +
-      `</div></div>`;
+      `</div></div>` +
+      (q.picked != null && !q.locked ? `<button class="ghost eraseBtn" data-erase="0">擦掉答案 <kbd>⌫</kbd></button>` : '');
   } else {
     let chain = '';
     for (let k = 0; k < q.steps; k++) {
       if (k > 0) chain += `<span class="link ${k <= q.chain.length ? 'done' : ''}"></span>`;
-      if (k < q.chain.length) chain += glyph(q.chain[k], 'node done');
+      if (k < q.chain.length) chain += q.locked ? glyph(q.chain[k], 'node done') :
+        `<button class="node done" data-erase="${k}" title="从这一步擦掉重推" style="color:${q.chain[k].c}">${q.chain[k].s}</button>`;
       else if (k === q.chain.length) chain += `<span class="node now">?</span>`;
       else chain += `<span class="node"></span>`;
     }
@@ -622,6 +643,7 @@ $('#rereadBtn').addEventListener('click', reread);
 $('#clockBtn').addEventListener('click', checkClock);
 $('#sheet').addEventListener('pointerdown', e => { const c = e.target.closest('.qcard'); if (c) selectQ(+c.dataset.q); });
 $('#work').addEventListener('click', e => {
+  const x = e.target.closest('[data-erase]'); if (x) return erase(+x.dataset.erase);
   const b = e.target.closest('[data-k]'); if (b) return answer(+b.dataset.k);
   if (e.target.closest('[data-act="flag"]')) toggleFlag();
 });
@@ -649,6 +671,7 @@ document.addEventListener('keydown', e => {
   if (k === 'v') pressStart('verify');
   else if (k === 's') skip();
   else if (k === 'r') reread();
+  else if (k === 'backspace' || k === 'delete') { e.preventDefault(); erase(); }
   else if (k === 't') checkClock();
   else if (/^[1-4]$/.test(k)) answer(+k - 1);
   else if (/^[a-d]$/.test(k)) answer('abcd'.indexOf(k));
