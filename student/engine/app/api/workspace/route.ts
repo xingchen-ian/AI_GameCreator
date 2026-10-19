@@ -1,0 +1,136 @@
+import { and, desc, eq, gte } from "drizzle-orm";
+import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getDb } from "@/db";
+import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddReviewChanges, gddVersions, projects, questionAnswers, stageSummaries } from "@/db/schema";
+import { allQuestions } from "@/lib/protocol/stages";
+import { getWorkspace, requireOwnedProject } from "@/lib/server/workspace";
+
+function unauthorized() {
+  return Response.json({ error: "请先使用 ChatGPT 账号登录。", signIn: "/signin-with-chatgpt?return_to=%2F" }, { status: 401 });
+}
+
+export async function GET() {
+  try {
+    const user = await getChatGPTUser();
+    if (!user) return unauthorized();
+    return Response.json(await getWorkspace(user));
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "无法读取项目。" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const user = await getChatGPTUser();
+    if (!user) return unauthorized();
+    const body = await request.json() as {
+      action?: "save_answer" | "set_active" | "rename_project" | "rebuild_project";
+      projectId?: string;
+      questionId?: string;
+      answer?: string;
+      structuredData?: Record<string, unknown>;
+      title?: string;
+    };
+    if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
+    const project = await requireOwnedProject(body.projectId, user);
+    if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
+    const db = getDb();
+    const now = new Date().toISOString();
+
+    if (body.action === "rebuild_project") {
+      const newProjectId = crypto.randomUUID();
+      await db.update(projects).set({ status: "archived", archivedAt: now, updatedAt: now }).where(eq(projects.id, project.id));
+      await db.insert(projects).values({
+        id: newProjectId,
+        ownerId: user.userId,
+        ownerEmail: user.email,
+        title: "未命名游戏",
+        status: "active",
+        activeQuestionId: "Q1",
+        prototypeVersion: 0,
+        gddVersion: 0,
+        buildBriefVersion: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else if (body.action === "set_active") {
+      if (body.questionId !== "GDD_GLOBAL" && !allQuestions.some((question) => question.id === body.questionId)) return Response.json({ error: "无效问题编号。" }, { status: 400 });
+      await db.update(projects).set({ activeQuestionId: body.questionId!, updatedAt: now }).where(eq(projects.id, project.id));
+    } else if (body.action === "rename_project") {
+      const title = body.title?.trim().slice(0, 80);
+      if (!title) return Response.json({ error: "项目名称不能为空。" }, { status: 400 });
+      await db.update(projects).set({ title, updatedAt: now }).where(eq(projects.id, project.id));
+    } else if (body.action === "save_answer") {
+      const questionId = body.questionId ?? "";
+      const answer = body.answer?.trim() ?? "";
+      if (!allQuestions.some((question) => question.id === questionId)) return Response.json({ error: "无效问题编号。" }, { status: 400 });
+      if (!answer || answer.length > 5000) return Response.json({ error: "答案需要包含 1–5000 个字符。" }, { status: 400 });
+
+      const [existing] = await db.select().from(questionAnswers).where(and(eq(questionAnswers.projectId, project.id), eq(questionAnswers.questionId, questionId))).limit(1);
+      const changed = existing?.answer !== answer;
+      if (existing) {
+        await db.update(questionAnswers).set({
+          answer,
+          status: "confirmed",
+          structuredJson: JSON.stringify(body.structuredData ?? {}),
+          revision: changed ? existing.revision + 1 : existing.revision,
+          updatedAt: now,
+        }).where(eq(questionAnswers.id, existing.id));
+      } else {
+        await db.insert(questionAnswers).values({
+          id: crypto.randomUUID(),
+          projectId: project.id,
+          questionId,
+          answer,
+          status: "confirmed",
+          structuredJson: JSON.stringify(body.structuredData ?? {}),
+          revision: 1,
+          updatedAt: now,
+        });
+      }
+      if (changed) {
+        const stageId = allQuestions.find((question) => question.id === questionId)!.stageId;
+        const [activeReview] = await db.select().from(designReviewRuns).where(eq(designReviewRuns.projectId, project.id)).orderBy(desc(designReviewRuns.version)).limit(1);
+        const relatedIssueIds: string[] = [];
+        if (activeReview && activeReview.status !== "superseded") {
+          const issueRows = await db.select().from(designReviewIssues).where(eq(designReviewIssues.lastSeenRunId, activeReview.id));
+          for (const issue of issueRows) {
+            let ids: string[] = [];
+            try { ids = JSON.parse(issue.questionIdsJson) as string[]; } catch { ids = []; }
+            if (ids.includes(questionId) && issue.status !== "superseded") {
+              relatedIssueIds.push(issue.id);
+            }
+          }
+        }
+        await Promise.all([
+          db.update(stageSummaries).set({ status: "stale" }).where(and(eq(stageSummaries.projectId, project.id), eq(stageSummaries.status, "current"), gte(stageSummaries.stageId, stageId))),
+          db.update(gddVersions).set({ status: "stale", updatedAt: now }).where(and(eq(gddVersions.projectId, project.id), eq(gddVersions.version, project.gddVersion))),
+          db.update(buildBriefs).set({ status: "stale" }).where(and(eq(buildBriefs.projectId, project.id), eq(buildBriefs.version, project.buildBriefVersion))),
+          db.update(gddReviewChanges).set({ status: "stale", updatedAt: now }).where(and(
+            eq(gddReviewChanges.projectId, project.id),
+            eq(gddReviewChanges.status, "proposed"),
+            eq(gddReviewChanges.targetType, "question_answer"),
+            eq(gddReviewChanges.targetId, questionId),
+          )),
+          db.update(designReviewChanges).set({ status: "stale", updatedAt: now }).where(and(
+            eq(designReviewChanges.projectId, project.id),
+            eq(designReviewChanges.status, "proposed"),
+            eq(designReviewChanges.targetQuestionId, questionId),
+          )),
+          ...(activeReview && activeReview.status !== "superseded"
+            ? [db.update(designReviewRuns).set({ status: "dirty", updatedAt: now, completedAt: null }).where(eq(designReviewRuns.id, activeReview.id))]
+            : []),
+          ...relatedIssueIds.map((issueId) => db.update(designReviewIssues).set({ status: "pending_verification", resolutionNote: null, updatedAt: now }).where(eq(designReviewIssues.id, issueId))),
+        ]);
+      }
+      const derivedTitle = questionId === "Q1" && project.title === "未命名游戏" ? answer.split(/[。；\n]/)[0].slice(0, 28) || project.title : project.title;
+      await db.update(projects).set({ activeQuestionId: questionId, title: derivedTitle, updatedAt: now }).where(eq(projects.id, project.id));
+    } else {
+      return Response.json({ error: "不支持的操作。" }, { status: 400 });
+    }
+
+    return Response.json(await getWorkspace(user));
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "保存失败。" }, { status: 500 });
+  }
+}
