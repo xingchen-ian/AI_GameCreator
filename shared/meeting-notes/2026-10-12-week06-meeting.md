@@ -3,6 +3,7 @@
 **课**：AI-Assisted Game Design Engine · Independent Study  
 **谁**：Xingchen + Josie  
 **课页**：https://xingchen-ian.github.io/AI_GameCreator/studio/week-06.html  
+**完整 PDF**：https://xingchen-ian.github.io/AI_GameCreator/meeting-notes/2026-10-12-week06-meeting.pdf  
 
 公开课页只保留下面四块；三林老街 / 行业闲聊等不上站。
 
