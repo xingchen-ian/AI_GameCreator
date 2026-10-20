@@ -97,21 +97,22 @@ export async function POST(request: Request) {
       const issues = normalizeIssues(result.issues);
       const runId = crypto.randomUUID();
       const version = (latestRun?.version ?? 0) + 1;
+      const createRun = db.insert(designReviewRuns).values({
+        id: runId,
+        projectId: project.id,
+        version,
+        snapshotKey: currentSnapshotKey,
+        answersJson: JSON.stringify(snapshot),
+        status: issues.length ? "action_required" : "ready",
+        createdAt: now,
+        updatedAt: now,
+        completedAt: issues.length ? null : now,
+      });
       await db.batch([
+        createRun,
         ...(latestRun && latestRun.status !== "superseded"
           ? [db.update(designReviewRuns).set({ status: "superseded", updatedAt: now }).where(eq(designReviewRuns.id, latestRun.id))]
           : []),
-        db.insert(designReviewRuns).values({
-          id: runId,
-          projectId: project.id,
-          version,
-          snapshotKey: currentSnapshotKey,
-          answersJson: JSON.stringify(snapshot),
-          status: issues.length ? "action_required" : "ready",
-          createdAt: now,
-          updatedAt: now,
-          completedAt: issues.length ? null : now,
-        }),
         ...issues.map((issue) => db.insert(designReviewIssues).values({
           id: crypto.randomUUID(),
           projectId: project.id,
@@ -178,7 +179,15 @@ export async function POST(request: Request) {
     }));
     const newIssues = normalizeIssues(result.newIssues).filter((issue) => !existingQuestionSets.has([...issue.questionIds].sort().join("|"))).slice(0, 4);
     const hasOpen = effectiveResults.some((item) => item.verdict !== "resolved") || newIssues.length > 0;
+    const updateRun = db.update(designReviewRuns).set({
+      snapshotKey: currentSnapshotKey,
+      answersJson: JSON.stringify(snapshot),
+      status: hasOpen ? "action_required" : "ready",
+      completedAt: hasOpen ? null : now,
+      updatedAt: now,
+    }).where(eq(designReviewRuns.id, latestRun.id));
     await db.batch([
+      updateRun,
       ...effectiveResults.flatMap((item) => {
         const status = item.verdict === "resolved" ? "resolved" as const : "open" as const;
         return [
@@ -201,13 +210,6 @@ export async function POST(request: Request) {
         createdAt: now,
         updatedAt: now,
       })),
-      db.update(designReviewRuns).set({
-        snapshotKey: currentSnapshotKey,
-        answersJson: JSON.stringify(snapshot),
-        status: hasOpen ? "action_required" : "ready",
-        completedAt: hasOpen ? null : now,
-        updatedAt: now,
-      }).where(eq(designReviewRuns.id, latestRun.id)),
     ]);
     return Response.json(await getWorkspace(user, project.id));
   } catch (error) {

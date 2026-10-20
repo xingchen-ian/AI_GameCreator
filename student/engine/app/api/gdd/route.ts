@@ -59,7 +59,7 @@ async function checkGddFidelity(projectId: string, projectTitle: string, designI
 }
 
 function applyFidelityPatches(sections: GddSection[], result: FidelityResult) {
-  const allowedKeys = new Set(gddSectionPlan.map(([key]) => key));
+  const allowedKeys = new Set<string>(gddSectionPlan.map(([key]) => key));
   const patches = new Map(result.patches.filter((patch) => allowedKeys.has(patch.sectionKey) && patch.revisedContent.trim()).map((patch) => [patch.sectionKey, patch]));
   return sections.map((section) => {
     const patch = patches.get(section.key);
