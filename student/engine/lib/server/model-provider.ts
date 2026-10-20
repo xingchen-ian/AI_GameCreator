@@ -51,7 +51,9 @@ function getProviderConfig(role: ModelRole) {
         ? env.DASHSCOPE_GDD_MODEL?.trim() || "qwen3.8-flash"
         : env.DASHSCOPE_CHAT_MODEL?.trim() || "qwen3.8-flash",
     temperature: role === "chat" ? 0.45 : 0.25,
-    thinkingEnabled: role === "review",
+    // 百炼在 enable_thinking=true 时拒绝 JSON 模式和非流式调用（400 InvalidParameter），
+    // 而所有结构化请求都是非流式 + response_format，因此各角色都必须关闭思考。
+    thinkingEnabled: false,
     appVersion: env.APP_COMMIT?.trim() || "local-dev",
   };
 }

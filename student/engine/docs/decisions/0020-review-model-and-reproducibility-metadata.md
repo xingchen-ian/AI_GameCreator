@@ -11,7 +11,7 @@
 
 ## 决定
 
-1. 新增独立的 `review` 模型角色。`DASHSCOPE_REVIEW_MODEL` 默认使用 `qwen3.8-27b`；Design State 初次扫描、修改验证和单项冲突讨论都走该角色并开启 thinking。聊天与 GDD 的模型路由不变。
+1. 新增独立的 `review` 模型角色。`DASHSCOPE_REVIEW_MODEL` 默认使用 `qwen3.8-27b`；Design State 初次扫描、修改验证和单项冲突讨论都走该角色。聊天与 GDD 的模型路由不变。（原决定同时开启 thinking，已修订，见下方“修订记录”。）
 2. 每个结构化模型调用必须在代码中显式声明 `promptVersion` 和 `schemaVersion`。类型系统把这两个字段设为必填，避免新增调用时漏记版本。
 3. `model_calls` 新增 `app_version`、`prompt_version`、`schema_version`、`temperature` 和 `thinking_enabled`。其中 `app_version` 来自部署环境变量 `APP_COMMIT`；本地未配置时明确记录为 `local-dev`。
 4. 新增 `research_participants`，为每个登录账号生成一个形如 `P-XXXXXXXXXXXX` 的随机稳定编号。内部表保存账号到编号的映射，研究 JSON 只导出匿名编号，不导出账号 ID 或邮箱。
@@ -33,7 +33,7 @@
 
 ## 验证方式
 
-- 全局审查产生的 `model_calls.role` 为 `review`，模型为环境配置值，`thinking_enabled=true`；
+- 全局审查产生的 `model_calls.role` 为 `review`，模型为环境配置值，`thinking_enabled=false`；
 - 教练对话仍为 `chat` 且 `thinking_enabled=false`；
 - 每条新模型调用都有非 legacy 的 Prompt/Schema 版本和准确温度；
 - 同一账号导出不同项目时 `participant.id` 相同，不同账号不同；
@@ -42,3 +42,11 @@
 ## 回退方式
 
 模型角色可以暂时把 `DASHSCOPE_REVIEW_MODEL` 指向 Flash，但保留独立路由和元数据字段。数据库新增字段和参与者表应保留，避免破坏历史导出。
+
+## 修订记录
+
+### 2026-10-20：审查角色关闭 thinking
+
+原决定让 `review` 角色开启 thinking。百炼[错误码文档](https://help.aliyun.com/zh/model-studio/error-code)明确列出两条 400 InvalidParameter：`Json mode response is not supported when enable_thinking is true`，以及 `parameter.enable_thinking must be set to false for non-streaming calls`。本应用所有结构化请求都是非流式并带 `response_format`，开启 thinking 会使严格请求和 JSON Object 降级请求都失败，进而让全局审查和其后的 GDD 生成无法进行。
+
+因此所有角色统一关闭 thinking，审查仍使用独立的 27B 模型。`thinking_enabled` 字段保留，如实记录为 `false`。若以后需要审查推理，应改为流式调用并在本地做 Schema 校验，而不是重新打开当前非流式路径的 thinking。

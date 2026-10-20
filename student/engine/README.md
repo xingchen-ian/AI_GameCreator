@@ -30,7 +30,7 @@ DASHSCOPE_BUILD_MODEL=qwen3.8-27b
 APP_COMMIT=本次部署对应的 Git commit SHA
 ```
 
-`DASHSCOPE_API_KEY` 必须以这个准确名称作为 Sites secret 配置，不能放进源码、浏览器或 `.openai/hosting.json`。日常教练对话、全局审查、GDD 整理和构建规格可以分别路由到不同价位的模型；全局审查默认使用 27B 并开启 thinking，其余角色保持非思考模式。`APP_COMMIT` 由部署流程写入当前 Git commit，用于研究数据复现。所有模型输出都在服务端通过结构校验后才进入应用状态。
+`DASHSCOPE_API_KEY` 必须以这个准确名称作为 Sites secret 配置，不能放进源码、浏览器或 `.openai/hosting.json`。日常教练对话、全局审查、GDD 整理和构建规格可以分别路由到不同价位的模型；全局审查默认使用 27B。所有角色都关闭 thinking：百炼不允许在思考模式下使用 JSON 输出或非流式调用。`APP_COMMIT` 由部署流程写入当前 Git commit，用于研究数据复现。所有模型输出都在服务端通过结构校验后才进入应用状态。
 
 ## V1 workflow
 
