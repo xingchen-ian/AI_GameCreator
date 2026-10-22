@@ -49,6 +49,7 @@
 | [ADR-0019](0019-separate-prototype-implementation-agent.md) | Workflow 停止内建 Prototype，交由独立实现 Agent | Accepted | 2026-10-19 |
 | [ADR-0020](0020-review-model-and-reproducibility-metadata.md) | 独立审查模型与可复现实验元数据 | Accepted | 2026-10-19 |
 | [ADR-0021](0021-typecheck-and-route-smoke-gates.md) | 强制类型检查与关键 API smoke test | Accepted | 2026-10-21 |
+| [ADR-0022](0022-optimistic-chat-messages.md) | 对话消息乐观显示并与服务端记录对账 | Accepted | 2026-10-22 |
 
 ## 后续工作约定
 

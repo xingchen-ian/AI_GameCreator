@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, CheckCircle2, ChevronRight, Lightbulb, Loader2, MessageSquareText, Play, RotateCcw, Send, ShieldCheck, Sparkles, WandSparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -89,6 +89,11 @@ export function GddReviewWorkspace(props: Props) {
     changesByMessage.set(change.messageId, messageChanges);
   }
   const relatedAnswers = (selectedIssue?.questionIds ?? []).map((questionId) => ({ questionId, question: allQuestions.find((question) => question.id === questionId), answer: workspace.answers[questionId] }));
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length, selectedIssue?.id, thinking]);
 
   const acceptIssue = () => {
     if (!selectedIssue) return;
@@ -114,6 +119,7 @@ export function GddReviewWorkspace(props: Props) {
         {!messages.length && !thinking && <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#dce5e7] bg-[#f7fafb] px-4 py-3.5"><div className="flex gap-3"><Lightbulb className="mt-1 size-4 shrink-0 text-[#0c7489]" /><p className="text-[13px] leading-6 text-[#30454d]">问题清单已经包含证据。只有需要修改建议时才调用 AI，不会在打开每一项时自动请求。</p></div><Button variant="ghost" size="sm" onClick={() => onAnalyze(selectedIssue.id)} className="shrink-0 text-[10px] text-[#0c7489]">讨论修改<ChevronRight /></Button></div>}
         {messages.map((message) => message.role === "assistant" ? <div key={message.id} className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#dff1f3] text-[#0c7489]"><Sparkles className="size-4" /></div><div className="min-w-0 max-w-[94%] flex-1"><div className="whitespace-pre-wrap rounded-2xl rounded-tl-sm border border-[#dce5e7] bg-[#f7fafb] px-4 py-3 text-[13px] leading-6 text-[#30454d]">{message.text}</div>{(changesByMessage.get(message.id) ?? []).map((change) => <ChangeCard key={change.id} change={change} saving={saving} onApply={onApply} onDismiss={onDismiss} onOpenQuestion={onOpenQuestion} />)}</div></div> : <div key={message.id} className="flex justify-end"><div className="max-w-[86%] whitespace-pre-wrap rounded-2xl rounded-tr-sm bg-[#0c7489] px-4 py-3 text-[13px] leading-6 text-white shadow-sm">{message.text}</div></div>)}
         {thinking && <div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#dff1f3] text-[#0c7489]"><Loader2 className="size-4 animate-spin" /></div><div className="rounded-2xl rounded-tl-sm border border-[#dce5e7] bg-[#f7fafb] px-4 py-3 text-[13px] text-[#6c7e84]">正在生成一条可执行的修改建议…</div></div>}
+        <div ref={chatEndRef} />
       </section>}
     </div></div>
     <div className="border-t border-[#d9e2e4] bg-[#fbfcfc] p-4 sm:px-7"><div className="mx-auto max-w-3xl"><div className="relative rounded-2xl border border-[#bccdd1] bg-white shadow-[0_6px_22px_rgba(27,57,66,.07)] focus-within:border-[#0c7489] focus-within:ring-2 focus-within:ring-[#0c7489]/10"><Textarea value={draft} onChange={(event) => onDraftChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} disabled={!selectedIssue || selectedIssue.status === "resolved" || selectedIssue.status === "superseded"} placeholder={selectedIssue ? "继续讨论当前问题，或说明你更希望保留哪一边……" : "先开始全局审查"} className="min-h-[76px] resize-none border-0 bg-transparent px-4 py-3.5 pr-14 text-[14px] shadow-none focus-visible:ring-0" /><Button aria-label="发送" size="icon" onClick={onSend} disabled={!draft.trim() || thinking || !selectedIssue} className="absolute bottom-3 right-3 size-9 rounded-xl"><Send className="size-4" /></Button></div><div className="mt-2 flex items-center justify-between text-[11px] text-[#829198]"><span>只处理当前稳定问题 · 写入后统一验证</span><span className="flex items-center gap-1"><MessageSquareText className="size-3" />{messages.length} 条消息</span></div></div></div>
