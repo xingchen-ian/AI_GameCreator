@@ -76,8 +76,8 @@ export async function POST(request: Request) {
 
     const { result, meta } = await createStructuredResponseWithMeta<ReviewResponse>({
       name: "design_review_conversation",
-      promptVersion: "design-review-conversation-v2",
-      schemaVersion: "design-review-response-v1",
+      promptVersion: "design-review-conversation-v3",
+      schemaVersion: "design-review-response-v2",
       projectId: project.id,
       schema: designReviewResponseSchema,
       role: "review",

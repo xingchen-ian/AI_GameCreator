@@ -40,8 +40,8 @@ async function checkGddFidelity(projectId: string, projectTitle: string, designI
   const gddText = sections.map((section) => `## ${section.key}｜${section.title}\n${section.content}\n来源：${section.sourceQuestionIds.join("/")}`).join("\n\n");
   return createStructuredResponse<FidelityResult>({
     name: "gdd_fidelity_check",
-    promptVersion: "gdd-fidelity-v1",
-    schemaVersion: "gdd-fidelity-v1",
+    promptVersion: "gdd-fidelity-v2",
+    schemaVersion: "gdd-fidelity-v2",
     projectId,
     schema: gddFidelitySchema,
     role: "gdd",
@@ -104,8 +104,8 @@ export async function POST(request: Request) {
     if (body.action === "stage_summaries") {
       const result = await createStructuredResponse<GeneratedSummary>({
         name: "gdd_stage_summaries",
-        promptVersion: "gdd-stage-summaries-v1",
-        schemaVersion: "gdd-summary-v1",
+        promptVersion: "gdd-stage-summaries-v2",
+        schemaVersion: "gdd-summary-v2",
         projectId: project.id,
         schema: gddSummarySchema,
         role: "gdd",
@@ -130,8 +130,8 @@ export async function POST(request: Request) {
       const sectionContract = sectionRows.map(([key, title, purpose, sources]) => `${key}｜${title}｜${purpose}｜主要证据 ${sources.join("/")}`).join("\n");
       const result = await createStructuredResponse<GeneratedSections>({
         name: `gdd_sections_${sectionRows[0][0]}`,
-        promptVersion: "gdd-sections-v1",
-        schemaVersion: "gdd-sections-v1",
+        promptVersion: "gdd-sections-v2",
+        schemaVersion: "gdd-sections-v2",
         projectId: project.id,
         schema: gddSectionsSchema,
         role: "gdd",

@@ -45,8 +45,8 @@ export async function POST(request: Request) {
 
     const { result, meta } = await createStructuredResponseWithMeta<CoachResponse>({
       name: "game_design_coach_response",
-      promptVersion: "coach-v3",
-      schemaVersion: "coach-response-v1",
+      promptVersion: "coach-v4",
+      schemaVersion: "coach-response-v2",
       projectId: project.id,
       schema: coachResponseSchema,
       instructions: [

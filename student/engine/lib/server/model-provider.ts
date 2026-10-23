@@ -1,10 +1,12 @@
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { modelCalls } from "@/db/schema";
+import { allQuestions } from "@/lib/protocol/stages";
 
 type JsonSchema = Record<string, unknown>;
 type ModelRole = "chat" | "review" | "gdd" | "build";
 type TokenUsage = { inputTokens: number | null; outputTokens: number | null };
+const protocolQuestionIds = allQuestions.map((question) => question.id);
 
 export type ModelCallMeta = {
   model: string;
@@ -367,7 +369,7 @@ export const coachResponseSchema: JsonSchema = {
         type: "object",
         properties: {
           content: { type: "string" },
-          suggestedQuestionId: { type: "string", enum: Array.from({ length: 23 }, (_, index) => `Q${index + 1}`) },
+          suggestedQuestionId: { type: "string", enum: protocolQuestionIds },
         },
         required: ["content", "suggestedQuestionId"],
         additionalProperties: false,
@@ -396,7 +398,7 @@ export const gddSectionSchema: JsonSchema = {
     key: { type: "string", maxLength: 120 },
     title: { type: "string", maxLength: 240 },
     content: { type: "string", maxLength: 4000 },
-    sourceQuestionIds: { type: "array", maxItems: 23, items: { type: "string", enum: Array.from({ length: 23 }, (_, index) => `Q${index + 1}`) } },
+    sourceQuestionIds: { type: "array", maxItems: protocolQuestionIds.length, items: { type: "string", enum: protocolQuestionIds } },
   },
   required: ["key", "title", "content", "sourceQuestionIds"],
   additionalProperties: false,
@@ -413,7 +415,7 @@ export const gddIssueSchema: JsonSchema = {
       type: "array",
       minItems: 2,
       maxItems: 8,
-      items: { type: "string", enum: Array.from({ length: 23 }, (_, index) => `Q${index + 1}`) },
+      items: { type: "string", enum: protocolQuestionIds },
     },
     options: { type: "array", maxItems: 2, items: { type: "string", maxLength: 600 } },
   },
@@ -432,7 +434,7 @@ export const designReviewIssueSchema: JsonSchema = {
       type: "array",
       minItems: 2,
       maxItems: 8,
-      items: { type: "string", enum: Array.from({ length: 23 }, (_, index) => `Q${index + 1}`) },
+      items: { type: "string", enum: protocolQuestionIds },
     },
     options: { type: "array", minItems: 1, maxItems: 2, items: { type: "string", maxLength: 600 } },
   },
@@ -551,7 +553,7 @@ export const gddFidelitySchema: JsonSchema = {
         properties: {
           sectionKey: { type: "string", enum: ["overview", "experience", "player_situation", "challenge", "core_loop", "skill", "system", "consequences", "feedback", "progression", "outcomes", "theme", "validation"] },
           revisedContent: { type: "string", maxLength: 4000 },
-          sourceQuestionIds: { type: "array", maxItems: 23, items: { type: "string", enum: Array.from({ length: 23 }, (_, index) => `Q${index + 1}`) } },
+          sourceQuestionIds: { type: "array", maxItems: protocolQuestionIds.length, items: { type: "string", enum: protocolQuestionIds } },
           reason: { type: "string", maxLength: 600 },
         },
         required: ["sectionKey", "revisedContent", "sourceQuestionIds", "reason"],

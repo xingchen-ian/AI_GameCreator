@@ -2,12 +2,13 @@
 
 > 状态：Draft for review  
 > 日期：2026-10-12  
+> 最后更新：2026-10-22；Q22/Q23 已按 ADR-0024 从设计 protocol 移除，原型与试玩由独立 Implementation Agent 承担。
 > 范围：仅描述独立项目 `game-workflow`，不包含 `game-agent` 方案。  
 > 本文目标：先确认产品边界、信息流和版本关系，再继续实现。
 
 ## 1. 一句话定义
 
-Game Design Workflow 是一个面向游戏设计新手的结构化设计工作台。它通过六阶段、23 个问题和逐题 AI 协作，把个人经历转化为可追踪、可复核、可版本化的游戏设计，并进一步生成 GDD 和可试玩游戏。
+Game Design Workflow 是一个面向游戏设计新手的结构化设计工作台。它通过六阶段、21 个问题和逐题 AI 协作，把个人经历转化为可追踪、可复核、可版本化的游戏设计，并进一步生成 GDD 和交给独立 Prototype Implementation Agent 的 Build Brief。
 
 它不是固定对话脚本，也不是通用编程 Agent。Workflow 负责维护设计状态、控制设计过程和保存研究证据；模型与代码 Agent 是 Workflow 调用的能力。
 
@@ -17,7 +18,7 @@ V1 需要支持验证以下命题：
 
 1. 六阶段 protocol 能否帮助新手从生活经历得到可玩的游戏概念？
 2. 逐题 AI 协作是否能提高答案的具体性、一致性和可执行性？
-3. 由 23 个答案生成的 GDD，是否足以让代码 Agent 实现一个可玩的浏览器游戏？
+3. 由 21 个问题形成的 GDD，是否足以让代码 Agent 实现一个可玩的浏览器游戏？
 4. 玩家实际行为和体验是否与 Stage 2 的目标体验一致？
 5. 当结果不一致时，用户能否定位应修改的问题，并生成更符合目标的新版本？
 
@@ -37,12 +38,12 @@ V1 需要支持验证以下命题：
 
 | 能力 | 状态 | 说明 |
 |---|---|---|
-| 六阶段、23 问 Workflow | 已实现 | 问题可跳转，不要求固定线性对话 |
+| 六阶段、21 问 Workflow | 已实现 | 问题可跳转，不要求固定线性对话 |
 | 逐题 AI 对话 | 已实现代码，尚未完成真实密钥验证 | 服务端 Provider 已切换到阿里云百炼 |
 | 正式答案确认 | 已实现 | AI 建议不会自动成为正式设计决定 |
 | Design State 持久化 | 已实现 | D1 保存项目、答案、消息和状态 |
 | 答案修改与全局一致性检查 | 已实现 | 修改只写入当前答案；用户主动重新生成 GDD 时由 AI 全局审查 |
-| 固定规格的机制原型播放器 | 已实现 | 仅支持少量有限状态玩法，用于快速机制草图 |
+| Workflow 内建原型播放器 | 已移除 | Prototype implementation 与试玩验证交给后续独立 Agent |
 | 阶段总结 | V1 新增 | 每个 Stage 形成可编辑、可确认的阶段产出 |
 | 版本化 GDD | V1 新增 | 从已确认 Design State 生成，必须人工确认 |
 | Codex Build Brief | V1 新增 | 把 GDD 转换成代码 Agent 可执行的工程任务 |
@@ -79,7 +80,7 @@ V1 需要支持验证以下命题：
 
 ### 4.7 Playtest Evidence
 
-试玩结果，包括行为记录、完成状态、玩家自述体验和 Q22/Q23 的对齐判断。
+独立 Prototype Implementation Agent 产生的试玩结果，包括行为记录、完成状态、玩家自述体验，以及与 Stage 2 目标体验的对照。它是原型之后的实证材料，不是设计阶段要求用户预判的答案。
 
 ## 5. V1 端到端用户流程
 
@@ -117,29 +118,28 @@ V1 推荐先使用人工触发的 Codex Harness：
 
 V2 才把步骤 2–4 自动化为 Codex SDK / app-server 调用。
 
-### Phase D — 试玩和回环
+### Phase D — 独立原型、试玩和回环
 
-1. 右侧 Preview 在受限 iframe 中加载 Game Build。
-2. 系统记录最少量、与研究有关的行为事件。
-3. 用户回答 Q22：玩家实际上不断做什么、感受到什么？
-4. 用户回答 Q23：实际体验是否与 Stage 2 一致？
-5. 用户返回相关问题修改答案。
-6. 系统创建新的 Design State Snapshot、GDD 和 Game Build，而不覆盖历史版本。
+1. 独立 Prototype Implementation Agent 根据 Build Brief 创建并运行 Game Build。
+2. 原型试玩直接记录玩家实际行为、完成状态和体验反馈。
+3. 将试玩证据与 Stage 2 的目标体验对照，而不是让设计者在原型出现前预判结果。
+4. 用户把确认后的发现带回相关设计问题。
+5. Workflow 创建新的 Design State Snapshot、GDD 和 Build Brief，而不覆盖历史版本。
 
 ## 6. 产品信息架构
 
 V1 推荐包含五个主要视图：
 
-1. **Workflow**：六阶段、23 问和完成度。
+1. **Workflow**：六阶段、21 问和完成度。
 2. **Question Workspace**：本题对话、答案草稿、正式确认和来源上下文。
 3. **Design State**：阶段总结、冲突和缺失项。
 4. **GDD**：章节导航、来源追踪、全局一致性反馈、编辑、确认和导出。
-5. **Build & Playtest**：Build Brief、构建版本、试玩和体验对齐记录。
+5. **Build Handoff**：Build Brief 的复制、下载和版本来源；原型与试玩属于独立 Agent。
 
 当前三栏页面可以保留，但右侧需要从单一 Prototype 面板演进为三个 Tab：
 
 ```text
-Design State | GDD | Build & Playtest
+Design State | GDD | Build Handoff
 ```
 
 ## 7. 系统边界与职责
@@ -170,8 +170,8 @@ Design State | GDD | Build & Playtest
 - 正式答案确认。
 - Design State、GDD 和版本谱系。
 - Build Brief 和验收条件。
-- 游戏构建归档与试玩入口。
-- Playtest 数据和体验对齐。
+- Build Brief 与独立 Prototype Implementation Agent 的交接边界。
+- 保留未来接收 Playtest Evidence 的版本关联能力，但不在当前 Workflow 内运行原型。
 
 ### 百炼模型负责
 
@@ -336,8 +336,7 @@ GDD 不是自由生成的长文章，而是固定 Schema 与可读文档的双�
 11. Feedback 设计。
 12. Progression。
 13. Outcome 与结束条件。
-14. 实际体验预测。
-15. 体验对齐风险与验证计划。
+14. 原型测试假设：明确未来需要观察什么，不预判实际体验或对齐结论。
 
 ### 9.2 每节都需要
 
@@ -549,7 +548,7 @@ POST       /api/playtests
 - 全局冲突的类型、证据、建议、用户处理方式和最终结果。
 - Build 的成功、失败和重试次数。
 - 试玩完成状态和最小行为摘要。
-- Q22/Q23 的主观体验判断。
+- 未来由独立原型试玩产生的实际行为、主观体验与目标体验对照。
 
 ### V1 不建议记录
 
@@ -603,7 +602,7 @@ POST       /api/playtests
 4. **Checkpoint 4：版本化 GDD**。
 5. **Checkpoint 5：Build Brief 和手动 Codex 验证**。
 6. **Checkpoint 6：游戏构建导入与 iframe Preview**。
-7. **Checkpoint 7：Playtest Evidence 与 Q22/Q23 回环**。
+7. **Checkpoint 7：与独立 Prototype Implementation Agent 的 Playtest Evidence 回环**。
 8. **Checkpoint 8：根据真实案例决定是否接 Codex SDK / app-server**。
 
 每个检查点完成后单独评审，不默认进入下一步。
@@ -616,7 +615,7 @@ POST       /api/playtests
 2. **V1 构建方式**：先手动把 Build Brief 交给 Codex，验证 3–5 个案例后再自动接入。建议：确认。
 3. **GDD 审批**：只有用户确认后的 GDD 才能进入构建。建议：确认。
 4. **构建导回**：V1 允许导入单 HTML 或受约束 ZIP，并保存版本关系。建议：确认。
-5. **现有机制原型**：保留并改名为 “Quick Mechanic Sketch”，与 Codex 生成的 “Game Build” 区分。建议：保留。
+5. **原型边界**：Workflow 不内建 Quick Mechanic Sketch；所有 Prototype implementation 与试玩验证由独立 Agent 承担。要求：已确认。
 6. **访问范围**：研究阶段保持私有、单用户项目；多人分享暂缓。建议：确认。
 7. **模型选择**：等架构确认后再单独决定，不在本检查点连接密钥。建议：确认。
 8. **Codex 自动化**：列为 V2 决策，不作为 V1 完成条件。建议：确认。

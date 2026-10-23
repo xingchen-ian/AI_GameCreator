@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import type { WorkspacePayload } from "@/lib/design/types";
+import { allQuestions } from "@/lib/protocol/stages";
 
 type GddPanelProps = {
   workspace: WorkspacePayload;
@@ -25,7 +26,7 @@ export function GddPanel({ workspace, busy, progress, onGenerate, onConfirm, onB
   const [drafts, setDrafts] = useState<Record<string, string>>(() => Object.fromEntries((gdd?.sections ?? []).map((section) => [section.key, section.content])));
 
   const reviewReady = workspace.latestDesignReview?.status === "ready";
-  const requiredIds = useMemo(() => Array.from({ length: 23 }, (_, index) => `Q${index + 1}`).filter((id) => id !== "Q8"), []);
+  const requiredIds = useMemo(() => allQuestions.map((question) => question.id).filter((id) => id !== "Q8"), []);
   const incomplete = requiredIds.filter((id) => workspace.answers[id]?.status !== "confirmed");
 
   if (!gdd) {

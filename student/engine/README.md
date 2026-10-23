@@ -1,6 +1,6 @@
 # Game Design Workflow
 
-一个独立于 `game-agent` 的正式游戏设计工作流产品。用户通过六阶段、23 个问题与 AI 设计教练协作，形成结构化 Design State，再生成可追溯 GDD、全局一致性反馈和交给 Codex 的 Build Brief。
+一个独立于 `game-agent` 的正式游戏设计工作流产品。用户通过六阶段、21 个问题与 AI 设计教练协作，形成结构化 Design State，再生成可追溯 GDD、全局一致性反馈和交给 Codex 的 Build Brief。
 
 ## Architecture
 
@@ -34,7 +34,7 @@ APP_COMMIT=本次部署对应的 Git commit SHA
 
 ## V1 workflow
 
-1. 完成并确认 23 题（Q8 可以留空）。
+1. 完成并确认 21 题（Q8 可以留空）。体验是否真正达成不在设计阶段预判，留给后续原型试玩验证。
 2. 生成 GDD：系统同时冻结答案修订号、生成六个阶段总结，并执行全局一致性审查。
 3. 处理冲突：blocker 必须解决或由用户说明为有意设计，系统不会自动改写答案。
 4. 确认 GDD，生成 Build Brief。

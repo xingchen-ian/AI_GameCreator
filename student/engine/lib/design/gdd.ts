@@ -2,7 +2,7 @@ import type { GddVersion } from "./types";
 
 export const gddSectionPlan = [
   ["overview", "游戏概述", "一句话概念、类型与设计边界", ["Q1", "Q5", "Q7"]],
-  ["experience", "目标玩家体验", "目标情绪、节奏和体验承诺", ["Q3", "Q6", "Q22", "Q23"]],
+  ["experience", "目标玩家体验", "目标情绪、节奏和体验承诺", ["Q3", "Q5", "Q6", "Q7"]],
   ["player_situation", "玩家与情境", "玩家身份、所处情境和可理解的目标", ["Q9", "Q10"]],
   ["challenge", "核心挑战", "压力、阻碍、不确定性和限制", ["Q11"]],
   ["core_loop", "核心循环", "玩家反复执行的动作与循环节奏", ["Q12", "Q13", "Q15"]],
@@ -13,7 +13,7 @@ export const gddSectionPlan = [
   ["progression", "进程与变化", "复杂度、风险、能力和组合如何发展", ["Q15", "Q20"]],
   ["outcomes", "结束条件与结果", "成功、失败、分数或结局", ["Q21"]],
   ["theme", "主题与抽象", "题材转译、抽象程度和可选表达", ["Q7", "Q8"]],
-  ["validation", "体验验证", "实际玩法体验、对齐判断和验证方法", ["Q22", "Q23"]],
+  ["validation", "原型测试假设", "根据目标体验和可观察反馈提出待原型试玩验证的问题，不预判测试结果", ["Q6", "Q19", "Q20", "Q21"]],
 ] as const;
 
 export function makeBuildBrief(gdd: GddVersion) {

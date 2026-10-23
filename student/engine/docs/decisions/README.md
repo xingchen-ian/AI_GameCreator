@@ -51,6 +51,7 @@
 | [ADR-0021](0021-typecheck-and-route-smoke-gates.md) | 强制类型检查与关键 API smoke test | Accepted | 2026-10-21 |
 | [ADR-0022](0022-optimistic-chat-messages.md) | 对话消息乐观显示并与服务端记录对账 | Accepted | 2026-10-22 |
 | [ADR-0023](0023-user-grounded-cross-question-parking.md) | 跨题暂存必须来自用户原文并可带入目标问题 | Accepted | 2026-10-22 |
+| [ADR-0024](0024-move-experience-validation-after-prototype.md) | 从设计 Protocol 移除 Q22/Q23，把体验验证移到原型之后 | Accepted | 2026-10-22 |
 
 ## 后续工作约定
 

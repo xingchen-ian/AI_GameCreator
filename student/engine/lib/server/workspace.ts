@@ -3,7 +3,16 @@ import { getDb } from "@/db";
 import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
 import type { AnswerStatus, ChatMessage, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
+import { allQuestions } from "@/lib/protocol/stages";
 import { ensureResearchParticipant } from "@/lib/server/research-participant";
+
+const activeQuestionIds = new Set(allQuestions.map((question) => question.id));
+
+function normalizeActiveQuestionId(questionId: string) {
+  if (activeQuestionIds.has(questionId)) return questionId;
+  if (questionId === "Q22" || questionId === "Q23") return "Q21";
+  return "Q1";
+}
 
 function parseObject(value: string): Record<string, unknown> {
   try {
@@ -77,6 +86,7 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
 
   const answers: Record<string, StoredAnswer> = {};
   for (const row of answerRows) {
+    if (!activeQuestionIds.has(row.questionId)) continue;
     answers[row.questionId] = {
       answer: row.answer,
       status: normalizeAnswerStatus(row.status),
@@ -218,10 +228,11 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
   const projectRows = await db.select().from(projects).where(eq(projects.ownerId, user.userId)).orderBy(desc(projects.updatedAt));
   const projectIds = projectRows.map((row) => row.id);
   const allAnswerRows = projectIds.length
-    ? await db.select({ projectId: questionAnswers.projectId, status: questionAnswers.status }).from(questionAnswers).where(inArray(questionAnswers.projectId, projectIds))
+    ? await db.select({ projectId: questionAnswers.projectId, questionId: questionAnswers.questionId, status: questionAnswers.status }).from(questionAnswers).where(inArray(questionAnswers.projectId, projectIds))
     : [];
   const answerCounts = new Map<string, number>();
   for (const answer of allAnswerRows) {
+    if (!activeQuestionIds.has(answer.questionId)) continue;
     if (normalizeAnswerStatus(answer.status) === "confirmed") answerCounts.set(answer.projectId, (answerCounts.get(answer.projectId) ?? 0) + 1);
   }
 
@@ -229,7 +240,7 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
     project: {
       id: project.id,
       title: project.title,
-      activeQuestionId: project.activeQuestionId,
+      activeQuestionId: normalizeActiveQuestionId(project.activeQuestionId),
       gddVersion: project.gddVersion,
       buildBriefVersion: project.buildBriefVersion,
       updatedAt: project.updatedAt,
@@ -259,5 +270,5 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
 export async function loadAnswerSnapshot(projectId: string) {
   const db = getDb();
   const rows = await db.select().from(questionAnswers).where(eq(questionAnswers.projectId, projectId)).orderBy(asc(questionAnswers.questionId));
-  return Object.fromEntries(rows.map((row) => [row.questionId, { answer: row.answer, status: normalizeAnswerStatus(row.status), revision: row.revision }]));
+  return Object.fromEntries(rows.filter((row) => activeQuestionIds.has(row.questionId)).map((row) => [row.questionId, { answer: row.answer, status: normalizeAnswerStatus(row.status), revision: row.revision }]));
 }

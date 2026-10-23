@@ -39,8 +39,8 @@ export async function POST(request: Request) {
     const context = Object.entries(snapshot).map(([id, value]) => `${id} [${value.status}]：${value.answer}`).join("\n") || "尚无已确认答案";
     const { result, meta } = await createStructuredResponseWithMeta<Synthesis>({
       name: "game_design_answer_synthesis",
-      promptVersion: "answer-synthesis-v3",
-      schemaVersion: "coach-response-v1",
+      promptVersion: "answer-synthesis-v4",
+      schemaVersion: "coach-response-v2",
       projectId: project.id,
       schema: coachResponseSchema,
       instructions: [

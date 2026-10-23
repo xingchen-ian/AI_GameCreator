@@ -77,8 +77,8 @@ export async function POST(request: Request) {
     if (body.action === "start") {
       const result = await createStructuredResponse<{ issues: GeneratedIssue[] }>({
         name: "design_state_consistency_review",
-        promptVersion: "design-state-review-v2",
-        schemaVersion: "design-review-scan-v1",
+        promptVersion: "design-state-review-v3",
+        schemaVersion: "design-review-scan-v2",
         projectId: project.id,
         schema: designReviewScanSchema,
         role: "review",
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         repairInvalidOutput: true,
         timeoutMs: 75_000,
         instructions: [
-          "你是游戏设计一致性审查员。只检查 23 道已确认设计答案之间真正不能同时成立的决定，不审查 GDD 文案。",
+          "你是游戏设计一致性审查员。只检查当前 21 道设计问题中的已确认答案之间真正不能同时成立的决定，不审查 GDD 文案。",
           "每个冲突必须引用至少两个真实题号，并明确概括各答案的主张以及为什么无法同时实现。",
           "信息缺失、细节尚未决定、措辞差异和普通优化建议都不是冲突。不要为了输出结果制造问题。",
           "severity 只使用 blocker 或 conflict：blocker 表示不做选择就无法实现核心原型；其余真实矛盾使用 conflict。",
@@ -138,8 +138,8 @@ export async function POST(request: Request) {
     const issueIds = verifiableIssues.map((issue) => issue.id);
     const result = await createStructuredResponse<VerificationResult>({
       name: "design_state_consistency_verification",
-      promptVersion: "design-state-verification-v2",
-      schemaVersion: "design-review-verification-v1",
+      promptVersion: "design-state-verification-v3",
+      schemaVersion: "design-review-verification-v2",
       projectId: project.id,
       schema: designReviewVerificationSchema(issueIds),
       role: "review",
