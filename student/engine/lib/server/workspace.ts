@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import type { ChatGPTUser } from "@/app/chatgpt-auth";
-import type { AnswerStatus, ChatMessage, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
+import type { AnswerStatus, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
 import { allQuestions } from "@/lib/protocol/stages";
 import { ensureResearchParticipant } from "@/lib/server/research-participant";
 
@@ -73,9 +73,9 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
   const db = getDb();
   await ensureResearchParticipant(user.userId);
   const project = await ensureOwnedProject(user, preferredProjectId);
-  const [answerRows, messageRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
+  const [answerRows, messageQuestionRows, summaryRows, latestReviewRows, latestGddRows, latestBriefRows, reviewChangeRows, designReviewChangeRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, project.id)).orderBy(asc(questionAnswers.questionId)),
-    db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
+    db.selectDistinct({ questionId: messages.questionId }).from(messages).where(eq(messages.projectId, project.id)),
     db.select().from(stageSummaries).where(eq(stageSummaries.projectId, project.id)).orderBy(desc(stageSummaries.version)),
     db.select().from(designReviewRuns).where(eq(designReviewRuns.projectId, project.id)).orderBy(desc(designReviewRuns.version)).limit(1),
     db.select().from(gddVersions).where(eq(gddVersions.projectId, project.id)).orderBy(desc(gddVersions.version)).limit(1),
@@ -94,11 +94,6 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
       structuredData: parseObject(row.structuredJson),
       updatedAt: row.updatedAt,
     };
-  }
-
-  const chats: Record<string, ChatMessage[]> = {};
-  for (const row of messageRows) {
-    (chats[row.questionId] ??= []).push({ id: row.id, role: row.role, text: row.content, createdAt: row.createdAt });
   }
 
   const summaries: WorkspacePayload["stageSummaries"] = {};
@@ -257,7 +252,8 @@ export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: strin
       archivedAt: row.archivedAt,
     })),
     answers,
-    chats,
+    chats: {},
+    chatQuestionIds: messageQuestionRows.map((row) => row.questionId),
     stageSummaries: summaries,
     latestDesignReview,
     designReviewChanges: designChanges,

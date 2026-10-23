@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
 import { aiSuggestions, answerRevisions, buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
 import { AIConfigurationError, AIRequestTimeoutError, createStructuredResponseWithMeta, designReviewResponseSchema } from "@/lib/server/model-provider";
+import { estimateTokens, loadRecentConversation } from "@/lib/server/model-context";
 import { parseStringArray } from "@/lib/server/design-review";
 import { getWorkspace, loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
@@ -55,9 +56,14 @@ export async function POST(request: Request) {
     const userMessageId = mode === "chat" ? crypto.randomUUID() : null;
     if (userMessageId) await db.insert(messages).values({ id: userMessageId, projectId: project.id, questionId: reviewNodeId, role: "user", content, createdAt: now });
 
-    const [snapshot, history] = await Promise.all([
+    const [snapshot, reviewConversation] = await Promise.all([
       loadAnswerSnapshot(project.id),
-      db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
+      loadRecentConversation(project.id, reviewNodeId, {
+        maxMessages: 10,
+        tokenBudget: 5_000,
+        userLabel: "用户",
+        assistantLabel: "审查助手",
+      }),
     ]);
     const selectedQuestionIds = new Set(parseStringArray(issue.questionIdsJson).filter((id) => allQuestions.some((question) => question.id === id)));
     const designContext = allQuestions.filter((question) => selectedQuestionIds.has(question.id)).map((question) => {
@@ -71,14 +77,22 @@ export async function POST(request: Request) {
       `相关问题：${[...selectedQuestionIds].join("/")}`,
       `已有方向：${parseStringArray(issue.optionsJson).join("；")}`,
     ].join("\n");
-    const reviewHistory = history.filter((message) => message.questionId === reviewNodeId).slice(-10).map((message) => `${message.role === "user" ? "用户" : "审查助手"}：${message.content}`).join("\n");
-    const userRequest = mode === "analyze" ? "简短解释这项冲突，并给出一个忠于用户意图、可以直接写入其中一道关联题的完整答案修改。" : content;
+    const userRequest = mode === "analyze"
+      ? "简短解释这项冲突，并给出一个忠于用户意图、可以直接写入其中一道关联题的完整答案修改。"
+      : "回应对话历史中用户的最后一条请求。";
 
     const { result, meta } = await createStructuredResponseWithMeta<ReviewResponse>({
       name: "design_review_conversation",
-      promptVersion: "design-review-conversation-v3",
+      promptVersion: "design-review-conversation-v4",
       schemaVersion: "design-review-response-v2",
       projectId: project.id,
+      contextStats: {
+        strategy: "issue-answers+recent-review-budget-v1",
+        includedAnswerCount: selectedQuestionIds.size,
+        includedMessageCount: reviewConversation.messages.length,
+        estimatedTokens: estimateTokens(designContext) + reviewConversation.estimatedTokens,
+        truncated: reviewConversation.truncated,
+      },
       schema: designReviewResponseSchema,
       role: "review",
       strictSchema: true,
@@ -91,7 +105,7 @@ export async function POST(request: Request) {
         "newContent 必须是该问题修改后的完整替换答案，不能只是操作指令，也不能改写无关设计决定。",
         "不要声称问题已经解决；写入后仍需统一验证。即使没有安全建议，也要返回 reply 和空数组。",
       ].join("\n"),
-      input: `项目：${project.title}\n审查轮次：v${run.version} / ${run.status}\n\n当前问题：\n${issueContext}\n\n相关最新答案：\n${designContext}\n\n对话历史：\n${reviewHistory || "（尚无）"}\n\n当前请求：\n${userRequest}`,
+      input: `项目：${project.title}\n审查轮次：v${run.version} / ${run.status}\n\n当前问题：\n${issueContext}\n\n相关最新答案：\n${designContext}\n\n对话历史：\n${reviewConversation.text || "（尚无）"}\n\n当前请求：\n${userRequest}`,
     });
 
     const normalized = result.proposedChanges.flatMap((change) => {

@@ -52,6 +52,8 @@
 | [ADR-0022](0022-optimistic-chat-messages.md) | 对话消息乐观显示并与服务端记录对账 | Accepted | 2026-10-22 |
 | [ADR-0023](0023-user-grounded-cross-question-parking.md) | 跨题暂存必须来自用户原文并可带入目标问题 | Accepted | 2026-10-22 |
 | [ADR-0024](0024-move-experience-validation-after-prototype.md) | 从设计 Protocol 移除 Q22/Q23，把体验验证移到原型之后 | Accepted | 2026-10-22 |
+| [ADR-0025](0025-budgeted-lazy-model-context.md) | 按节点懒加载对话并使用可观测的预算化模型上下文 | Accepted | 2026-10-23 |
+| [ADR-0026](0026-protect-user-edited-answer-drafts.md) | AI 建议不得自动覆盖用户编辑中的正式答案 | Accepted | 2026-10-23 |
 
 ## 后续工作约定
 

@@ -1,11 +1,11 @@
-import { asc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { aiSuggestions, messages } from "@/db/schema";
+import { aiSuggestions } from "@/db/schema";
 import { allQuestions, stages } from "@/lib/protocol/stages";
 import { describeParkingTargets, getQuestionScope } from "@/lib/protocol/question-scope";
 import { validateParkedInsights, type ParkedInsight } from "@/lib/design/parked-insights";
 import { AIConfigurationError, coachResponseSchema, createStructuredResponseWithMeta } from "@/lib/server/model-provider";
+import { buildConfirmedAnswerContext, combineContextStats, loadRecentConversation } from "@/lib/server/model-context";
 import { loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
 type Synthesis = {
@@ -27,21 +27,26 @@ export async function POST(request: Request) {
     const project = await requireOwnedProject(body.projectId, user);
     if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
     const db = getDb();
-    const [snapshot, history] = await Promise.all([
+    const [snapshot, conversation] = await Promise.all([
       loadAnswerSnapshot(project.id),
-      db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
+      loadRecentConversation(project.id, question.id, {
+        maxMessages: 20,
+        tokenBudget: 6_000,
+        userLabel: "用户",
+        assistantLabel: "教练",
+      }),
     ]);
     const stage = stages.find((item) => item.id === question.stageId)!;
     const scope = getQuestionScope(question.id);
     const parkingTargets = describeParkingTargets(question.id);
-    const conversation = history.filter((item) => item.questionId === question.id).slice(-20).map((item) => `${item.role === "user" ? "用户" : "教练"}：${item.content}`).join("\n");
-    if (!conversation) return Response.json({ error: "请先与 AI 讨论，再提炼正式答案。" }, { status: 409 });
-    const context = Object.entries(snapshot).map(([id, value]) => `${id} [${value.status}]：${value.answer}`).join("\n") || "尚无已确认答案";
+    if (!conversation.text) return Response.json({ error: "请先与 AI 讨论，再提炼正式答案。" }, { status: 409 });
+    const answerContext = buildConfirmedAnswerContext(snapshot);
     const { result, meta } = await createStructuredResponseWithMeta<Synthesis>({
       name: "game_design_answer_synthesis",
-      promptVersion: "answer-synthesis-v4",
+      promptVersion: "answer-synthesis-v5",
       schemaVersion: "coach-response-v2",
       projectId: project.id,
+      contextStats: combineContextStats("all-confirmed+recent-question-budget-v1", answerContext, conversation),
       schema: coachResponseSchema,
       instructions: [
         "你是游戏设计编辑。根据对话整理一份忠于用户意图、具体、可执行的正式答案。",
@@ -49,12 +54,12 @@ export async function POST(request: Request) {
         "只有用户亲自说出的越界内容才能放入 parkedInsights。content 必须逐字复制用户消息中的连续原文，并指向最合适的 suggestedQuestionId；禁止写入你自己的追问、推断、建议或补充。没有符合条件的用户原文则返回空数组。",
         "reply 简短说明整理原则；不要要求用户现在继续回答其他问题。用中文。",
       ].join("\n"),
-      input: `阶段：${stage.name}\n问题：${question.prompt}\n本题必须完成：${scope.focus}\n本题不要决定：${scope.defer}\n可以暂存到：${parkingTargets.length ? parkingTargets.join("；") : "没有后续题"}\n\n全局状态（仅作为一致性背景）：\n${context}\n\n本题对话：\n${conversation}`,
+      input: `阶段：${stage.name}\n问题：${question.prompt}\n本题必须完成：${scope.focus}\n本题不要决定：${scope.defer}\n可以暂存到：${parkingTargets.length ? parkingTargets.join("；") : "没有后续题"}\n\n全局状态（仅作为一致性背景）：\n${answerContext.text}\n\n本题对话：\n${conversation.text}`,
     });
     const suggestionId = crypto.randomUUID();
     const parkedInsights = validateParkedInsights(
       result.parkedInsights,
-      history.filter((item) => item.questionId === question.id && item.role === "user").map((item) => item.content),
+      conversation.messages.filter((item) => item.role === "user").map((item) => item.content),
       question.id,
     );
     const structuredData = { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights };

@@ -150,6 +150,7 @@ export type WorkspacePayload = {
   projects: ProjectSummary[];
   answers: Record<string, StoredAnswer>;
   chats: Record<string, ChatMessage[]>;
+  chatQuestionIds: string[];
   stageSummaries: Record<number, StageSummary>;
   latestDesignReview: DesignReviewRun | null;
   designReviewChanges: DesignReviewChange[];

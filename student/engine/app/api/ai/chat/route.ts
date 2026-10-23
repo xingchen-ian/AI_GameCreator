@@ -1,4 +1,3 @@
-import { asc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
 import { aiSuggestions, messages } from "@/db/schema";
@@ -6,6 +5,7 @@ import { allQuestions, stages } from "@/lib/protocol/stages";
 import { describeParkingTargets, getQuestionScope } from "@/lib/protocol/question-scope";
 import { validateParkedInsights, type ParkedInsight } from "@/lib/design/parked-insights";
 import { AIConfigurationError, coachResponseSchema, createStructuredResponseWithMeta } from "@/lib/server/model-provider";
+import { buildConfirmedAnswerContext, combineContextStats, loadRecentConversation } from "@/lib/server/model-context";
 import { loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 
 type CoachResponse = {
@@ -33,21 +33,26 @@ export async function POST(request: Request) {
     const userMessageId = crypto.randomUUID();
     await db.insert(messages).values({ id: userMessageId, projectId: project.id, questionId: question.id, role: "user", content, createdAt: now });
 
-    const [snapshot, history] = await Promise.all([
+    const [snapshot, conversation] = await Promise.all([
       loadAnswerSnapshot(project.id),
-      db.select().from(messages).where(eq(messages.projectId, project.id)).orderBy(asc(messages.createdAt)),
+      loadRecentConversation(project.id, question.id, {
+        maxMessages: 12,
+        tokenBudget: 4_000,
+        userLabel: "用户",
+        assistantLabel: "设计教练",
+      }),
     ]);
     const stage = stages.find((item) => item.id === question.stageId)!;
     const scope = getQuestionScope(question.id);
     const parkingTargets = describeParkingTargets(question.id);
-    const relevantHistory = history.filter((item) => item.questionId === question.id).slice(-12).map((item) => `${item.role === "user" ? "用户" : "设计教练"}：${item.content}`).join("\n");
-    const designContext = Object.entries(snapshot).map(([id, value]) => `${id} [${value.status}]：${value.answer}`).join("\n") || "尚无已确认答案";
+    const answerContext = buildConfirmedAnswerContext(snapshot);
 
     const { result, meta } = await createStructuredResponseWithMeta<CoachResponse>({
       name: "game_design_coach_response",
-      promptVersion: "coach-v4",
+      promptVersion: "coach-v5",
       schemaVersion: "coach-response-v2",
       projectId: project.id,
+      contextStats: combineContextStats("all-confirmed+recent-question-budget-v1", answerContext, conversation),
       schema: coachResponseSchema,
       instructions: [
         "你是一名面向游戏设计新手的专业设计教练。",
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
         "允许引用已确认的上游答案来澄清当前题，但不能替用户完成尚未讨论的下游决定。",
         "如果用户本轮完全越界且没有提供当前题的新信息，suggestedAnswer 保留已有当前题答案；如果尚无答案则返回空字符串，不要用越界内容填充。",
       ].join("\n"),
-      input: `阶段：${stage.name}\n阶段目标：${stage.goal}\n阶段产出：${stage.output}\n当前问题：${question.id} ${question.prompt}\n问题引导：${question.guide}\n\n本题必须完成：${scope.focus}\n本题不要决定：${scope.defer}\n可以暂存到：${parkingTargets.length ? parkingTargets.join("；") : "没有后续题；只提示越界，不推进实现"}\n\n全局设计状态（只作为一致性背景，不代表要在本题处理）：\n${designContext}\n\n当前问题对话：\n${relevantHistory}`,
+      input: `阶段：${stage.name}\n阶段目标：${stage.goal}\n阶段产出：${stage.output}\n当前问题：${question.id} ${question.prompt}\n问题引导：${question.guide}\n\n本题必须完成：${scope.focus}\n本题不要决定：${scope.defer}\n可以暂存到：${parkingTargets.length ? parkingTargets.join("；") : "没有后续题；只提示越界，不推进实现"}\n\n全局设计状态（只作为一致性背景，不代表要在本题处理）：\n${answerContext.text}\n\n当前问题对话：\n${conversation.text}`,
     });
 
     const assistantMessageId = crypto.randomUUID();
@@ -70,7 +75,7 @@ export async function POST(request: Request) {
     const suggestionId = crypto.randomUUID();
     const parkedInsights = validateParkedInsights(
       result.parkedInsights,
-      history.filter((item) => item.questionId === question.id && item.role === "user").map((item) => item.content),
+      conversation.messages.filter((item) => item.role === "user").map((item) => item.content),
       question.id,
     );
     const structuredData = { keyInsights: result.keyInsights, recommendedAction: result.recommendedAction, scopeStatus: result.scopeStatus, parkedInsights };

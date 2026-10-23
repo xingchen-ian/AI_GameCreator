@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BuildBriefPanel, GddPanel } from "@/components/workflow/gdd-panels";
 import { GddReviewWorkspace } from "@/components/workflow/gdd-review-workspace";
 import { ProjectManager } from "@/components/workflow/project-manager";
+import { answerDraftIsDirty, shouldAutoApplyAnswerSuggestion } from "@/lib/design/answer-draft";
 import type { DesignReviewChange, GddSection, WorkspacePayload } from "@/lib/design/types";
 import { gddSectionPlan } from "@/lib/design/gdd";
 import { validateParkedInsights } from "@/lib/design/parked-insights";
@@ -101,23 +102,49 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   const [projectManagerOpen, setProjectManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [thinking, setThinking] = useState(false);
+  const [loadingChatKey, setLoadingChatKey] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [gddProgress, setGddProgress] = useState<GddProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const loadedChatKeysRef = useRef<Set<string>>(new Set());
+  const loadingChatKeysRef = useRef<Set<string>>(new Set());
+  const selectedIdRef = useRef("Q1");
+  const answerDraftBaselineRef = useRef("");
+  const answerDraftDirtyRef = useRef(false);
+
+  const replaceAnswerDraft = (value: string) => {
+    answerDraftBaselineRef.current = value;
+    answerDraftDirtyRef.current = false;
+    setAnswerDraft(value);
+  };
+
+  const editAnswerDraft = (value: string) => {
+    answerDraftDirtyRef.current = answerDraftIsDirty(value, answerDraftBaselineRef.current);
+    setAnswerDraft(value);
+  };
 
   const applyWorkspace = (payload: WorkspacePayload) => {
+    loadedChatKeysRef.current.clear();
+    loadingChatKeysRef.current.clear();
     setWorkspace(payload);
     window.localStorage.setItem("game-workflow.active-project", payload.project.id);
     const activeQuestionId = payload.project.activeQuestionId || "Q1";
+    selectedIdRef.current = activeQuestionId;
     setSelectedId(activeQuestionId);
     setSelectedGddIssueId(defaultGddIssueId(payload));
-    setAnswerDraft(payload.answers[activeQuestionId]?.answer ?? "");
+    replaceAnswerDraft(payload.answers[activeQuestionId]?.answer ?? "");
     setDraft("");
     setSuggestions({});
     const question = allQuestions.find((item) => item.id === activeQuestionId);
     if (question) setOpenStages(new Set([question.stageId]));
     setError(null);
+  };
+
+  const mergeWorkspacePayload = (payload: WorkspacePayload) => {
+    setWorkspace((current) => current?.project.id === payload.project.id
+      ? { ...payload, chats: current.chats }
+      : payload);
   };
 
   const loadWorkspace = async (projectId?: string | null) => {
@@ -171,33 +198,64 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
 
   const selected = allQuestions.find((question) => question.id === selectedId) ?? allQuestions[0];
   const isGlobalReview = selectedId === GDD_REVIEW_ID;
+  const activeChatKey = isGlobalReview
+    ? selectedGddIssueId ? gddIssueChatKey(selectedGddIssueId) : null
+    : selectedId;
   const selectedStage = stages.find((stage) => stage.id === selected.stageId)!;
   const selectedScope = getQuestionScope(selected.id);
   const storedAnswer = workspace?.answers[selectedId];
   const selectedStructuredData = suggestions[selectedId]?.structuredData ?? storedAnswer?.structuredData;
   const selectedChats = workspace?.chats[selectedId] ?? [];
+  const chatIsLoading = loadingChatKey === activeChatKey;
   const parkedInsights = validateParkedInsights(
     selectedStructuredData?.parkedInsights,
     selectedChats.filter((message) => message.role === "user").map((message) => message.text),
     selectedId,
   );
-  const displayedChats = selectedChats.length ? selectedChats : [{ id: "starter", role: "assistant" as const, text: starterFor(selected), createdAt: "" }];
+  const displayedChats = selectedChats.length ? selectedChats : chatIsLoading ? [] : [{ id: "starter", role: "assistant" as const, text: starterFor(selected), createdAt: "" }];
   const confirmedCount = Object.values(workspace?.answers ?? {}).filter((answer) => answer.status === "confirmed").length;
   const progress = Math.round((confirmedCount / allQuestions.length) * 100);
+
+  useEffect(() => {
+    const projectId = workspace?.project.id;
+    if (!projectId || !activeChatKey || loadedChatKeysRef.current.has(activeChatKey) || loadingChatKeysRef.current.has(activeChatKey)) return;
+    const controller = new AbortController();
+    loadingChatKeysRef.current.add(activeChatKey);
+    setLoadingChatKey(activeChatKey);
+    const query = new URLSearchParams({ projectId, questionId: activeChatKey });
+    void (async () => readJson<{ messages: WorkspacePayload["chats"][string]; hasMore: boolean }>(
+      await fetch(`/api/messages?${query.toString()}`, { cache: "no-store", signal: controller.signal }),
+    ))().then((payload) => {
+      loadedChatKeysRef.current.add(activeChatKey);
+      setWorkspace((current) => current?.project.id === projectId ? {
+        ...current,
+        chats: { ...current.chats, [activeChatKey]: payload.messages },
+      } : current);
+    }).catch((caught) => {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
+      setError(caught instanceof Error ? caught.message : "无法读取对话。");
+    }).finally(() => {
+      loadingChatKeysRef.current.delete(activeChatKey);
+      setLoadingChatKey((current) => current === activeChatKey ? null : current);
+    });
+    return () => controller.abort();
+  }, [activeChatKey, workspace?.project.id]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [selectedChats.length, selectedId, thinking]);
 
   const selectQuestion = (id: string, stageId: number, initialDraft = "") => {
+    selectedIdRef.current = id;
     setSelectedId(id);
-    setAnswerDraft(workspace?.answers[id]?.answer ?? suggestions[id]?.answer ?? "");
+    replaceAnswerDraft(workspace?.answers[id]?.answer ?? suggestions[id]?.answer ?? "");
     setDraft(initialDraft);
     setOpenStages((current) => new Set([...current, stageId]));
     if (workspace) void fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "set_active", projectId: workspace.project.id, questionId: id }) });
   };
 
   const selectGlobalReview = () => {
+    selectedIdRef.current = GDD_REVIEW_ID;
     setSelectedId(GDD_REVIEW_ID);
     setSelectedGddIssueId((current) => current && workspace?.latestDesignReview?.issues.some((issue) => issue.id === current) ? current : defaultGddIssueId(workspace));
     setDraft("");
@@ -212,7 +270,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
 
   const sendGddReview = async (mode: "analyze" | "chat" = "chat", issueId = selectedGddIssueId, contentOverride?: string) => {
     const content = contentOverride?.trim() ?? draft.trim();
-    if (!workspace || !issueId || (mode === "chat" && !content) || thinking) return;
+    if (!workspace || !issueId || (mode === "chat" && !content) || thinking || loadingChatKey === gddIssueChatKey(issueId)) return;
     const projectId = workspace.project.id;
     const chatKey = gddIssueChatKey(issueId);
     const optimisticMessage = mode === "chat" ? {
@@ -225,6 +283,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
       setWorkspace((current) => current ? {
         ...current,
         chats: { ...current.chats, [chatKey]: [...(current.chats[chatKey] ?? []), optimisticMessage] },
+        chatQuestionIds: current.chatQuestionIds.includes(chatKey) ? current.chatQuestionIds : [...current.chatQuestionIds, chatKey],
       } : current);
       if (contentOverride === undefined) setDraft("");
     }
@@ -264,7 +323,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setError(null);
     try {
       const payload = await readJson<WorkspacePayload>(await fetch("/api/ai/gdd-review", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, changeId: change.id, action, proposedContent }) }));
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "修改建议处理失败。");
       await loadWorkspace();
@@ -280,7 +339,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setError(null);
     try {
       const payload = await readJson<WorkspacePayload>(await fetch("/api/design-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, action }) }));
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
       setSelectedGddIssueId(defaultGddIssueId(payload));
       setSelectedId(GDD_REVIEW_ID);
       setView("gdd");
@@ -298,7 +357,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setError(null);
     try {
       const payload = await readJson<WorkspacePayload>(await fetch("/api/design-review", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, issueId, action: accepted ? "accept" : "reopen", note }) }));
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "问题状态更新失败。");
     } finally {
@@ -309,7 +368,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   const send = async () => {
     if (isGlobalReview) return sendGddReview("chat");
     const content = draft.trim();
-    if (!workspace || !content || thinking) return;
+    if (!workspace || !content || thinking || chatIsLoading) return;
     const projectId = workspace.project.id;
     const questionId = selectedId;
     const optimisticMessage = {
@@ -321,6 +380,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setWorkspace((current) => current ? {
       ...current,
       chats: { ...current.chats, [questionId]: [...(current.chats[questionId] ?? []), optimisticMessage] },
+      chatQuestionIds: current.chatQuestionIds.includes(questionId) ? current.chatQuestionIds : [...current.chatQuestionIds, questionId],
     } : current);
     setDraft("");
     setThinking(true);
@@ -343,7 +403,11 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
         },
       } : current);
       setSuggestions((current) => ({ ...current, [questionId]: payload.suggestion }));
-      setAnswerDraft(payload.suggestion.answer);
+      if (shouldAutoApplyAnswerSuggestion({
+        activeQuestionId: selectedIdRef.current,
+        responseQuestionId: questionId,
+        draftIsDirty: answerDraftDirtyRef.current,
+      })) replaceAnswerDraft(payload.suggestion.answer);
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "AI 暂时无法响应。";
       await loadWorkspace(projectId);
@@ -355,13 +419,18 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
   };
 
   const synthesize = async () => {
-    if (!workspace) return;
+    if (!workspace || chatIsLoading) return;
+    const questionId = selectedId;
     setThinking(true);
     setError(null);
     try {
-      const payload = await readJson<Suggestion>(await fetch("/api/ai/synthesize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, questionId: selectedId }) }));
-      setSuggestions((current) => ({ ...current, [selectedId]: payload }));
-      setAnswerDraft(payload.answer);
+      const payload = await readJson<Suggestion>(await fetch("/api/ai/synthesize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, questionId }) }));
+      setSuggestions((current) => ({ ...current, [questionId]: payload }));
+      if (shouldAutoApplyAnswerSuggestion({
+        activeQuestionId: selectedIdRef.current,
+        responseQuestionId: questionId,
+        draftIsDirty: answerDraftDirtyRef.current,
+      })) replaceAnswerDraft(payload.answer);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "无法提炼答案。");
     } finally {
@@ -371,11 +440,14 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
 
   const saveAnswer = async () => {
     if (!workspace || !answerDraft.trim()) return;
+    const questionId = selectedId;
+    const submittedAnswer = answerDraft.trim();
     setSaving(true);
     setError(null);
     try {
-      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_answer", projectId: workspace.project.id, questionId: selectedId, answer: answerDraft.trim(), structuredData: suggestions[selectedId]?.structuredData ?? {}, suggestionId: suggestions[selectedId]?.id }) }));
-      setWorkspace(payload);
+      const payload = await readJson<WorkspacePayload>(await fetch("/api/workspace", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_answer", projectId: workspace.project.id, questionId, answer: submittedAnswer, structuredData: suggestions[questionId]?.structuredData ?? {}, suggestionId: suggestions[questionId]?.id }) }));
+      mergeWorkspacePayload(payload);
+      if (selectedIdRef.current === questionId) replaceAnswerDraft(submittedAnswer);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "保存失败。");
     } finally {
@@ -430,7 +502,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
         stageSummaries: summary.result.stageSummaries,
         sections: fidelity.result.sections,
       });
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
       setSelectedGddIssueId(defaultGddIssueId(payload));
       setView("gdd");
     } catch (caught) {
@@ -447,7 +519,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setError(null);
     try {
       const payload = await readJson<WorkspacePayload>(await fetch("/api/gdd", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id, ...body }) }));
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "GDD 更新失败。");
     } finally {
@@ -461,7 +533,7 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     setError(null);
     try {
       const payload = await readJson<WorkspacePayload>(await fetch("/api/build-brief", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: workspace.project.id }) }));
-      setWorkspace(payload);
+      mergeWorkspacePayload(payload);
       setView("build");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Build Brief 生成失败。");
@@ -475,6 +547,9 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
     confirmed: stage.questions.filter((question) => workspace?.answers[question.id]?.status === "confirmed").length,
     total: stage.questions.length,
   })), [workspace]);
+  const pendingAnswerSuggestion = suggestions[selectedId]?.answer.trim() && suggestions[selectedId].answer.trim() !== answerDraft.trim()
+    ? suggestions[selectedId]
+    : null;
 
   if (loading && !workspace) return <main className="grid min-h-screen place-items-center bg-[#10252d] text-white"><div className="text-center"><Loader2 className="mx-auto size-7 animate-spin text-[#72d2dd]" /><p className="mt-3 text-sm text-[#a8bec4]">正在载入正式项目…</p></div></main>;
   if (!workspace) return <main className="grid min-h-screen place-items-center bg-[#10252d] px-6 text-white"><section className="max-w-md text-center"><AlertTriangle className="mx-auto size-8 text-[#f0a63a]" /><h1 className="mt-3 text-xl font-semibold">项目暂时无法载入</h1><p className="mt-2 text-sm text-[#b7cbd0]">{error}</p><Button onClick={() => void loadWorkspace()} className="mt-5">重试</Button></section></main>;
@@ -498,23 +573,24 @@ export function WorkflowApp({ displayName }: { displayName: string }) {
               const isCurrent = !isGlobalReview && selected.stageId === stage.id;
               return <Collapsible key={stage.id} open={isOpen} onOpenChange={(open) => setOpenStages((current) => { const next = new Set(current); if (open) next.add(stage.id); else next.delete(stage.id); return next; })} className="relative mb-4"><CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-1 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#72d2dd]"><span className={`z-10 grid size-7 shrink-0 place-items-center rounded-full bg-[#10252d] font-mono text-[11px] ${counts.confirmed === counts.total ? "border-2 border-[#82ae60] text-[#a8d782]" : isCurrent ? "border-2 border-[#5cc3ce] text-[#8adbe3]" : "border border-[#47636a] text-[#8ca5ac]"}`}>{counts.confirmed === counts.total ? <Check className="size-3.5" /> : String(stage.id).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className={`text-[13px] font-semibold ${isCurrent ? "text-white" : "text-[#a9bdc2]"}`}>{stage.name}</p><p className="text-[10px] text-[#66838b]">{stage.english} · {counts.confirmed}/{counts.total}</p></div>{isOpen ? <ChevronDown className="size-4 text-[#6f8c94]" /> : <ChevronRight className="size-4 text-[#6f8c94]" />}</CollapsibleTrigger><CollapsibleContent className="ml-8 mt-2 space-y-1.5">{stage.questions.map((question) => {
                 const answer = workspace.answers[question.id];
-                return <button key={question.id} onClick={() => selectQuestion(question.id, stage.id)} className={`group flex w-full gap-2.5 rounded-xl px-3 py-2.5 text-left transition ${selectedId === question.id ? "bg-[#21434c] shadow-[inset_3px_0_0_#5cc3ce]" : "hover:bg-[#183740]"}`}><span className={`mt-0.5 font-mono text-[10px] ${selectedId === question.id ? "text-[#7bd5de]" : "text-[#6e8c94]"}`}>{question.id}</span><span className={`line-clamp-2 flex-1 text-[12px] leading-[1.55] ${selectedId === question.id ? "text-white" : "text-[#afc1c6]"}`}>{question.short}</span>{answer?.status === "confirmed" ? <CheckCircle2 className="mt-0.5 size-3.5 text-[#8fbd6b]" /> : workspace.chats[question.id]?.length ? <Circle className="mt-1 size-2.5 fill-[#5cc3ce] text-[#5cc3ce]" /> : null}</button>;
+                return <button key={question.id} onClick={() => selectQuestion(question.id, stage.id)} className={`group flex w-full gap-2.5 rounded-xl px-3 py-2.5 text-left transition ${selectedId === question.id ? "bg-[#21434c] shadow-[inset_3px_0_0_#5cc3ce]" : "hover:bg-[#183740]"}`}><span className={`mt-0.5 font-mono text-[10px] ${selectedId === question.id ? "text-[#7bd5de]" : "text-[#6e8c94]"}`}>{question.id}</span><span className={`line-clamp-2 flex-1 text-[12px] leading-[1.55] ${selectedId === question.id ? "text-white" : "text-[#afc1c6]"}`}>{question.short}</span>{answer?.status === "confirmed" ? <CheckCircle2 className="mt-0.5 size-3.5 text-[#8fbd6b]" /> : workspace.chatQuestionIds.includes(question.id) ? <Circle className="mt-1 size-2.5 fill-[#5cc3ce] text-[#5cc3ce]" /> : null}</button>;
               })}</CollapsibleContent></Collapsible>;
             })}
             <button onClick={selectGlobalReview} className={`relative mt-2 flex w-full items-center gap-3 rounded-xl px-1 py-2 text-left transition ${isGlobalReview ? "bg-[#21434c] shadow-[inset_3px_0_0_#f0a63a]" : "hover:bg-[#183740]"}`}><span className={`z-10 grid size-7 shrink-0 place-items-center rounded-full bg-[#10252d] ${isGlobalReview ? "border-2 border-[#f0a63a] text-[#ffd07a]" : workspace.latestDesignReview?.status === "ready" ? "border-2 border-[#82ae60] text-[#a8d782]" : workspace.latestDesignReview ? "border-2 border-[#f0a63a] text-[#ffd07a]" : "border border-[#47636a] text-[#8ca5ac]"}`}><GitCompareArrows className="size-3.5" /></span><div className="min-w-0 flex-1"><p className={`text-[13px] font-semibold ${isGlobalReview ? "text-white" : "text-[#a9bdc2]"}`}>Design State 全局审查</p><p className="text-[10px] text-[#66838b]">{!workspace.latestDesignReview ? "等待开始审查" : workspace.latestDesignReview.status === "ready" ? "已通过，可生成 GDD" : `${workspace.latestDesignReview.issues.filter((issue) => issue.status === "open" || issue.status === "pending_verification").length} 个待处理`}</p></div><ChevronRight className="size-4 text-[#6f8c94]" /></button>
           </div>
         </aside>
 
-        {isGlobalReview ? <GddReviewWorkspace workspace={workspace} selectedIssueId={selectedGddIssueId} draft={draft} thinking={thinking} saving={saving} onSelectIssue={selectGddIssue} onDraftChange={setDraft} onSend={() => void sendGddReview("chat")} onAnalyze={(issueId) => void sendGddReview("analyze", issueId)} onRefine={(issueId) => void sendGddReview("chat", issueId, "请根据我们对这个冲突的全部讨论，提炼出最合适的最终答案。给出完整替换文本，并让我决定是否接受；不要直接修改。")} onApply={(change, content) => void updateReviewChange(change, "apply", content)} onDismiss={(change) => void updateReviewChange(change, "dismiss")} onStartReview={() => void runDesignReview("start")} onVerifyReview={() => void runDesignReview("verify")} onAcceptIssue={(issueId, note) => void setDesignIssueAccepted(issueId, true, note)} onReopenIssue={(issueId) => void setDesignIssueAccepted(issueId, false)} onOpenQuestion={(questionId) => { const question = allQuestions.find((item) => item.id === questionId); if (question) selectQuestion(question.id, question.stageId); }} /> : <section className="flex min-h-[720px] min-w-0 flex-col bg-white xl:min-h-0">
+        {isGlobalReview ? <GddReviewWorkspace workspace={workspace} selectedIssueId={selectedGddIssueId} draft={draft} thinking={thinking} loadingChat={chatIsLoading} saving={saving} onSelectIssue={selectGddIssue} onDraftChange={setDraft} onSend={() => void sendGddReview("chat")} onAnalyze={(issueId) => void sendGddReview("analyze", issueId)} onRefine={(issueId) => void sendGddReview("chat", issueId, "请根据我们对这个冲突的全部讨论，提炼出最合适的最终答案。给出完整替换文本，并让我决定是否接受；不要直接修改。")} onApply={(change, content) => void updateReviewChange(change, "apply", content)} onDismiss={(change) => void updateReviewChange(change, "dismiss")} onStartReview={() => void runDesignReview("start")} onVerifyReview={() => void runDesignReview("verify")} onAcceptIssue={(issueId, note) => void setDesignIssueAccepted(issueId, true, note)} onReopenIssue={(issueId) => void setDesignIssueAccepted(issueId, false)} onOpenQuestion={(questionId) => { const question = allQuestions.find((item) => item.id === questionId); if (question) selectQuestion(question.id, question.stageId); }} /> : <section className="flex min-h-[720px] min-w-0 flex-col bg-white xl:min-h-0">
           <div className="scrollbar-none flex gap-2 overflow-x-auto border-b border-[#d9e2e4] bg-[#10252d] px-3 py-2 xl:hidden">{stages.map((stage) => <button key={stage.id} onClick={() => selectQuestion(stage.questions[0].id, stage.id)} className={`shrink-0 rounded-lg px-3 py-2 text-[12px] ${selected.stageId === stage.id ? "bg-[#2b5360] text-white" : "text-[#9db5bb]"}`}>{stage.id}. {stage.name}</button>)}<button onClick={selectGlobalReview} className="shrink-0 rounded-lg px-3 py-2 text-[12px] text-[#ffd07a]">全局审查</button></div>
           <div className="border-b border-[#d9e2e4] px-5 py-4 sm:px-7"><div className="mb-2 flex items-center justify-between gap-3"><div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.12em] text-[#0c7489]"><span>Stage {selected.stageId}</span><span className="text-[#a4b2b7]">/</span><span>{selected.id} · {selected.short}</span></div></div><h2 className="max-w-3xl text-[20px] font-semibold leading-[1.45] tracking-[-.015em] text-[#14232b] sm:text-[21px]">{selected.prompt}</h2><p className="mt-2 flex max-w-3xl items-start gap-2 text-[11px] leading-5 text-[#71858c]"><span className="mt-0.5 shrink-0 rounded bg-[#e7f2f4] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[#0c7489]">本题边界</span>{selectedScope.focus}</p></div>
           <div className="scrollbar-thin flex-1 overflow-y-auto px-5 py-6 sm:px-7"><div className="mx-auto max-w-3xl space-y-5">
             {displayedChats.map((message) => message.role === "assistant" ? <div key={message.id} className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#dff1f3] text-[#0c7489]"><Sparkles className="size-4" /></div><div className="max-w-[88%] whitespace-pre-wrap rounded-2xl rounded-tl-sm border border-[#dce5e7] bg-[#f7fafb] px-4 py-3.5 text-[14px] leading-6 text-[#30454d]">{message.text}</div></div> : <div key={message.id} className="flex justify-end"><div className="max-w-[86%] whitespace-pre-wrap rounded-2xl rounded-tr-sm bg-[#0c7489] px-4 py-3 text-[14px] leading-6 text-white shadow-sm">{message.text}</div></div>)}
+            {chatIsLoading && <div className="flex items-center gap-2 text-[12px] text-[#71858c]"><Loader2 className="size-4 animate-spin" />正在载入本题对话…</div>}
             {thinking && <div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#dff1f3] text-[#0c7489]"><Loader2 className="size-4 animate-spin" /></div><div className="rounded-2xl rounded-tl-sm border border-[#dce5e7] bg-[#f7fafb] px-4 py-3 text-[13px] text-[#6c7e84]">AI 正在结合完整 Design State 推理…</div></div>}
             <div ref={chatEndRef} />
-            {(selectedChats.length > 0 || storedAnswer) && <section className="rounded-2xl border border-[#a9cfd5] bg-[#eef8f9] p-4 sm:ml-11"><div className="flex items-start justify-between gap-3"><div><p className="flex items-center gap-2 text-[13px] font-semibold text-[#164e59]"><WandSparkles className="size-4" />正式答案</p><p className="mt-1 text-[11px] text-[#6b858b]">只收录当前问题的答案；保存后直接成为最新设计状态。</p></div><Button variant="ghost" size="sm" onClick={() => void synthesize()} disabled={thinking || !selectedChats.length} className="h-7 text-[11px] text-[#0c7489]">AI 重新提炼</Button></div><Textarea value={answerDraft} onChange={(event) => setAnswerDraft(event.target.value)} placeholder="与 AI 讨论后提炼，或直接写下当前问题的确认答案。" className="mt-3 min-h-[100px] resize-y border-[#bcd5da] bg-white text-[13px] leading-5" />{parkedInsights.length > 0 && <div className="mt-3 rounded-xl border border-[#e8ca8d] bg-[#fff8e9] p-3"><p className="flex items-center gap-2 text-[11px] font-semibold text-[#765722]"><BookmarkPlus className="size-3.5" />稍后讨论 · 不会写入本题答案</p><div className="mt-2 space-y-2">{parkedInsights.map((insight, index) => { const target = allQuestions.find((question) => question.id === insight.suggestedQuestionId); return <div key={`${insight.suggestedQuestionId}-${index}`} className="flex items-start justify-between gap-2 rounded-lg bg-white/70 p-2"><p className="text-[10px] leading-4 text-[#705d38]">{insight.content}</p><Button variant="outline" size="sm" onClick={() => target && selectQuestion(target.id, target.stageId, insight.content)} className="h-7 shrink-0 bg-white px-2 text-[10px]">去 {insight.suggestedQuestionId}</Button></div>; })}</div></div>}<div className="mt-3 flex items-center justify-between gap-3"><span className="text-[11px] text-[#71888e]">{storedAnswer ? `修订 ${storedAnswer.revision}` : "尚未写入"}</span><Button size="sm" disabled={!answerDraft.trim() || saving} onClick={() => void saveAnswer()} className="rounded-lg">{saving ? <Loader2 className="animate-spin" /> : <Check className="size-3.5" />}确认写入方案</Button></div></section>}
+            {(selectedChats.length > 0 || storedAnswer) && <section className="rounded-2xl border border-[#a9cfd5] bg-[#eef8f9] p-4 sm:ml-11"><div className="flex items-start justify-between gap-3"><div><p className="flex items-center gap-2 text-[13px] font-semibold text-[#164e59]"><WandSparkles className="size-4" />正式答案</p><p className="mt-1 text-[11px] text-[#6b858b]">只收录当前问题的答案；保存后直接成为最新设计状态。</p></div><Button variant="ghost" size="sm" onClick={() => void synthesize()} disabled={thinking || chatIsLoading || !selectedChats.length} className="h-7 text-[11px] text-[#0c7489]">AI 重新提炼</Button></div><Textarea value={answerDraft} onChange={(event) => editAnswerDraft(event.target.value)} placeholder="与 AI 讨论后提炼，或直接写下当前问题的确认答案。" className="mt-3 min-h-[100px] resize-y border-[#bcd5da] bg-white text-[13px] leading-5" />{pendingAnswerSuggestion && <div aria-live="polite" className="mt-3 rounded-xl border border-[#b9d8dd] bg-white p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="flex items-center gap-2 text-[11px] font-semibold text-[#0c7489]"><Sparkles className="size-3.5" />AI 最新建议 · 尚未覆盖</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#4c6269]">{pendingAnswerSuggestion.answer}</p></div><Button variant="outline" size="sm" onClick={() => replaceAnswerDraft(pendingAnswerSuggestion.answer)} className="h-8 shrink-0 bg-white px-2.5 text-[10px] text-[#0c7489]">确认覆盖</Button></div><p className="mt-2 text-[10px] text-[#7b8d92]">当前文本框保留不变；确认后才会替换，仍需点击“确认写入方案”才能保存。</p></div>}{parkedInsights.length > 0 && <div className="mt-3 rounded-xl border border-[#e8ca8d] bg-[#fff8e9] p-3"><p className="flex items-center gap-2 text-[11px] font-semibold text-[#765722]"><BookmarkPlus className="size-3.5" />稍后讨论 · 不会写入本题答案</p><div className="mt-2 space-y-2">{parkedInsights.map((insight, index) => { const target = allQuestions.find((question) => question.id === insight.suggestedQuestionId); return <div key={`${insight.suggestedQuestionId}-${index}`} className="flex items-start justify-between gap-2 rounded-lg bg-white/70 p-2"><p className="text-[10px] leading-4 text-[#705d38]">{insight.content}</p><Button variant="outline" size="sm" onClick={() => target && selectQuestion(target.id, target.stageId, insight.content)} className="h-7 shrink-0 bg-white px-2 text-[10px]">去 {insight.suggestedQuestionId}</Button></div>; })}</div></div>}<div className="mt-3 flex items-center justify-between gap-3"><span className="text-[11px] text-[#71888e]">{storedAnswer ? `修订 ${storedAnswer.revision}` : "尚未写入"}</span><Button size="sm" disabled={!answerDraft.trim() || saving} onClick={() => void saveAnswer()} className="rounded-lg">{saving ? <Loader2 className="animate-spin" /> : <Check className="size-3.5" />}确认写入方案</Button></div></section>}
           </div></div>
-          <div className="border-t border-[#d9e2e4] bg-[#fbfcfc] p-4 sm:px-7"><div className="mx-auto max-w-3xl"><div className="relative rounded-2xl border border-[#bccdd1] bg-white shadow-[0_6px_22px_rgba(27,57,66,.07)] focus-within:border-[#0c7489] focus-within:ring-2 focus-within:ring-[#0c7489]/10"><Textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="与真实 AI 设计教练讨论当前问题……" className="min-h-[82px] resize-none border-0 bg-transparent px-4 py-3.5 pr-14 text-[14px] shadow-none focus-visible:ring-0" /><Button aria-label="发送" size="icon" onClick={() => void send()} disabled={!draft.trim() || thinking} className="absolute bottom-3 right-3 size-9 rounded-xl"><Send className="size-4" /></Button></div><div className="mt-2 flex items-center justify-between text-[11px] text-[#829198]"><span>Enter 发送 · Shift + Enter 换行</span><span className="max-w-[55%] truncate">{selected.guide}</span></div></div></div>
+          <div className="border-t border-[#d9e2e4] bg-[#fbfcfc] p-4 sm:px-7"><div className="mx-auto max-w-3xl"><div className="relative rounded-2xl border border-[#bccdd1] bg-white shadow-[0_6px_22px_rgba(27,57,66,.07)] focus-within:border-[#0c7489] focus-within:ring-2 focus-within:ring-[#0c7489]/10"><Textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="与真实 AI 设计教练讨论当前问题……" className="min-h-[82px] resize-none border-0 bg-transparent px-4 py-3.5 pr-14 text-[14px] shadow-none focus-visible:ring-0" /><Button aria-label="发送" size="icon" onClick={() => void send()} disabled={!draft.trim() || thinking || chatIsLoading} className="absolute bottom-3 right-3 size-9 rounded-xl"><Send className="size-4" /></Button></div><div className="mt-2 flex items-center justify-between text-[11px] text-[#829198]"><span>Enter 发送 · Shift + Enter 换行</span><span className="max-w-[55%] truncate">{selected.guide}</span></div></div></div>
         </section>}
 
         <aside className="flex min-h-[620px] min-w-0 flex-col border-l border-[#d3dee0] bg-[#f4f7f8] xl:min-h-0"><div className="flex items-center justify-between border-b border-[#d3dee0] px-3 py-[14px]"><Tabs value={view} onValueChange={(value) => setView(value as "design" | "gdd" | "build")} className="w-full"><TabsList className="grid h-10 w-full grid-cols-3 bg-[#e2eaec]"><TabsTrigger value="design" className="px-1 text-[10px]"><FileText />状态</TabsTrigger><TabsTrigger value="gdd" className="px-1 text-[10px]">GDD</TabsTrigger><TabsTrigger value="build" className="px-1 text-[10px]">Build</TabsTrigger></TabsList></Tabs></div>

@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { modelCalls } from "@/db/schema";
+import type { ModelContextStats } from "@/lib/server/model-context";
 import { allQuestions } from "@/lib/protocol/stages";
 
 type JsonSchema = Record<string, unknown>;
@@ -209,7 +210,7 @@ function addUsage(total: TokenUsage, next: TokenUsage): TokenUsage {
 }
 
 // 研究数据记录不能影响主流程：写入失败只打日志。
-async function recordModelCall(projectId: string | undefined, operation: string, role: ModelRole, meta: ModelCallMeta) {
+async function recordModelCall(projectId: string | undefined, operation: string, role: ModelRole, meta: ModelCallMeta, contextStats?: ModelContextStats) {
   try {
     await getDb().insert(modelCalls).values({
       id: crypto.randomUUID(),
@@ -226,6 +227,11 @@ async function recordModelCall(projectId: string | undefined, operation: string,
       strictFallback: meta.strictFallback,
       inputTokens: meta.inputTokens,
       outputTokens: meta.outputTokens,
+      contextStrategy: contextStats?.strategy ?? "unknown",
+      includedAnswerCount: contextStats?.includedAnswerCount ?? 0,
+      includedMessageCount: contextStats?.includedMessageCount ?? 0,
+      estimatedContextTokens: contextStats?.estimatedTokens ?? 0,
+      contextTruncated: contextStats?.truncated ?? false,
       durationMs: meta.durationMs,
       createdAt: new Date().toISOString(),
     });
@@ -250,6 +256,8 @@ type StructuredRequest = {
   timeoutMs?: number;
   /** 写入 model_calls 时关联的项目；不提供时仍会记录，但不关联项目。 */
   projectId?: string;
+  /** 记录本次请求使用的上下文策略和组成，供成本实验分析。 */
+  contextStats?: ModelContextStats;
 };
 
 export async function createStructuredResponse<T>(request: StructuredRequest): Promise<T> {
@@ -269,6 +277,7 @@ export async function createStructuredResponseWithMeta<T>({
   maxTokens,
   timeoutMs,
   projectId,
+  contextStats,
 }: StructuredRequest): Promise<{ result: T; meta: ModelCallMeta }> {
   const startedAt = Date.now();
   const config = getProviderConfig(role);
@@ -288,7 +297,7 @@ export async function createStructuredResponseWithMeta<T>({
       durationMs: Date.now() - startedAt,
       ...usage,
     };
-    await recordModelCall(projectId, name, role, meta);
+    await recordModelCall(projectId, name, role, meta, contextStats);
     return meta;
   };
   const complete = async (options: Parameters<typeof requestCompletion>[0]) => {
