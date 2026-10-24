@@ -1,0 +1,112 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%;
+  background: #1f1b33;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  color: #3a3350;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+#wrap {
+  position: relative;
+  width: min(100vw, 160vh);
+  aspect-ratio: 16 / 10;
+  font-size: 16px; /* JS 按画布宽度缩放 */
+}
+canvas { display: block; width: 100%; height: 100%; touch-action: none; border-radius: .6em; }
+.hidden { display: none !important; }
+
+button {
+  font: inherit; font-size: .9em;
+  border: 0; border-radius: 2em;
+  padding: .5em 1.1em;
+  background: rgba(255,255,255,.88); color: #3a3350;
+  cursor: pointer; white-space: nowrap;
+  box-shadow: 0 .15em .5em rgba(40,30,80,.18);
+  transition: transform .12s, background .2s;
+}
+button:hover { transform: translateY(-1px); background: #fff; }
+button.primary { background: #ffb4c8; color: #4a2238; font-weight: 600; }
+button.primary:hover { background: #ffc7d6; }
+kbd {
+  display: inline-block; min-width: 1.5em; padding: 0 .35em;
+  border-radius: .3em; background: #efeaf8; border: 1px solid #d6cfe6;
+  font-size: .85em; text-align: center; font-family: inherit;
+}
+
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(40,30,70,.25);
+  backdrop-filter: blur(2px);
+}
+.overlay.bottom { align-items: flex-end; background: none; backdrop-filter: none; padding-bottom: .5em; pointer-events: none; }
+.overlay.bottom .panel { pointer-events: auto; }
+.panel {
+  background: rgba(255,252,246,.94);
+  border-radius: 1.2em;
+  padding: 1.6em 2.2em;
+  max-width: 34em;
+  box-shadow: 0 .6em 2em rgba(30,20,60,.3);
+  text-align: center;
+}
+.panel.wide { max-width: none; width: 52em; display: flex; align-items: center; justify-content: space-between; text-align: left; padding: .7em 1.4em; gap: 1em; }
+.panel h1 { margin: 0 0 .3em; font-size: 2.6em; letter-spacing: .15em; color: #6b4fa0; }
+.panel h2 { margin: 0 0 .2em; font-size: 1.3em; color: #6b4fa0; }
+.panel .tag { margin: 0 0 1em; font-size: 1.05em; }
+.panel p { margin: 0; font-size: .9em; line-height: 1.6; }
+.howto { text-align: left; font-size: .88em; line-height: 2; margin: 0 0 1.4em; padding-left: 1.2em; }
+.row { display: flex; gap: .6em; }
+
+#hint {
+  position: absolute; top: .7em; left: 50%; transform: translateX(-50%);
+  background: rgba(255,252,246,.9); padding: .35em 1.1em; border-radius: 2em;
+  font-size: .85em; white-space: nowrap;
+  box-shadow: 0 .15em .5em rgba(40,30,80,.18);
+  pointer-events: none;
+}
+#toast {
+  position: absolute; top: 3.4em; left: 50%; transform: translate(-50%, -.5em);
+  background: rgba(60,45,95,.88); color: #fff; padding: .4em 1.1em; border-radius: 2em;
+  font-size: .85em; white-space: nowrap; opacity: 0; transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+#hud {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 1.2em .7em; pointer-events: none;
+}
+#hud > * { pointer-events: auto; }
+#bottles { display: flex; gap: .6em; }
+.bottle {
+  position: relative; width: 4.6em; padding: .45em .3em .35em; border-radius: .9em;
+  background: rgba(255,252,246,.78);
+  display: flex; flex-direction: column; align-items: center; gap: .2em;
+}
+.bottle.sel { background: #fff; box-shadow: 0 0 0 .18em #ffb4c8, 0 .3em .8em rgba(40,30,80,.25); transform: translateY(-.25em); }
+.bottle .glass {
+  position: relative; width: 2.4em; height: 3.2em; margin-top: .45em;
+  border: .14em solid rgba(90,80,120,.45); border-radius: .5em .5em 1em 1em;
+  background: rgba(255,255,255,.6); overflow: hidden;
+}
+.bottle .glass::before {
+  content: ""; position: absolute; top: -.6em; left: 50%; transform: translateX(-50%);
+  width: 1.1em; height: .5em; background: #c8a98a; border-radius: .2em;
+}
+.bottle .neck { position: absolute; top: .25em; left: 50%; transform: translateX(-50%); width: 1.1em; height: .45em; background: #c9a77f; border-radius: .2em; }
+.bottle .liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; transition: height .4s ease, background-color .5s ease; }
+.bottle .liquid::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: .25em; background: rgba(255,255,255,.35); }
+.bottle .lbl { font-size: .7em; line-height: 1.2; }
+.bottle .parts { display: flex; gap: .15em; height: .55em; }
+.bottle .parts i { width: .55em; height: .55em; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+.bottle kbd { position: absolute; top: .25em; left: .3em; font-size: .6em; }
+.bottle.pulse .glass { animation: pulse .45s ease; }
+@keyframes pulse { 0% { transform: scale(1); } 40% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+#side { display: flex; flex-direction: column; align-items: flex-end; gap: .5em; }
+#counter { background: rgba(255,252,246,.85); padding: .25em .9em; border-radius: 2em; font-size: .85em; }
+#actions { display: flex; gap: .5em; }
+#btnMute.off { opacity: .45; text-decoration: line-through; }

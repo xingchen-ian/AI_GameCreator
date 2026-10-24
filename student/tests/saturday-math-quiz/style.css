@@ -161,6 +161,10 @@ main { display: grid; grid-template-columns: 250px 1fr; gap: 16px; padding: 16px
 .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 0; margin: 4px 0 20px; }
 .node { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; border: 2px dashed var(--line); background: var(--paper); }
 .node.done { border: 2px solid var(--ink-2); }
+button.node.done { padding: 0; position: relative; }
+button.node.done:hover { border-color: var(--red); }
+button.node.done:hover::after { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; height: 2px; background: var(--red); transform: rotate(-20deg); }
+.eraseBtn { margin-top: 14px; font-size: 13px; padding: 5px 12px; }
 .node.now { border: 2px solid var(--ink); animation: pulse 1.2s ease-in-out infinite; font-family: var(--serif); color: var(--ink-2); }
 .link { width: 22px; height: 2px; background: var(--line); }
 .link.done { background: var(--ink-2); }
