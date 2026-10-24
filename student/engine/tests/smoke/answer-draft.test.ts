@@ -8,6 +8,7 @@ describe("answer draft suggestion protection", () => {
       activeQuestionId: "Q4",
       responseQuestionId: "Q4",
       draftIsDirty: true,
+      recommendedAction: "confirm_answer",
     })).toBe(false);
   });
 
@@ -16,11 +17,22 @@ describe("answer draft suggestion protection", () => {
       activeQuestionId: "Q4",
       responseQuestionId: "Q4",
       draftIsDirty: false,
+      recommendedAction: "confirm_answer",
     })).toBe(true);
     expect(shouldAutoApplyAnswerSuggestion({
       activeQuestionId: "Q5",
       responseQuestionId: "Q4",
       draftIsDirty: false,
+      recommendedAction: "confirm_answer",
+    })).toBe(false);
+  });
+
+  it("does not place a not-ready suggestion into the answer editor", () => {
+    expect(shouldAutoApplyAnswerSuggestion({
+      activeQuestionId: "Q4",
+      responseQuestionId: "Q4",
+      draftIsDirty: false,
+      recommendedAction: "continue_discussion",
     })).toBe(false);
   });
 });

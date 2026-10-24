@@ -1,14 +1,16 @@
 import { and, desc, eq } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { after } from "next/server";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
 import { messages } from "@/db/schema";
+import { processBackgroundJobs } from "@/lib/server/background-jobs";
 import { requireOwnedProject } from "@/lib/server/workspace";
 
 const MAX_MESSAGES = 100;
 
 export async function GET(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const searchParams = new URL(request.url).searchParams;
     const projectId = searchParams.get("projectId")?.trim() ?? "";
@@ -16,6 +18,11 @@ export async function GET(request: Request) {
     if (!projectId || !questionId || questionId.length > 100) return Response.json({ error: "请求参数无效。" }, { status: 400 });
     const project = await requireOwnedProject(projectId, user);
     if (!project) return Response.json({ error: "项目不存在或无权访问。" }, { status: 404 });
+    after(async () => {
+      await processBackgroundJobs({ projectId: project.id, limit: 2 }).catch((error) => {
+        console.warn(JSON.stringify({ event: "background_job_drain_failed", projectId: project.id, reason: error instanceof Error ? error.message.slice(0, 240) : "unknown" }));
+      });
+    });
 
     const rows = await getDb().select({
       id: messages.id,

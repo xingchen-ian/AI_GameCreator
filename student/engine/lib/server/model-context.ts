@@ -1,9 +1,9 @@
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { messages } from "@/db/schema";
+import { messages, questionMemories } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
 
-type AnswerSnapshot = Record<string, {
+export type AnswerSnapshot = Record<string, {
   answer: string;
   status: "draft" | "confirmed";
   revision: number;
@@ -30,6 +30,27 @@ export type ContextMessage = {
   content: string;
   createdAt: string;
 };
+
+export type QuestionMemoryContextItem = {
+  questionId: string;
+  answerRevision: number;
+  summary: string;
+  confirmedDecisions: string[];
+  editedAdoptions: string[];
+  explicitRejections: string[];
+  constraints: string[];
+  openQuestions: string[];
+  unresolvedSuggestions?: string[];
+};
+
+function parseStringArray(value: string) {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 // A conservative tokenizer-free estimate for enforcing a pre-request budget.
 // CJK characters are commonly close to one token; other text is approximated at
@@ -86,9 +107,16 @@ export async function loadRecentConversation(
   };
 }
 
-export function buildConfirmedAnswerContext(snapshot: AnswerSnapshot) {
+export function buildConfirmedAnswerContext(
+  snapshot: AnswerSnapshot,
+  options: { excludeQuestionId?: string; excludeQuestionIds?: Iterable<string>; includeQuestionIds?: Iterable<string> } = {},
+) {
+  const excluded = new Set(options.excludeQuestionIds ?? []);
+  const included = options.includeQuestionIds ? new Set(options.includeQuestionIds) : null;
+  if (options.excludeQuestionId) excluded.add(options.excludeQuestionId);
   const includedQuestionIds: string[] = [];
   const text = allQuestions.flatMap((question) => {
+    if (excluded.has(question.id) || included && !included.has(question.id)) return [];
     const answer = snapshot[question.id];
     if (!answer || answer.status !== "confirmed") return [];
     includedQuestionIds.push(question.id);
@@ -100,6 +128,69 @@ export function buildConfirmedAnswerContext(snapshot: AnswerSnapshot) {
     includedQuestionIds,
     estimatedTokens: estimateTokens(text),
   };
+}
+
+export function buildQuestionMemoryContext(items: QuestionMemoryContextItem[], excludeQuestionId?: string) {
+  const byQuestionId = new Map(items.map((item) => [item.questionId, item]));
+  const includedQuestionIds: string[] = [];
+  const text = allQuestions.flatMap((question) => {
+    if (question.id === excludeQuestionId) return [];
+    const memory = byQuestionId.get(question.id);
+    if (!memory) return [];
+    includedQuestionIds.push(question.id);
+    const details = [
+      memory.confirmedDecisions.length ? `确认决定：${memory.confirmedDecisions.join("；")}` : "",
+      memory.editedAdoptions.length ? `修改后采用：${memory.editedAdoptions.join("；")}` : "",
+      memory.explicitRejections.length ? `明确拒绝：${memory.explicitRejections.join("；")}` : "",
+      memory.constraints.length ? `约束：${memory.constraints.join("；")}` : "",
+      memory.openQuestions.length ? `未解决：${memory.openQuestions.join("；")}` : "",
+      memory.unresolvedSuggestions?.length ? `尚未处理的 AI 建议：${memory.unresolvedSuggestions.join("；")}` : "",
+    ].filter(Boolean).join("\n");
+    return [`${question.id} [Question Memory, answer r${memory.answerRevision}]：${memory.summary}${details ? `\n${details}` : ""}`];
+  }).join("\n\n");
+
+  return {
+    text: text || "尚无已确认的 Question Memory",
+    includedQuestionIds,
+    estimatedTokens: estimateTokens(text),
+  };
+}
+
+// A memory describes one answer revision. Only a memory whose revision equals the
+// question's current confirmed revision is trustworthy; anything else (older
+// revision, or an answer that is no longer confirmed) describes a decision the
+// user may have since changed, so it is dropped and the answer text stands alone.
+export function selectCurrentMemoryRows<T extends { questionId: string; answerRevision: number }>(
+  rows: T[],
+  snapshot: AnswerSnapshot,
+) {
+  return rows.filter((row) => {
+    const answer = snapshot[row.questionId];
+    return answer?.status === "confirmed" && answer.revision === row.answerRevision;
+  });
+}
+
+export async function loadQuestionMemoryContext(
+  projectId: string,
+  snapshot: AnswerSnapshot,
+  excludeQuestionId?: string,
+  includeQuestionIds?: Iterable<string>,
+) {
+  const rows = await getDb().select().from(questionMemories).where(eq(questionMemories.projectId, projectId)).orderBy(desc(questionMemories.createdAt));
+  const currentByQuestion = new Map<string, typeof rows[number]>();
+  for (const row of selectCurrentMemoryRows(rows, snapshot)) if (!currentByQuestion.has(row.questionId)) currentByQuestion.set(row.questionId, row);
+  const included = includeQuestionIds ? new Set(includeQuestionIds) : null;
+  return buildQuestionMemoryContext([...currentByQuestion.values()].filter((row) => !included || included.has(row.questionId)).map((row) => ({
+    questionId: row.questionId,
+    answerRevision: row.answerRevision,
+    summary: row.summary,
+    confirmedDecisions: parseStringArray(row.confirmedDecisionsJson),
+    editedAdoptions: parseStringArray(row.editedAdoptionsJson),
+    explicitRejections: parseStringArray(row.explicitRejectionsJson),
+    constraints: parseStringArray(row.constraintsJson),
+    openQuestions: parseStringArray(row.openQuestionsJson),
+    unresolvedSuggestions: parseStringArray(row.unresolvedSuggestionsJson),
+  })), excludeQuestionId);
 }
 
 export function combineContextStats(

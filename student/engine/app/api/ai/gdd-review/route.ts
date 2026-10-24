@@ -1,6 +1,7 @@
 import { and, desc, eq, gte } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
+import { runSqliteBatch } from "@/db/batch";
 import { aiSuggestions, answerRevisions, buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
 import { AIConfigurationError, AIRequestTimeoutError, createStructuredResponseWithMeta, designReviewResponseSchema } from "@/lib/server/model-provider";
@@ -36,7 +37,7 @@ function errorStatus(error: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as { projectId?: string; issueId?: string; mode?: "analyze" | "chat"; content?: string };
     const mode = body.mode ?? "chat";
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
         truncated: reviewConversation.truncated,
       },
       schema: designReviewResponseSchema,
-      role: "review",
+      purpose: "design_review",
       strictSchema: true,
       repairInvalidOutput: true,
       timeoutMs: 60_000,
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
 
     const assistantMessageId = crypto.randomUUID();
     const assistantCreatedAt = new Date().toISOString();
-    await db.batch([
+    runSqliteBatch(db, [
       db.insert(messages).values({ id: assistantMessageId, projectId: project.id, questionId: reviewNodeId, role: "assistant", content: result.reply.trim(), createdAt: assistantCreatedAt }),
       // 保留 AI 的原始提议：用户编辑后写入时，designReviewChanges.proposedContent 会被覆盖。
       ...normalized.map((change) => db.insert(aiSuggestions).values({ id: change.id, projectId: project.id, questionId: change.targetQuestionId, source: "design_review", messageId: assistantMessageId, suggestedAnswer: change.proposedContent, structuredJson: JSON.stringify({ issueId: issue.id, reviewRunId: run.id, summary: change.summary, rationale: change.rationale }), model: meta.model, createdAt: assistantCreatedAt })),
@@ -138,7 +139,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as { projectId?: string; changeId?: string; action?: "apply" | "dismiss"; proposedContent?: string };
     if (!body.projectId || !body.changeId || !body.action) return Response.json({ error: "修改参数无效。" }, { status: 400 });
@@ -168,7 +169,7 @@ export async function PATCH(request: Request) {
     const issueRows = await db.select().from(designReviewIssues).where(eq(designReviewIssues.lastSeenRunId, change.reviewRunId));
     const affectedIssueIds = issueRows.filter((item) => item.status !== "superseded" && parseStringArray(item.questionIdsJson).includes(change.targetQuestionId)).map((item) => item.id);
     const linkedSuggestionId = await suggestionExists(change.id) ? change.id : null;
-    await db.batch([
+    runSqliteBatch(db, [
       db.update(questionAnswers).set({ answer: finalContent, status: "confirmed", structuredJson: JSON.stringify(audit), revision: existing.revision + 1, updatedAt: now }).where(eq(questionAnswers.id, existing.id)),
       db.insert(answerRevisions).values({ id: crypto.randomUUID(), projectId: project.id, questionId: change.targetQuestionId, revision: existing.revision + 1, answer: finalContent, source: "design_review", suggestionId: linkedSuggestionId, adoption: finalContent === change.proposedContent.trim() ? "verbatim" : "edited", createdAt: now }).onConflictDoNothing(),
       ...affectedIssueIds.map((issueId) => db.update(designReviewIssues).set({ status: "pending_verification", resolutionNote: "相关答案已修改，等待统一验证。", updatedAt: now }).where(eq(designReviewIssues.id, issueId))),

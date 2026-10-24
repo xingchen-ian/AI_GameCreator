@@ -1,20 +1,21 @@
 import type { GddVersion } from "./types";
 
-export const gddSectionPlan = [
-  ["overview", "游戏概述", "一句话概念、类型与设计边界", ["Q1", "Q5", "Q7"]],
-  ["experience", "目标玩家体验", "目标情绪、节奏和体验承诺", ["Q3", "Q5", "Q6", "Q7"]],
+/**
+ * GDDs may choose their own outline. These tags describe information that the
+ * complete document must cover; they are not prescribed chapter names.
+ */
+export const gddCoveragePlan = [
+  ["concept", "游戏概念", "起点、主题、抽象边界和一句话概念", ["Q1", "Q5", "Q7", "Q8"]],
+  ["player_experience", "目标玩家体验", "目标情绪、节奏和体验承诺", ["Q3", "Q5", "Q6"]],
   ["player_situation", "玩家与情境", "玩家身份、所处情境和可理解的目标", ["Q9", "Q10"]],
-  ["challenge", "核心挑战", "压力、阻碍、不确定性和限制", ["Q11"]],
-  ["core_loop", "核心循环", "玩家反复执行的动作与循环节奏", ["Q12", "Q13", "Q15"]],
-  ["skill", "玩家技能与决策", "玩家如何变得更擅长", ["Q4", "Q14"]],
-  ["system", "规则、状态与资源", "系统追踪的状态及其关系", ["Q16", "Q18"]],
-  ["consequences", "行动、响应与后果", "核心动作造成的即时响应和后续后果", ["Q17", "Q18"]],
-  ["feedback", "反馈设计", "系统如何解释状态、选择影响和表现", ["Q19"]],
-  ["progression", "进程与变化", "复杂度、风险、能力和组合如何发展", ["Q15", "Q20"]],
-  ["outcomes", "结束条件与结果", "成功、失败、分数或结局", ["Q21"]],
-  ["theme", "主题与抽象", "题材转译、抽象程度和可选表达", ["Q7", "Q8"]],
-  ["validation", "原型测试假设", "根据目标体验和可观察反馈提出待原型试玩验证的问题，不预判测试结果", ["Q6", "Q19", "Q20", "Q21"]],
+  ["core_gameplay", "核心玩法", "反复行动、循环节奏和玩家需要做好的事情", ["Q4", "Q12", "Q13", "Q14", "Q15"]],
+  ["rules_and_constraints", "规则与限制", "挑战、资源、状态及其关系", ["Q11", "Q16", "Q18"]],
+  ["feedback_and_consequences", "反馈与后果", "行动的即时响应、后续影响和可理解反馈", ["Q17", "Q18", "Q19"]],
+  ["progression_and_outcomes", "进程与结果", "局面如何变化以及一局如何结束", ["Q15", "Q20", "Q21"]],
+  ["prototype_validation", "原型验证", "需要通过可观察试玩验证的问题，不预判结果", ["Q6", "Q19", "Q20", "Q21"]],
 ] as const;
+
+export const requiredGddCoverageTags = gddCoveragePlan.map(([tag]) => tag);
 
 export function makeBuildBrief(gdd: GddVersion) {
   const sections = gdd.sections.map((section) => `## ${section.title}\n\n${section.content}\n\n来源：${section.sourceQuestionIds.join("、")}`).join("\n\n");

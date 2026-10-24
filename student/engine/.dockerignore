@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+.git
+.env*
+!.env.example
+data
+.wrangler
+.sites-runtime
+coverage
+npm-debug.log*

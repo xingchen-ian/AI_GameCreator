@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
 import { buildBriefs, gddVersions, projects } from "@/db/schema";
 import { makeBuildBrief } from "@/lib/design/gdd";
@@ -8,7 +8,7 @@ import { getWorkspace, requireOwnedProject } from "@/lib/server/workspace";
 
 export async function POST(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as { projectId?: string };
     if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });

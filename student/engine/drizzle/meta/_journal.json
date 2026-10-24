@@ -71,6 +71,48 @@
       "when": 1792731092001,
       "tag": "0009_stiff_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792758659008,
+      "tag": "0010_quick_clint_barton",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1792819773748,
+      "tag": "0011_concerned_talos",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792821619496,
+      "tag": "0012_overconfident_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1792823421476,
+      "tag": "0013_living_lord_hawal",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1792826350738,
+      "tag": "0014_nifty_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1792840654384,
+      "tag": "0015_simple_lenny_balinger",
+      "breakpoints": true
     }
   ]
 }

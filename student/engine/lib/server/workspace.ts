@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
 import { buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddIssues, gddReviewChanges, gddVersions, messages, projects, questionAnswers, stageSummaries } from "@/db/schema";
-import type { ChatGPTUser } from "@/app/chatgpt-auth";
+import type { AppUser } from "@/app/app-auth";
 import type { AnswerStatus, StoredAnswer, WorkspacePayload } from "@/lib/design/types";
 import { allQuestions } from "@/lib/protocol/stages";
 import { ensureResearchParticipant } from "@/lib/server/research-participant";
@@ -36,7 +36,7 @@ function normalizeAnswerStatus(status: string): AnswerStatus {
   return status === "draft" ? "draft" : "confirmed";
 }
 
-export async function ensureOwnedProject(user: ChatGPTUser, preferredProjectId?: string | null) {
+export async function ensureOwnedProject(user: AppUser, preferredProjectId?: string | null) {
   const db = getDb();
   if (preferredProjectId) {
     const [preferred] = await db.select().from(projects).where(and(eq(projects.id, preferredProjectId), eq(projects.ownerId, user.userId), eq(projects.status, "active"))).limit(1);
@@ -57,19 +57,19 @@ export async function ensureOwnedProject(user: ChatGPTUser, preferredProjectId?:
   return created;
 }
 
-export async function requireOwnedProject(projectId: string, user: ChatGPTUser) {
+export async function requireOwnedProject(projectId: string, user: AppUser) {
   const db = getDb();
   const [project] = await db.select().from(projects).where(and(eq(projects.id, projectId), eq(projects.ownerId, user.userId), eq(projects.status, "active"))).limit(1);
   return project ?? null;
 }
 
-export async function requireAnyOwnedProject(projectId: string, user: ChatGPTUser) {
+export async function requireAnyOwnedProject(projectId: string, user: AppUser) {
   const db = getDb();
   const [project] = await db.select().from(projects).where(and(eq(projects.id, projectId), eq(projects.ownerId, user.userId))).limit(1);
   return project ?? null;
 }
 
-export async function getWorkspace(user: ChatGPTUser, preferredProjectId?: string | null): Promise<WorkspacePayload> {
+export async function getWorkspace(user: AppUser, preferredProjectId?: string | null): Promise<WorkspacePayload> {
   const db = getDb();
   await ensureResearchParticipant(user.userId);
   const project = await ensureOwnedProject(user, preferredProjectId);

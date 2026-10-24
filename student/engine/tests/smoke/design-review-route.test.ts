@@ -2,17 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requiredQuestionIds } from "@/lib/server/design-review";
 
 const mocks = vi.hoisted(() => ({
-  batch: vi.fn(),
   createStructuredResponse: vi.fn(),
-  getChatGPTUser: vi.fn(),
+  getAppUser: vi.fn(),
   getWorkspace: vi.fn(),
   loadAnswerSnapshot: vi.fn(),
   requireOwnedProject: vi.fn(),
   selectLimit: vi.fn(),
+  statementRun: vi.fn(),
+  transaction: vi.fn((callback: () => unknown) => callback()),
 }));
 
-vi.mock("@/app/chatgpt-auth", () => ({
-  getChatGPTUser: mocks.getChatGPTUser,
+vi.mock("@/app/app-auth", () => ({
+  getAppUser: mocks.getAppUser,
 }));
 
 vi.mock("@/lib/server/workspace", () => ({
@@ -34,9 +35,9 @@ vi.mock("@/lib/server/model-provider", () => {
 });
 
 vi.mock("@/db", () => {
-  const insert = vi.fn(() => ({ values: vi.fn(() => ({ kind: "insert" })) }));
+  const insert = vi.fn(() => ({ values: vi.fn(() => ({ run: mocks.statementRun })) }));
   const update = vi.fn(() => ({
-    set: vi.fn(() => ({ where: vi.fn(() => ({ kind: "update" })) })),
+    set: vi.fn(() => ({ where: vi.fn(() => ({ run: mocks.statementRun })) })),
   }));
   const select = vi.fn(() => ({
     from: vi.fn(() => ({
@@ -46,7 +47,7 @@ vi.mock("@/db", () => {
     })),
   }));
   return {
-    getDb: () => ({ batch: mocks.batch, insert, select, update }),
+    getDb: () => ({ transaction: mocks.transaction, insert, select, update }),
   };
 });
 
@@ -55,7 +56,7 @@ import { POST } from "@/app/api/design-review/route";
 describe("global design review smoke test", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getChatGPTUser.mockResolvedValue({
+    mocks.getAppUser.mockResolvedValue({
       userId: "user-1",
       email: "student@example.edu",
       displayName: "Student",
@@ -67,7 +68,7 @@ describe("global design review smoke test", () => {
     ));
     mocks.selectLimit.mockResolvedValue([]);
     mocks.createStructuredResponse.mockResolvedValue({ issues: [] });
-    mocks.batch.mockResolvedValue([]);
+    mocks.transaction.mockImplementation((callback: () => unknown) => callback());
     mocks.getWorkspace.mockResolvedValue({
       project: { id: "project-1", title: "Test game" },
       latestDesignReview: { status: "ready", issues: [] },
@@ -87,11 +88,12 @@ describe("global design review smoke test", () => {
       latestDesignReview: { status: "ready" },
     });
     expect(mocks.createStructuredResponse).toHaveBeenCalledWith(expect.objectContaining({
-      role: "review",
+      purpose: "design_review",
       projectId: "project-1",
       name: "design_state_consistency_review",
     }));
-    expect(mocks.batch).toHaveBeenCalledTimes(1);
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.statementRun).toHaveBeenCalled();
     expect(mocks.getWorkspace).toHaveBeenCalledWith(expect.objectContaining({ userId: "user-1" }), "project-1");
   });
 });

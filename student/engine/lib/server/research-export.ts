@@ -3,24 +3,34 @@ import { getDb } from "@/db";
 import {
   aiSuggestions,
   answerRevisions,
+  answerSubmissionReviews,
+  backgroundJobs,
+  buildBriefs,
+  conversationSummaries,
+  designSnapshots,
   designReviewChanges,
   designReviewIssues,
   designReviewRuns,
   designReviewVerdicts,
+  gddIssues,
+  gddReviewChanges,
   gddVersions,
   messages,
   modelCalls,
   projects,
+  prototypeVersions,
   questionAnswers,
+  questionMemories,
   stageSummaries,
+  studyEvents,
 } from "@/db/schema";
 import { ensureResearchParticipant } from "@/lib/server/research-participant";
 
-export const RESEARCH_EXPORT_FORMAT_VERSION = 2;
+export const RESEARCH_EXPORT_FORMAT_VERSION = 5;
 
 type TimelineEvent = {
   at: string;
-  type: "message" | "ai_suggestion" | "answer_revision" | "design_review_run" | "design_review_change" | "model_call";
+  type: "message" | "ai_suggestion" | "answer_revision" | "design_review_run" | "design_review_change" | "model_call" | "study_event";
   questionId: string | null;
   actor: "user" | "ai" | "system";
   refId: string;
@@ -51,7 +61,7 @@ export async function buildResearchExport(projectId: string) {
   if (!project) return null;
   const participant = await ensureResearchParticipant(project.ownerId);
 
-  const [answerRows, revisionRows, suggestionRows, messageRows, callRows, runRows, issueRows, changeRows, summaryRows, gddRows] = await Promise.all([
+  const [answerRows, revisionRows, suggestionRows, messageRows, callRows, runRows, issueRows, changeRows, summaryRows, gddRows, conversationSummaryRows, memoryRows, submissionReviewRows, buildBriefRows, gddIssueRows, gddChangeRows, snapshotRows, prototypeRows, eventRows, backgroundJobRows] = await Promise.all([
     db.select().from(questionAnswers).where(eq(questionAnswers.projectId, projectId)).orderBy(asc(questionAnswers.questionId)),
     db.select().from(answerRevisions).where(eq(answerRevisions.projectId, projectId)).orderBy(asc(answerRevisions.createdAt)),
     db.select().from(aiSuggestions).where(eq(aiSuggestions.projectId, projectId)).orderBy(asc(aiSuggestions.createdAt)),
@@ -62,6 +72,16 @@ export async function buildResearchExport(projectId: string) {
     db.select().from(designReviewChanges).where(eq(designReviewChanges.projectId, projectId)).orderBy(asc(designReviewChanges.createdAt)),
     db.select().from(stageSummaries).where(eq(stageSummaries.projectId, projectId)).orderBy(asc(stageSummaries.createdAt)),
     db.select().from(gddVersions).where(eq(gddVersions.projectId, projectId)).orderBy(asc(gddVersions.version)),
+    db.select().from(conversationSummaries).where(eq(conversationSummaries.projectId, projectId)).orderBy(asc(conversationSummaries.createdAt)),
+    db.select().from(questionMemories).where(eq(questionMemories.projectId, projectId)).orderBy(asc(questionMemories.createdAt)),
+    db.select().from(answerSubmissionReviews).where(eq(answerSubmissionReviews.projectId, projectId)).orderBy(asc(answerSubmissionReviews.createdAt)),
+    db.select().from(buildBriefs).where(eq(buildBriefs.projectId, projectId)).orderBy(asc(buildBriefs.version)),
+    db.select().from(gddIssues).where(eq(gddIssues.projectId, projectId)).orderBy(asc(gddIssues.createdAt)),
+    db.select().from(gddReviewChanges).where(eq(gddReviewChanges.projectId, projectId)).orderBy(asc(gddReviewChanges.createdAt)),
+    db.select().from(designSnapshots).where(eq(designSnapshots.projectId, projectId)).orderBy(asc(designSnapshots.createdAt)),
+    db.select().from(prototypeVersions).where(eq(prototypeVersions.projectId, projectId)).orderBy(asc(prototypeVersions.version)),
+    db.select().from(studyEvents).where(eq(studyEvents.projectId, projectId)).orderBy(asc(studyEvents.occurredAt)),
+    db.select().from(backgroundJobs).where(eq(backgroundJobs.projectId, projectId)).orderBy(asc(backgroundJobs.createdAt)),
   ]);
   const verdictRows = runRows.length
     ? await db.select().from(designReviewVerdicts).where(inArray(designReviewVerdicts.reviewRunId, runRows.map((run) => run.id))).orderBy(asc(designReviewVerdicts.createdAt))
@@ -81,6 +101,7 @@ export async function buildResearchExport(projectId: string) {
     ...runRows.map((row): TimelineEvent => ({ at: row.createdAt, type: "design_review_run", questionId: null, actor: "system", refId: row.id, summary: `v${row.version} ${row.status}` })),
     ...changeRows.map((row): TimelineEvent => ({ at: row.appliedAt ?? row.createdAt, type: "design_review_change", questionId: row.targetQuestionId, actor: row.status === "applied" || row.status === "dismissed" ? "user" : "ai", refId: row.id, summary: `${row.status}: ${preview(row.summary)}` })),
     ...callRows.map((row): TimelineEvent => ({ at: row.createdAt, type: "model_call", questionId: null, actor: "system", refId: row.id, summary: `${row.operation} ${row.model} ${row.outcome} ${row.durationMs}ms` })),
+    ...eventRows.map((row): TimelineEvent => ({ at: row.occurredAt, type: "study_event", questionId: row.questionId, actor: row.actor === "participant" ? "user" : "system", refId: row.id, summary: row.eventType })),
   ].sort((a, b) => a.at.replace(" ", "T").localeCompare(b.at.replace(" ", "T")));
 
   return {
@@ -101,6 +122,7 @@ export async function buildResearchExport(projectId: string) {
       title: project.title,
       status: project.status,
       activeQuestionId: project.activeQuestionId,
+      prototypeVersion: project.prototypeVersion,
       gddVersion: project.gddVersion,
       buildBriefVersion: project.buildBriefVersion,
       createdAt: project.createdAt,
@@ -111,10 +133,32 @@ export async function buildResearchExport(projectId: string) {
     answerRevisions: revisionRows.map((row) => ({ id: row.id, questionId: row.questionId, revision: row.revision, source: row.source, adoption: row.adoption, suggestionId: row.suggestionId, answer: row.answer, createdAt: row.createdAt })),
     aiSuggestions: suggestionRows.map((row) => ({ id: row.id, questionId: row.questionId, source: row.source, messageId: row.messageId, model: row.model, suggestedAnswer: row.suggestedAnswer, structuredData: parseJson(row.structuredJson), createdAt: row.createdAt })),
     messages: messageRows.map((row) => ({ id: row.id, questionId: row.questionId, role: row.role, content: row.content, createdAt: row.createdAt })),
+    conversationSummaries: conversationSummaryRows.map((row) => ({ id: row.id, questionId: row.questionId, throughMessageId: row.throughMessageId, messageCount: row.messageCount, summary: row.summary, structuredData: parseJson(row.structuredJson), model: row.model, createdAt: row.createdAt })),
+    questionMemories: memoryRows.map((row) => ({
+      id: row.id,
+      questionId: row.questionId,
+      answerRevision: row.answerRevision,
+      baseMemoryId: row.baseMemoryId,
+      throughMessageId: row.throughMessageId,
+      throughCreatedAt: row.throughCreatedAt,
+      memoryText: row.summary,
+      summary: row.summary,
+      confirmedDecisions: parseJson(row.confirmedDecisionsJson),
+      editedAdoptions: parseJson(row.editedAdoptionsJson),
+      explicitRejections: parseJson(row.explicitRejectionsJson),
+      constraints: parseJson(row.constraintsJson),
+      openQuestions: parseJson(row.openQuestionsJson),
+      unresolvedSuggestions: parseJson(row.unresolvedSuggestionsJson),
+      relatedQuestionIds: parseJson(row.relatedQuestionIdsJson),
+      model: row.model,
+      createdAt: row.createdAt,
+    })),
+    answerSubmissionReviews: submissionReviewRows.map((row) => ({ id: row.id, questionId: row.questionId, designSnapshotKey: row.designSnapshotKey, requirementStatus: row.requirementStatus, conflictStatus: row.conflictStatus, feedback: row.feedback, conflicts: parseJson(row.conflictsJson), confirmedAt: row.confirmedAt, createdAt: row.createdAt })),
     modelCalls: callRows.map((row) => ({
       id: row.id,
       operation: row.operation,
       role: row.role,
+      purpose: row.role,
       model: row.model,
       appVersion: row.appVersion,
       promptVersion: row.promptVersion,
@@ -130,8 +174,22 @@ export async function buildResearchExport(projectId: string) {
       includedMessageCount: row.includedMessageCount,
       estimatedContextTokens: row.estimatedContextTokens,
       contextTruncated: row.contextTruncated,
+      attempts: parseJson(row.attemptsJson),
       durationMs: row.durationMs,
       createdAt: row.createdAt,
+    })),
+    backgroundJobs: backgroundJobRows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      dedupeKey: row.dedupeKey,
+      payload: parseJson(row.payloadJson),
+      status: row.status,
+      attempts: row.attempts,
+      availableAt: row.availableAt,
+      lastError: row.lastError,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      completedAt: row.completedAt,
     })),
     designReview: {
       runs: runRows.map((row) => ({ id: row.id, version: row.version, status: row.status, snapshotKey: row.snapshotKey, answers: parseJson(row.answersJson), createdAt: row.createdAt, updatedAt: row.updatedAt, completedAt: row.completedAt })),
@@ -140,7 +198,13 @@ export async function buildResearchExport(projectId: string) {
       changes: changeRows.map((row) => ({ id: row.id, reviewRunId: row.reviewRunId, issueId: row.issueId, targetQuestionId: row.targetQuestionId, status: row.status, summary: row.summary, rationale: row.rationale, beforeContent: row.beforeContent, beforeRevision: row.beforeRevision, finalContent: row.proposedContent, appliedAt: row.appliedAt, createdAt: row.createdAt })),
     },
     stageSummaries: summaryRows.map((row) => ({ stageId: row.stageId, version: row.version, status: row.status, summary: row.summary, keyDecisions: parseJson(row.keyDecisionsJson), openQuestions: parseJson(row.openQuestionsJson), createdAt: row.createdAt })),
-    gddVersions: gddRows.map((row) => ({ version: row.version, status: row.status, fidelityStatus: row.fidelityStatus, title: row.title, oneLinePitch: row.oneLinePitch, sections: parseJson(row.sectionsJson), confirmedAt: row.confirmedAt, createdAt: row.createdAt })),
+    gddVersions: gddRows.map((row) => ({ id: row.id, snapshotId: row.snapshotId, version: row.version, status: row.status, fidelityStatus: row.fidelityStatus, title: row.title, oneLinePitch: row.oneLinePitch, sections: parseJson(row.sectionsJson), confirmedAt: row.confirmedAt, createdAt: row.createdAt, updatedAt: row.updatedAt })),
+    gddIssues: gddIssueRows.map((row) => ({ id: row.id, gddVersionId: row.gddVersionId, severity: row.severity, title: row.title, evidence: row.evidence, whyItMatters: row.whyItMatters, questionIds: parseJson(row.questionIdsJson), options: parseJson(row.optionsJson), status: row.status, resolutionNote: row.resolutionNote, createdAt: row.createdAt, updatedAt: row.updatedAt })),
+    gddReviewChanges: gddChangeRows.map((row) => ({ id: row.id, messageId: row.messageId, gddVersionId: row.gddVersionId, targetType: row.targetType, targetId: row.targetId, issueIds: parseJson(row.issueIdsJson), summary: row.summary, rationale: row.rationale, beforeContent: row.beforeContent, proposedContent: row.proposedContent, status: row.status, appliedAt: row.appliedAt, createdAt: row.createdAt, updatedAt: row.updatedAt })),
+    buildBriefs: buildBriefRows.map((row) => ({ id: row.id, gddVersionId: row.gddVersionId, version: row.version, status: row.status, markdown: row.markdown, createdAt: row.createdAt })),
+    designSnapshots: snapshotRows.map((row) => ({ id: row.id, answerRevisions: parseJson(row.answerRevisionsJson), answers: parseJson(row.answersJson), createdAt: row.createdAt })),
+    prototypeVersions: prototypeRows.map((row) => ({ id: row.id, version: row.version, status: row.status, gameSpec: parseJson(row.gameSpecJson), designSnapshot: parseJson(row.designSnapshotJson), createdAt: row.createdAt })),
+    studyEvents: eventRows.map((row) => ({ id: row.id, sessionId: row.sessionId, actor: row.actor, eventType: row.eventType, questionId: row.questionId, payload: parseJson(row.payloadJson), occurredAt: row.occurredAt, receivedAt: row.receivedAt })),
     timeline,
   };
 }

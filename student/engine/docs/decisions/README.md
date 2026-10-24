@@ -54,6 +54,19 @@
 | [ADR-0024](0024-move-experience-validation-after-prototype.md) | 从设计 Protocol 移除 Q22/Q23，把体验验证移到原型之后 | Accepted | 2026-10-22 |
 | [ADR-0025](0025-budgeted-lazy-model-context.md) | 按节点懒加载对话并使用可观测的预算化模型上下文 | Accepted | 2026-10-23 |
 | [ADR-0026](0026-protect-user-edited-answer-drafts.md) | AI 建议不得自动覆盖用户编辑中的正式答案 | Accepted | 2026-10-23 |
+| [ADR-0027](0027-standalone-node-sqlite-deployment.md) | 脱离 ChatGPT Sites，采用独立 Node 与 SQLite 部署 | Accepted | 2026-10-24 |
+| [ADR-0028](0028-participant-links-and-local-research-export.md) | 参与者专属链接与本地集中研究导出 | Accepted | 2026-10-24 |
+| [ADR-0029](0029-complete-research-observability-and-verified-backups.md) | 完整研究可观测性与校验备份 | Accepted | 2026-10-24 |
+| [ADR-0030](0030-compact-assessment-contract.md) | 压缩 Assessment 输出合同 | Accepted | 2026-10-24 |
+| [ADR-0031](0031-nonblocking-conversation-maintenance.md) | 将对话维护移出用户等待链 | Accepted | 2026-10-24 |
+| [ADR-0032](0032-purpose-based-model-routing-and-context-package.md) | 按业务用途路由模型并统一题目上下文 | Accepted | 2026-10-24 |
+| [ADR-0033](0033-holistic-question-memory-and-call-specific-context.md) | 整体 Question Memory、Pre-answer 与按调用职责构造上下文 | Accepted | 2026-10-24 |
+| [ADR-0034](0034-binary-readiness-assessment.md) | Readiness Assessment 只输出整体二元判断 | Accepted | 2026-10-24 |
+| [ADR-0035](0035-dynamic-parking-and-adaptive-scaffolding.md) | 动态跨题导航与自适应 Scaffolding 回复 | Accepted | 2026-10-24 |
+| [ADR-0036](0036-remove-generated-key-insights.md) | 从题目交互模型合同中移除 keyInsights | Accepted | 2026-10-24 |
+| [ADR-0037](0037-separate-ready-and-not-ready-response-contracts.md) | 分离 Ready 与 Not Ready 的 Call 2 输出合同 | Superseded | 2026-10-24 |
+| [ADR-0038](0038-unified-coach-turn-and-incremental-question-memory.md) | 统一 Coach Turn、跨题双入口与增量 Question Memory | Accepted | 2026-10-24 |
+| [ADR-0039](0039-dynamic-gdd-outline-with-semantic-coverage.md) | 动态 GDD 大纲与固定语义覆盖合同 | Accepted | 2026-10-24 |
 
 ## 后续工作约定
 

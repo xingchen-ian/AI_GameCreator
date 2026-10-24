@@ -1,10 +1,10 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAppUser } from "@/app/app-auth";
 import { buildResearchExport } from "@/lib/server/research-export";
 import { requireAnyOwnedProject } from "@/lib/server/workspace";
 
 export async function GET(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const projectId = new URL(request.url).searchParams.get("projectId");
     if (!projectId) return Response.json({ error: "projectId is required" }, { status: 400 });

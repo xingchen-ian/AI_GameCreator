@@ -1,13 +1,21 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
+let database: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-  return drizzle(env.DB, { schema });
+export function getDb() {
+  if (database) return database;
+
+  const databasePath = path.resolve(process.env.DATABASE_PATH?.trim() || "./data/game-workflow.db");
+  mkdirSync(path.dirname(databasePath), { recursive: true });
+  const client = new Database(databasePath);
+  client.pragma("journal_mode = WAL");
+  client.pragma("foreign_keys = ON");
+  database = drizzle(client, { schema });
+  migrate(database, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+  return database;
 }

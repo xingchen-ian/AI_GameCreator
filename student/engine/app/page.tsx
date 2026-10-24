@@ -1,22 +1,29 @@
-import { chatGPTSignInPath, getChatGPTUser } from "@/app/chatgpt-auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAppUser } from "@/app/app-auth";
+import { ParticipantAccess } from "@/components/access/participant-access";
 import { WorkflowApp } from "@/components/workflow/workflow-app";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const user = await getChatGPTUser();
-  if (!user) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#10252d] px-6 text-white">
-        <section className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[.06] p-8 text-center shadow-2xl backdrop-blur">
-          <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-[#72d2dd] text-xl text-[#10252d]">✦</div>
-          <h1 className="mt-5 text-2xl font-semibold">游戏设计工作流</h1>
-          <p className="mt-3 text-sm leading-6 text-[#b7cbd0]">登录后，你的设计状态、对话和原型版本会安全保存到个人项目。</p>
-          <a href={chatGPTSignInPath("/")} target="_top" className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#f0a63a] px-5 text-sm font-semibold text-[#1e2e34] transition hover:bg-[#ffc05e]">使用 ChatGPT 登录</a>
-        </section>
-      </main>
-    );
+function isLocalHost(value: string) {
+  try {
+    return ["localhost", "127.0.0.1", "::1"].includes(new URL(`http://${value}`).hostname);
+  } catch {
+    return false;
   }
+}
 
-  return <WorkflowApp displayName={user.displayName} />;
+export default async function Home(props: { searchParams: Promise<{ accessError?: string }> }) {
+  const user = await getAppUser();
+  if (!user) {
+    const requestHeaders = await headers();
+    const host = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim()
+      || requestHeaders.get("host")
+      || "";
+    if (isLocalHost(host)) redirect("/admin/workspace");
+    const searchParams = await props.searchParams;
+    return <ParticipantAccess invalidLink={searchParams.accessError === "invalid"} />;
+  }
+  return <WorkflowApp displayName={user.displayName} participantMode={user.accessMode === "participant"} />;
 }

@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getChatGPTUser: vi.fn(),
+  getAppUser: vi.fn(),
   requireOwnedProject: vi.fn(),
   limit: vi.fn(),
 }));
 
-vi.mock("@/app/chatgpt-auth", () => ({ getChatGPTUser: mocks.getChatGPTUser }));
+vi.mock("@/app/app-auth", () => ({ getAppUser: mocks.getAppUser }));
+vi.mock("next/server", () => ({ after: vi.fn() }));
+vi.mock("@/lib/server/background-jobs", () => ({ processBackgroundJobs: vi.fn() }));
 vi.mock("@/lib/server/workspace", () => ({ requireOwnedProject: mocks.requireOwnedProject }));
 vi.mock("@/db", () => ({
   getDb: () => ({
@@ -25,7 +27,7 @@ import { GET } from "@/app/api/messages/route";
 describe("lazy message route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getChatGPTUser.mockResolvedValue({ userId: "user-1", email: "student@example.edu" });
+    mocks.getAppUser.mockResolvedValue({ userId: "user-1", email: "student@example.edu" });
     mocks.requireOwnedProject.mockResolvedValue({ id: "project-1" });
     mocks.limit.mockResolvedValue([
       { id: "m2", role: "assistant", content: "reply", createdAt: "2026-10-23T10:00:02.000Z" },

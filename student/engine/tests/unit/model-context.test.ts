@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ getDb: vi.fn(), limit: vi.fn() }));
 
 vi.mock("@/db", () => ({ getDb: mocks.getDb }));
 
-import { buildConfirmedAnswerContext, estimateTokens, loadRecentConversation } from "@/lib/server/model-context";
+import { buildConfirmedAnswerContext, buildQuestionMemoryContext, estimateTokens, loadRecentConversation, selectCurrentMemoryRows } from "@/lib/server/model-context";
 
 describe("model context construction", () => {
   beforeEach(() => {
@@ -32,10 +32,64 @@ describe("model context construction", () => {
     expect(context.text.split("\n").some((line) => line.startsWith("Q1 "))).toBe(false);
   });
 
+  it("omits confirmed-answer fallbacks when a current Question Memory already covers them", () => {
+    const context = buildConfirmedAnswerContext({
+      Q2: { answer: "过程原文", status: "confirmed", revision: 1 },
+      Q3: { answer: "情绪原文", status: "confirmed", revision: 1 },
+      Q4: { answer: "行动原文", status: "confirmed", revision: 1 },
+    }, {
+      excludeQuestionId: "Q4",
+      excludeQuestionIds: ["Q2"],
+    });
+
+    expect(context.includedQuestionIds).toEqual(["Q3"]);
+    expect(context.text).toContain("情绪原文");
+    expect(context.text).not.toContain("过程原文");
+    expect(context.text).not.toContain("行动原文");
+  });
+
+  it("can restrict confirmed-answer fallback to Pre-answer selected questions", () => {
+    const context = buildConfirmedAnswerContext({
+      Q2: { answer: "过程", status: "confirmed", revision: 1 },
+      Q3: { answer: "情绪", status: "confirmed", revision: 1 },
+    }, { includeQuestionIds: ["Q3"] });
+
+    expect(context.includedQuestionIds).toEqual(["Q3"]);
+    expect(context.text).toContain("情绪");
+    expect(context.text).not.toContain("过程");
+  });
+
   it("uses a conservative estimate for CJK text", () => {
     expect(estimateTokens("游戏设计")).toBe(4);
     expect(estimateTokens("abcd")).toBe(1);
     expect(estimateTokens("游戏abcd")).toBe(3);
+  });
+
+  it("orders question memories by protocol and preserves rejected directions separately", () => {
+    const context = buildQuestionMemoryContext([
+      { questionId: "Q10", answerRevision: 2, summary: "目标摘要", confirmedDecisions: ["完成订单"], editedAdoptions: [], explicitRejections: ["无限时间"], constraints: ["时间有限"], openQuestions: [] },
+      { questionId: "Q2", answerRevision: 1, summary: "过程摘要", confirmedDecisions: ["先观察"], editedAdoptions: [], explicitRejections: [], constraints: [], openQuestions: ["结束信号待定"] },
+    ], "Q2");
+
+    expect(context.includedQuestionIds).toEqual(["Q10"]);
+    expect(context.text).toContain("明确拒绝：无限时间");
+    expect(context.text).not.toContain("过程摘要");
+  });
+
+  it("drops memories whose revision is not the current confirmed revision", () => {
+    const rows = [
+      { questionId: "Q3", answerRevision: 1 },
+      { questionId: "Q4", answerRevision: 2 },
+      { questionId: "Q5", answerRevision: 1 },
+      { questionId: "Q6", answerRevision: 1 },
+    ];
+    const current = selectCurrentMemoryRows(rows, {
+      Q3: { answer: "新答案", status: "confirmed", revision: 2 },
+      Q4: { answer: "答案", status: "confirmed", revision: 2 },
+      Q5: { answer: "已改回草稿", status: "draft", revision: 1 },
+    });
+
+    expect(current).toEqual([{ questionId: "Q4", answerRevision: 2 }]);
   });
 
   it("loads only the newest node messages and enforces the token budget", async () => {
