@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getChatGPTUser: vi.fn(),
+  getAppUser: vi.fn(),
   getWorkspace: vi.fn(),
 }));
 
-vi.mock("@/app/chatgpt-auth", () => ({
-  getChatGPTUser: mocks.getChatGPTUser,
+vi.mock("@/app/app-auth", () => ({
+  getAppUser: mocks.getAppUser,
 }));
 
 vi.mock("@/lib/server/workspace", () => ({
@@ -17,11 +17,11 @@ vi.mock("@/lib/server/workspace", () => ({
 
 vi.mock("@/db", () => ({ getDb: vi.fn() }));
 
-import { GET } from "@/app/api/workspace/route";
+import { GET, POST } from "@/app/api/workspace/route";
 
-describe("authenticated workspace smoke test", () => {
+describe("workspace identity smoke test", () => {
   beforeEach(() => {
-    mocks.getChatGPTUser.mockReset();
+    mocks.getAppUser.mockReset();
     mocks.getWorkspace.mockReset();
   });
 
@@ -37,7 +37,7 @@ describe("authenticated workspace smoke test", () => {
       projects: [],
       answers: {},
     };
-    mocks.getChatGPTUser.mockResolvedValue(user);
+    mocks.getAppUser.mockResolvedValue(user);
     mocks.getWorkspace.mockResolvedValue(workspace);
 
     const response = await GET(new Request("https://site.test/api/workspace?projectId=project-1"));
@@ -47,15 +47,34 @@ describe("authenticated workspace smoke test", () => {
     expect(mocks.getWorkspace).toHaveBeenCalledWith(user, "project-1");
   });
 
-  it("rejects a workspace request without a signed-in user", async () => {
-    mocks.getChatGPTUser.mockResolvedValue(null);
+  it("rejects a workspace request without an application identity", async () => {
+    mocks.getAppUser.mockResolvedValue(null);
 
     const response = await GET(new Request("https://site.test/api/workspace"));
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toMatchObject({
-      error: "请先使用 ChatGPT 账号登录。",
+      error: "请使用参与者专属链接进入。",
     });
+    expect(mocks.getWorkspace).not.toHaveBeenCalled();
+  });
+
+  it("prevents a participant from creating a second project", async () => {
+    mocks.getAppUser.mockResolvedValue({
+      userId: "participant:1",
+      email: "p001@study.invalid",
+      displayName: "P001",
+      fullName: null,
+      accessMode: "participant",
+    });
+
+    const response = await POST(new Request("https://site.test/api/workspace", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "create_project", title: "second" }),
+    }));
+
+    expect(response.status).toBe(403);
     expect(mocks.getWorkspace).not.toHaveBeenCalled();
   });
 });

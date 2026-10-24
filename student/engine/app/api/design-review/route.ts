@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
+import { runSqliteBatch } from "@/db/batch";
 import { designReviewIssues, designReviewRuns, designReviewVerdicts } from "@/db/schema";
 import { AIConfigurationError, AIRequestTimeoutError, createStructuredResponse, designReviewScanSchema, designReviewVerificationSchema } from "@/lib/server/model-provider";
 import { answerSnapshotKey, designStateText, requiredQuestionIds, sanitizeQuestionIds } from "@/lib/server/design-review";
@@ -58,7 +59,7 @@ function normalizeIssues(issues: GeneratedIssue[]) {
 
 export async function POST(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as { projectId?: string; action?: "start" | "verify" };
     if (!body.projectId || !body.action) return Response.json({ error: "审查参数无效。" }, { status: 400 });
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
         schemaVersion: "design-review-scan-v2",
         projectId: project.id,
         schema: designReviewScanSchema,
-        role: "review",
+        purpose: "design_review",
         strictSchema: true,
         repairInvalidOutput: true,
         timeoutMs: 75_000,
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
         updatedAt: now,
         completedAt: issues.length ? null : now,
       });
-      await db.batch([
+      runSqliteBatch(db, [
         createRun,
         ...(latestRun && latestRun.status !== "superseded"
           ? [db.update(designReviewRuns).set({ status: "superseded", updatedAt: now }).where(eq(designReviewRuns.id, latestRun.id))]
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
       schemaVersion: "design-review-verification-v2",
       projectId: project.id,
       schema: designReviewVerificationSchema(issueIds),
-      role: "review",
+      purpose: "design_review",
       strictSchema: true,
       repairInvalidOutput: true,
       timeoutMs: 75_000,
@@ -186,7 +187,7 @@ export async function POST(request: Request) {
       completedAt: hasOpen ? null : now,
       updatedAt: now,
     }).where(eq(designReviewRuns.id, latestRun.id));
-    await db.batch([
+    runSqliteBatch(db, [
       updateRun,
       ...effectiveResults.flatMap((item) => {
         const status = item.verdict === "resolved" ? "resolved" as const : "open" as const;
@@ -220,7 +221,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as { projectId?: string; issueId?: string; action?: "accept" | "reopen"; note?: string };
     if (!body.projectId || !body.issueId || !body.action) return Response.json({ error: "问题处理参数无效。" }, { status: 400 });

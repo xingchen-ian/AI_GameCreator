@@ -22,7 +22,7 @@ type GddPanelProps = {
 
 export function GddPanel({ workspace, busy, progress, onGenerate, onConfirm, onBuildBrief, onSaveSection, onVerifyFidelity }: GddPanelProps) {
   const gdd = workspace.latestGdd;
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["overview", "experience", "core_loop"]));
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set((gdd?.sections ?? []).slice(0, 3).map((section) => section.key)));
   const [drafts, setDrafts] = useState<Record<string, string>>(() => Object.fromEntries((gdd?.sections ?? []).map((section) => [section.key, section.content])));
 
   const reviewReady = workspace.latestDesignReview?.status === "ready";

@@ -12,10 +12,10 @@
 
 # testing
 /coverage
+/.test-artifacts/
 
 # next.js
 /.next/
-/.vinext/
 /out/
 
 # misc
@@ -39,7 +39,12 @@ yarn-error.log*
 next-env.d.ts
 /dist/
 /.wrangler/
-# Checkout-local execution profile and tool state; never publish them.
+/data/
+/.runtime/
+*.db
+*.db-shm
+*.db-wal
+# Legacy checkout-local caches and current tool state; never publish them.
 /.sites-runtime/
 /.agents/
 /.codex/

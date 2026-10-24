@@ -15,7 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { workflowFetch } from "@/lib/client/workflow-fetch";
 import type { ProjectSummary, WorkspacePayload } from "@/lib/design/types";
+import { allQuestions } from "@/lib/protocol/stages";
 
 type ProjectManagerProps = {
   workspace: WorkspacePayload;
@@ -32,7 +34,7 @@ type ProjectManagerProps = {
 
 function projectMeta(project: ProjectSummary) {
   const outputs = [project.gddVersion ? `GDD v${project.gddVersion}` : null, project.buildBriefVersion ? `Brief v${project.buildBriefVersion}` : null].filter(Boolean);
-  return `${project.confirmedAnswerCount}/23 已确认${outputs.length ? ` · ${outputs.join(" · ")}` : ""}`;
+  return `${project.confirmedAnswerCount}/${allQuestions.length} 已确认${outputs.length ? ` · ${outputs.join(" · ")}` : ""}`;
 }
 
 export function ProjectManager(props: ProjectManagerProps) {
@@ -51,7 +53,7 @@ export function ProjectManager(props: ProjectManagerProps) {
     setExportingId(project.id);
     setExportError(null);
     try {
-      const response = await fetch(`/api/research-export?projectId=${encodeURIComponent(project.id)}`);
+      const response = await workflowFetch(`/api/research-export?projectId=${encodeURIComponent(project.id)}`);
       if (!response.ok) {
         const payload = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(payload?.error ?? "导出失败。");

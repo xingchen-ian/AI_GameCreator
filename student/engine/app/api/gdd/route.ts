@@ -1,50 +1,56 @@
 import { and, desc, eq } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
+import { runSqliteBatch } from "@/db/batch";
 import { buildBriefs, designReviewRuns, designSnapshots, gddReviewChanges, gddVersions, projects, stageSummaries } from "@/db/schema";
-import { gddSectionPlan } from "@/lib/design/gdd";
-import type { GddSection } from "@/lib/design/types";
+import { gddCoveragePlan, requiredGddCoverageTags } from "@/lib/design/gdd";
+import type { GddOutlineSection, GddSection } from "@/lib/design/types";
 import { stages } from "@/lib/protocol/stages";
 import {
   AIConfigurationError,
   AIRequestTimeoutError,
   createStructuredResponse,
-  gddFidelitySchema,
+  gddFidelitySchemaForSections,
+  gddOutlineSchema,
+  gddOutlineSectionSchema,
+  gddSectionBatchSchema,
   gddSectionsSchema,
-  gddSummarySchema,
   validateStructuredValue,
 } from "@/lib/server/model-provider";
 import { getWorkspace, loadAnswerSnapshot, requireOwnedProject } from "@/lib/server/workspace";
 import { answerSnapshotKey, designStateText, requiredQuestionIds, sanitizeQuestionIds } from "@/lib/server/design-review";
 
-type GeneratedSummary = {
+type GeneratedOutline = {
   stageSummaries: Array<{ stageId: number; summary: string; keyDecisions: string[]; openQuestions: string[] }>;
   title: string;
   oneLinePitch: string;
+  sections: GddOutlineSection[];
 };
 
+type GeneratedSectionBatch = { sections: Array<{ key: string; content: string; sourceQuestionIds: string[] }> };
 type GeneratedSections = { sections: GddSection[] };
 type FidelityResult = { patches: Array<{ sectionKey: string; revisedContent: string; sourceQuestionIds: string[]; reason: string }> };
 type GenerationRequest = {
   projectId?: string;
-  action?: "stage_summaries" | "section_batch" | "fidelity" | "finalize";
+  action?: "outline" | "section_batch" | "fidelity" | "finalize";
   snapshotKey?: string;
-  sectionKeys?: string[];
+  outlineSections?: GddOutlineSection[];
   title?: string;
   oneLinePitch?: string;
-  stageSummaries?: GeneratedSummary["stageSummaries"];
+  stageSummaries?: GeneratedOutline["stageSummaries"];
   sections?: GddSection[];
 };
 
 async function checkGddFidelity(projectId: string, projectTitle: string, designInput: string, sections: GddSection[]) {
-  const gddText = sections.map((section) => `## ${section.key}｜${section.title}\n${section.content}\n来源：${section.sourceQuestionIds.join("/")}`).join("\n\n");
+  const sectionKeys = sections.map((section) => section.key);
+  const gddText = sections.map((section) => `## ${section.key}｜${section.title}\n覆盖：${section.coverageTags?.join("/") || "旧版章节"}\n${section.content}\n来源：${section.sourceQuestionIds.join("/")}`).join("\n\n");
   return createStructuredResponse<FidelityResult>({
     name: "gdd_fidelity_check",
     promptVersion: "gdd-fidelity-v2",
     schemaVersion: "gdd-fidelity-v2",
     projectId,
-    schema: gddFidelitySchema,
-    role: "gdd",
+    schema: gddFidelitySchemaForSections(sectionKeys),
+    purpose: "gdd",
     strictSchema: true,
     repairInvalidOutput: true,
     timeoutMs: 42_000,
@@ -59,7 +65,7 @@ async function checkGddFidelity(projectId: string, projectTitle: string, designI
 }
 
 function applyFidelityPatches(sections: GddSection[], result: FidelityResult) {
-  const allowedKeys = new Set<string>(gddSectionPlan.map(([key]) => key));
+  const allowedKeys = new Set<string>(sections.map((section) => section.key));
   const patches = new Map(result.patches.filter((patch) => allowedKeys.has(patch.sectionKey) && patch.revisedContent.trim()).map((patch) => [patch.sectionKey, patch]));
   return sections.map((section) => {
     const patch = patches.get(section.key);
@@ -67,6 +73,41 @@ function applyFidelityPatches(sections: GddSection[], result: FidelityResult) {
     const sourceQuestionIds = sanitizeQuestionIds(patch.sourceQuestionIds);
     return { ...section, content: patch.revisedContent.trim(), sourceQuestionIds: sourceQuestionIds.length ? sourceQuestionIds : section.sourceQuestionIds };
   });
+}
+
+function validateOutline(value: unknown): GeneratedOutline {
+  const outline = validateStructuredValue<GeneratedOutline>(value, gddOutlineSchema);
+  const stageIds = outline.stageSummaries.map((summary) => summary.stageId);
+  if (new Set(stageIds).size !== 6 || ![1, 2, 3, 4, 5, 6].every((id) => stageIds.includes(id))) {
+    throw new Error("stageSummaries 必须分别覆盖 Stage 1–6。");
+  }
+  const sectionKeys = outline.sections.map((section) => section.key);
+  if (new Set(sectionKeys).size !== sectionKeys.length) throw new Error("GDD 动态章节 key 不能重复。");
+  const covered = new Set(outline.sections.flatMap((section) => section.coverageTags));
+  const missing = requiredGddCoverageTags.filter((tag) => !covered.has(tag));
+  if (missing.length) throw new Error(`GDD 大纲缺少覆盖标签：${missing.join("、")}`);
+  return outline;
+}
+
+function validateSectionBatch(value: unknown, outlineSections: GddOutlineSection[]): GeneratedSectionBatch {
+  const expectedKeys = outlineSections.map((section) => section.key);
+  const batch = validateStructuredValue<GeneratedSectionBatch>(value, gddSectionBatchSchema(expectedKeys));
+  const returnedKeys = batch.sections.map((section) => section.key);
+  if (new Set(returnedKeys).size !== expectedKeys.length || !expectedKeys.every((key) => returnedKeys.includes(key))) {
+    throw new Error("GDD 章节批次没有逐一覆盖请求的大纲章节。");
+  }
+  return batch;
+}
+
+function validateCompleteSections(value: unknown): GeneratedSections {
+  const generated = validateStructuredValue<GeneratedSections>(value, gddSectionsSchema);
+  if (generated.sections.length < 5 || generated.sections.length > 10) throw new Error("GDD 必须包含 5–10 个动态章节。");
+  const keys = generated.sections.map((section) => section.key);
+  if (new Set(keys).size !== keys.length) throw new Error("GDD 章节 key 不能重复。");
+  const covered = new Set(generated.sections.flatMap((section) => section.coverageTags ?? []));
+  const missing = requiredGddCoverageTags.filter((tag) => !covered.has(tag));
+  if (missing.length) throw new Error(`GDD 缺少必要信息覆盖：${missing.join("、")}`);
+  return generated;
 }
 
 function requestStatus(error: unknown) {
@@ -77,7 +118,7 @@ function requestStatus(error: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as GenerationRequest;
     if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
@@ -101,50 +142,75 @@ export async function POST(request: Request) {
       return Response.json({ error: "请先完成并通过最新 Design State 全局审查，再生成 GDD。" }, { status: 409 });
     }
 
-    if (body.action === "stage_summaries") {
-      const result = await createStructuredResponse<GeneratedSummary>({
-        name: "gdd_stage_summaries",
-        promptVersion: "gdd-stage-summaries-v2",
-        schemaVersion: "gdd-summary-v2",
+    if (body.action === "outline") {
+      const coverageContract = gddCoveragePlan.map(([tag, label, purpose, sources]) => `${tag}｜${label}｜${purpose}｜参考证据 ${sources.join("/")}`).join("\n");
+      const result = await createStructuredResponse<GeneratedOutline>({
+        name: "gdd_dynamic_outline",
+        promptVersion: "gdd-dynamic-outline-v1",
+        schemaVersion: "gdd-outline-v1",
         projectId: project.id,
-        schema: gddSummarySchema,
-        role: "gdd",
-        maxTokens: 1900,
+        schema: gddOutlineSchema,
+        purpose: "gdd",
+        maxTokens: 2600,
         timeoutMs: 48_000,
+        repairInvalidOutput: true,
+        normalizeResult: validateOutline,
         instructions: [
-          "你是严谨的游戏设计总编。只根据已确认答案，为完整 GDD 建立标题、一句话概念和六个阶段摘要。",
+          "你是严谨的游戏设计总编。只根据已确认答案，为这个具体游戏规划一份自然、避免重复的 GDD 大纲。",
+          "不要套用固定章节模板。根据本游戏的重点设计 5–10 个章节；可合并相关内容，也可把该游戏特有的复杂机制单独成章。",
+          "所有 coverageTags 必须在整份大纲中至少出现一次。标签是信息覆盖要求，不是章节标题。",
+          "每个章节 key 使用简短、稳定、互不重复的英文 snake_case；sourceQuestionIds 只列实际支持该章节的题目。",
           "stageSummaries 必须恰好覆盖 Stage 1–6；每段摘要保持简洁，指出已做出的关键决定和仍缺证据之处。",
-          "不得补造用户未定义的机制；语言使用简明中文。",
+          "不得补造用户未定义的机制；原型验证内容只提出待验证问题，不预判结果；语言使用简明中文。",
+          "必须原样使用字段 title、oneLinePitch、stageSummaries、sections，以及章节字段 key、title、purpose、coverageTags、sourceQuestionIds，不得换名或省略空数组。",
         ].join("\n"),
-        input: `项目名：${project.title}\n\n用户设计状态：\n${designInput}`,
+        input: `项目名：${project.title}\n\n必须覆盖的信息合同：\n${coverageContract}\n\n用户设计状态：\n${designInput}`,
       });
       return Response.json({ snapshotKey: currentSnapshotKey, result });
     }
 
     if (body.action === "section_batch") {
-      const requestedKeys = [...new Set(body.sectionKeys ?? [])];
-      const sectionRows = gddSectionPlan.filter(([key]) => requestedKeys.includes(key));
-      if (!sectionRows.length || sectionRows.length !== requestedKeys.length || sectionRows.length > 7) {
+      let sectionRows: GddOutlineSection[];
+      try {
+        sectionRows = validateStructuredValue<{ sections: GddOutlineSection[] }>({ sections: body.outlineSections }, {
+          type: "object",
+          properties: { sections: { type: "array", minItems: 1, maxItems: 5, items: gddOutlineSectionSchema } },
+          required: ["sections"],
+          additionalProperties: false,
+        }).sections;
+      } catch {
         return Response.json({ error: "GDD 章节批次无效。" }, { status: 400 });
       }
-      const sectionContract = sectionRows.map(([key, title, purpose, sources]) => `${key}｜${title}｜${purpose}｜主要证据 ${sources.join("/")}`).join("\n");
-      const result = await createStructuredResponse<GeneratedSections>({
-        name: `gdd_sections_${sectionRows[0][0]}`,
-        promptVersion: "gdd-sections-v2",
-        schemaVersion: "gdd-sections-v2",
+      const sectionContract = sectionRows.map(({ key, title, purpose, coverageTags, sourceQuestionIds }) => `${key}｜${title}｜${purpose}｜覆盖 ${coverageTags.join("/")}｜证据 ${sourceQuestionIds.join("/")}`).join("\n");
+      const sectionKeys = sectionRows.map((section) => section.key);
+      const result = await createStructuredResponse<GeneratedSectionBatch>({
+        name: `gdd_sections_${sectionRows[0].key}`,
+        promptVersion: "gdd-dynamic-sections-v1",
+        schemaVersion: "gdd-section-batch-v1",
         projectId: project.id,
-        schema: gddSectionsSchema,
-        role: "gdd",
+        schema: gddSectionBatchSchema(sectionKeys),
+        purpose: "gdd",
         maxTokens: 3200,
         timeoutMs: 48_000,
+        repairInvalidOutput: true,
+        normalizeResult: (value) => validateSectionBatch(value, sectionRows),
         instructions: [
-          "你是游戏设计文档编辑。只根据已确认答案撰写指定的 GDD 章节。",
-          "必须覆盖契约中的每个 key，不能添加未请求章节；每章约 120–260 个中文字符，写成可执行的设计说明。",
+          "你是游戏设计文档编辑。只根据已确认答案和动态大纲撰写指定章节。",
+          "必须逐一覆盖契约中的每个 key，不能添加、改名或省略章节；每章约 120–320 个中文字符，写成可执行的设计说明。",
           "每章必须提供真实 sourceQuestionIds。不要补造关键机制；证据不足时明确写出边界。",
+          "只返回 sections；每项只包含 key、content、sourceQuestionIds。",
         ].join("\n"),
         input: `项目名：${project.title}\n\n本批章节契约：\n${sectionContract}\n\n用户设计状态：\n${designInput}`,
       });
-      return Response.json({ snapshotKey: currentSnapshotKey, result });
+      const byKey = new Map(result.sections.map((section) => [section.key, section]));
+      const sections: GddSection[] = sectionRows.map((outline) => ({
+        key: outline.key,
+        title: outline.title,
+        content: byKey.get(outline.key)?.content.trim() ?? "",
+        sourceQuestionIds: sanitizeQuestionIds(byKey.get(outline.key)?.sourceQuestionIds ?? outline.sourceQuestionIds),
+        coverageTags: outline.coverageTags,
+      }));
+      return Response.json({ snapshotKey: currentSnapshotKey, result: { sections } });
     }
 
     if (body.action === "fidelity") {
@@ -157,25 +223,28 @@ export async function POST(request: Request) {
       return Response.json({ error: "GDD 生成步骤无效，请刷新页面后重试。" }, { status: 400 });
     }
 
-    const generatedSummary = validateStructuredValue<GeneratedSummary>({
+    const generatedSummary = validateOutline({
       title: body.title,
       oneLinePitch: body.oneLinePitch,
       stageSummaries: body.stageSummaries,
-    }, gddSummarySchema);
-    const generatedSections = validateStructuredValue<GeneratedSections>({ sections: body.sections }, gddSectionsSchema);
+      sections: (body.sections ?? []).map(({ key, title, coverageTags, sourceQuestionIds }) => ({
+        key,
+        title,
+        purpose: "已完成章节",
+        coverageTags,
+        sourceQuestionIds,
+      })),
+    });
+    const generatedSections = validateCompleteSections({ sections: body.sections });
     if (generatedSummary.title.length > 240 || generatedSummary.oneLinePitch.length > 1000 || generatedSections.sections.some((section) => section.content.length > 4000)) {
       return Response.json({ error: "生成的 GDD 内容超过安全限制，请重新生成。" }, { status: 400 });
     }
 
-    const normalizedSections: GddSection[] = gddSectionPlan.map(([key, title, , defaultSources]) => {
-      const value = generatedSections.sections.find((section) => section.key === key);
-      return {
-        key,
-        title,
-        content: value?.content?.trim() || defaultSources.map((id) => snapshot[id]?.answer).filter(Boolean).join("\n\n"),
-        sourceQuestionIds: sanitizeQuestionIds(value?.sourceQuestionIds?.length ? value.sourceQuestionIds : [...defaultSources]),
-      };
-    });
+    const normalizedSections: GddSection[] = generatedSections.sections.map((section) => ({
+      ...section,
+      content: section.content.trim(),
+      sourceQuestionIds: sanitizeQuestionIds(section.sourceQuestionIds),
+    }));
     const normalizedSummaries = stages.map((stage) => {
       const value = generatedSummary.stageSummaries.find((summary) => summary.stageId === stage.id);
       return value ?? {
@@ -190,7 +259,7 @@ export async function POST(request: Request) {
     const snapshotId = crypto.randomUUID();
     const gddId = crypto.randomUUID();
     const version = project.gddVersion + 1;
-    await db.batch([
+    runSqliteBatch(db, [
       db.insert(designSnapshots).values({
         id: snapshotId,
         projectId: project.id,
@@ -238,7 +307,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return Response.json({ error: "请先登录。" }, { status: 401 });
     const body = await request.json() as {
       projectId?: string;

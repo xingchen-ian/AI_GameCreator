@@ -1,12 +1,34 @@
-import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { modelCalls } from "@/db/schema";
+import { requiredGddCoverageTags } from "@/lib/design/gdd";
 import type { ModelContextStats } from "@/lib/server/model-context";
 import { allQuestions } from "@/lib/protocol/stages";
 
 type JsonSchema = Record<string, unknown>;
-type ModelRole = "chat" | "review" | "gdd" | "build";
+export type ModelPurpose =
+  | "coach_turn"
+  | "pre_answer"
+  | "candidate"
+  | "conversation_summary"
+  | "question_memory"
+  | "answer_review"
+  | "design_review"
+  | "gdd"
+  | "build";
 type TokenUsage = { inputTokens: number | null; outputTokens: number | null };
+type ModelAttemptPhase = "primary_strict" | "primary_json" | "strict_fallback" | "repair";
+type ModelAttemptSnapshot = {
+  sequence: number;
+  phase: ModelAttemptPhase;
+  requestedAt: string;
+  durationMs: number;
+  endpoint: string;
+  request: Record<string, unknown>;
+  httpStatus: number | null;
+  responseBody: string;
+  error: string | null;
+};
+type AttemptError = Error & { status?: number; attemptSnapshot?: ModelAttemptSnapshot };
 const protocolQuestionIds = allQuestions.map((question) => question.id);
 
 export type ModelCallMeta = {
@@ -23,7 +45,7 @@ export type ModelCallMeta = {
 
 export class AIConfigurationError extends Error {
   constructor(missing: string[]) {
-    super(`真实 AI 尚未配置。请为 Site 设置：${missing.join("、")}。`);
+    super(`真实 AI 尚未配置。请设置服务端环境变量：${missing.join("、")}。`);
     this.name = "AIConfigurationError";
   }
 }
@@ -35,29 +57,38 @@ export class AIRequestTimeoutError extends Error {
   }
 }
 
-function getProviderConfig(role: ModelRole) {
+const purposeModelEnvironment: Record<ModelPurpose, string> = {
+  coach_turn: "DASHSCOPE_COACH_TURN_MODEL",
+  pre_answer: "DASHSCOPE_PRE_ANSWER_MODEL",
+  candidate: "DASHSCOPE_CANDIDATE_MODEL",
+  conversation_summary: "DASHSCOPE_CONVERSATION_SUMMARY_MODEL",
+  question_memory: "DASHSCOPE_QUESTION_MEMORY_MODEL",
+  answer_review: "DASHSCOPE_ANSWER_REVIEW_MODEL",
+  design_review: "DASHSCOPE_DESIGN_REVIEW_MODEL",
+  gdd: "DASHSCOPE_GDD_MODEL",
+  build: "DASHSCOPE_BUILD_MODEL",
+};
+
+function getProviderConfig(purpose: ModelPurpose) {
   const missing: string[] = [];
-  const apiKey = env.DASHSCOPE_API_KEY?.trim();
-  const baseUrl = env.DASHSCOPE_BASE_URL?.trim().replace(/\/$/, "");
+  const apiKey = process.env.DASHSCOPE_API_KEY?.trim();
+  const baseUrl = process.env.DASHSCOPE_BASE_URL?.trim().replace(/\/$/, "");
+  const modelEnvironment = purposeModelEnvironment[purpose];
+  const model = process.env[modelEnvironment]?.trim();
   if (!apiKey) missing.push("DASHSCOPE_API_KEY");
   if (!baseUrl) missing.push("DASHSCOPE_BASE_URL");
+  if (!model) missing.push(modelEnvironment);
   if (missing.length) throw new AIConfigurationError(missing);
 
   return {
     apiKey: apiKey!,
     baseUrl: baseUrl!,
-    model: role === "build"
-      ? env.DASHSCOPE_BUILD_MODEL?.trim() || "qwen3.8-27b"
-      : role === "review"
-        ? env.DASHSCOPE_REVIEW_MODEL?.trim() || "qwen3.8-27b"
-      : role === "gdd"
-        ? env.DASHSCOPE_GDD_MODEL?.trim() || "qwen3.8-flash"
-        : env.DASHSCOPE_CHAT_MODEL?.trim() || "qwen3.8-flash",
-    temperature: role === "chat" ? 0.45 : 0.25,
+    model: model!,
+    temperature: purpose === "coach_turn" ? 0.45 : purpose === "candidate" ? 0.35 : 0.25,
     // 百炼在 enable_thinking=true 时拒绝 JSON 模式和非流式调用（400 InvalidParameter），
     // 而所有结构化请求都是非流式 + response_format，因此各角色都必须关闭思考。
     thinkingEnabled: false,
-    appVersion: env.APP_COMMIT?.trim() || "local-dev",
+    appVersion: process.env.APP_COMMIT?.trim() || process.env.GIT_COMMIT_SHA?.trim() || "local-dev",
   };
 }
 
@@ -131,74 +162,185 @@ export function validateStructuredValue<T>(value: unknown, schema: JsonSchema): 
   return value as T;
 }
 
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+/** Only renames known Assessment aliases and removes unused keys; it never changes a model decision. */
+export function normalizeCoachAssessment(value: unknown): unknown {
+  const source = objectValue(value);
+  const rawReady = source.ready ?? source.readiness ?? source.status;
+  const ready = typeof rawReady === "boolean"
+    ? rawReady
+    : rawReady === "ready"
+      ? true
+      : rawReady === "not_ready"
+        ? false
+        : rawReady;
+  return {
+    ready,
+    summary: source.summary ?? source.readinessReason ?? source.reasoning,
+    missingElements: source.missingElements,
+    parkedInsights: source.parkedInsights ?? [],
+  };
+}
+
+/** Some DashScope models call Pre-answer coverage `status` despite a strict schema. */
+export function normalizePreAnswerResult(value: unknown): unknown {
+  const source = objectValue(value);
+  return {
+    coverage: source.coverage ?? source.status,
+    summary: source.summary ?? source.reasoning,
+    missingElements: source.missingElements,
+    reply: source.reply,
+    suggestedAnswer: source.suggestedAnswer,
+  };
+}
+
+/** DashScope may accept strict JSON Schema while still renaming `ready` or
+ * returning non-object cross-question entries. Keep the useful response, apply
+ * only deterministic aliases/defaults, and let the local Schema remain the
+ * security boundary. */
+export function normalizeCoachTurnResult(value: unknown): unknown {
+  const source = objectValue(value);
+  const rawReady = source.ready ?? source.isReady ?? source.readiness ?? source.status;
+  const ready = typeof rawReady === "boolean"
+    ? rawReady
+    : rawReady === "ready"
+      ? true
+      : rawReady === "not_ready"
+        ? false
+        : rawReady;
+  const issues = Array.isArray(source.crossQuestionIssues)
+    ? source.crossQuestionIssues.filter((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+      const issue = item as Record<string, unknown>;
+      return typeof issue.questionId === "string"
+        && protocolQuestionIds.includes(issue.questionId)
+        && (issue.type === "possible_update" || issue.type === "conflict")
+        && typeof issue.explanation === "string"
+        && (issue.recommendedEditTarget === "current" || issue.recommendedEditTarget === "previous" || issue.recommendedEditTarget === "either")
+        && typeof issue.suggestedRevision === "string";
+    })
+    : [];
+  return {
+    ready,
+    decisionReason: source.decisionReason ?? source.reason ?? source.summary,
+    reply: source.reply,
+    suggestedAnswer: ready === false ? "" : source.suggestedAnswer,
+    crossQuestionIssues: issues,
+  };
+}
+
 async function requestCompletion({
   instructions,
   input,
   name,
   schema,
-  role,
+  purpose,
   strict,
   maxTokens,
   timeoutMs,
+  phase,
 }: {
   instructions: string;
   input: string;
   name: string;
   schema: JsonSchema;
-  role: ModelRole;
+  purpose: ModelPurpose;
   strict: boolean;
   maxTokens?: number;
   timeoutMs?: number;
+  phase: ModelAttemptPhase;
 }) {
-  const config = getProviderConfig(role);
-  const requestTimeoutMs = timeoutMs ?? (role === "chat" ? 35_000 : 55_000);
+  const config = getProviderConfig(purpose);
+  const requestTimeoutMs = timeoutMs ?? (["coach_turn", "pre_answer", "conversation_summary", "question_memory"].includes(purpose) ? 35_000 : 55_000);
+  const endpoint = `${config.baseUrl}/chat/completions`;
+  const requestedAt = new Date().toISOString();
+  const startedAt = Date.now();
+  const requestBody: Record<string, unknown> = {
+    model: config.model,
+    messages: [
+      { role: "system", content: `${instructions}\n只返回 JSON，不要使用 Markdown 代码块。` },
+      { role: "user", content: input },
+    ],
+    enable_thinking: config.thinkingEnabled,
+    temperature: config.temperature,
+    ...(strict ? {} : { max_tokens: maxTokens ?? (purpose === "gdd" ? 7200 : ["answer_review", "design_review"].includes(purpose) ? 2600 : ["candidate", "question_memory", "build"].includes(purpose) ? 2200 : 1100) }),
+    response_format: strict
+      ? { type: "json_schema", json_schema: { name, strict: true, schema } }
+      : { type: "json_object" },
+  };
+  const snapshot = (httpStatus: number | null, responseBody: string, error: string | null): ModelAttemptSnapshot => ({
+    sequence: 0,
+    phase,
+    requestedAt,
+    durationMs: Date.now() - startedAt,
+    endpoint,
+    request: requestBody,
+    httpStatus,
+    responseBody,
+    error,
+  });
   let response: Response;
   try {
-    response = await fetch(`${config.baseUrl}/chat/completions`, {
+    response = await fetch(endpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: config.model,
-        messages: [
-          { role: "system", content: `${instructions}\n只返回 JSON，不要使用 Markdown 代码块。` },
-          { role: "user", content: input },
-        ],
-        enable_thinking: config.thinkingEnabled,
-        temperature: config.temperature,
-        ...(strict ? {} : { max_tokens: maxTokens ?? (role === "gdd" ? 7200 : role === "review" ? 2600 : role === "build" ? 2200 : 1100) }),
-        response_format: strict
-          ? { type: "json_schema", json_schema: { name, strict: true, schema } }
-          : { type: "json_object" },
-      }),
+      body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(requestTimeoutMs),
     });
   } catch (error) {
-    if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
-      throw new AIRequestTimeoutError(requestTimeoutMs);
-    }
-    throw error;
+    const finalError: AttemptError = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
+      ? new AIRequestTimeoutError(requestTimeoutMs)
+      : error instanceof Error ? error : new Error("模型请求失败。");
+    finalError.attemptSnapshot = snapshot(null, "", finalError.message);
+    throw finalError;
   }
 
-  const payload = await response.json() as Record<string, unknown>;
+  let responseBody = "";
+  try {
+    responseBody = await response.text();
+  } catch (error) {
+    const finalError = (error instanceof Error ? error : new Error("无法读取模型响应。")) as AttemptError;
+    finalError.attemptSnapshot = snapshot(response.status, responseBody, finalError.message);
+    throw finalError;
+  }
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(responseBody) as Record<string, unknown>;
+  } catch {
+    const error = new Error("模型服务返回了无法解析的响应。") as AttemptError;
+    error.status = response.status;
+    error.attemptSnapshot = snapshot(response.status, responseBody, error.message);
+    throw error;
+  }
+  const attemptSnapshot = snapshot(response.status, responseBody, null);
   if (!response.ok) {
     const providerError = payload.error && typeof payload.error === "object"
       ? (payload.error as { message?: unknown }).message
       : null;
-    const error = new Error(typeof providerError === "string" ? providerError : `百炼请求失败（${response.status}）`);
-    Object.assign(error, { status: response.status });
+    const error = new Error(typeof providerError === "string" ? providerError : `百炼请求失败（${response.status}）`) as AttemptError;
+    error.status = response.status;
+    error.attemptSnapshot = { ...attemptSnapshot, error: error.message };
     throw error;
   }
   const content = extractMessageContent(payload);
-  if (!content) throw new Error("模型没有返回可解析的结构化结果。");
+  if (!content) {
+    const error = new Error("模型没有返回可解析的结构化结果。") as AttemptError;
+    error.attemptSnapshot = { ...attemptSnapshot, error: error.message };
+    throw error;
+  }
   const usage = payload.usage && typeof payload.usage === "object" ? payload.usage as { prompt_tokens?: unknown; completion_tokens?: unknown } : {};
   return {
     content,
     model: config.model,
     inputTokens: typeof usage.prompt_tokens === "number" ? usage.prompt_tokens : null,
     outputTokens: typeof usage.completion_tokens === "number" ? usage.completion_tokens : null,
+    attemptSnapshot,
   };
 }
 
@@ -210,13 +352,13 @@ function addUsage(total: TokenUsage, next: TokenUsage): TokenUsage {
 }
 
 // 研究数据记录不能影响主流程：写入失败只打日志。
-async function recordModelCall(projectId: string | undefined, operation: string, role: ModelRole, meta: ModelCallMeta, contextStats?: ModelContextStats) {
+async function recordModelCall(projectId: string | undefined, operation: string, purpose: ModelPurpose, meta: ModelCallMeta, attempts: ModelAttemptSnapshot[], contextStats?: ModelContextStats) {
   try {
     await getDb().insert(modelCalls).values({
       id: crypto.randomUUID(),
       projectId: projectId ?? null,
       operation,
-      role,
+      role: purpose,
       model: meta.model,
       appVersion: meta.appVersion,
       promptVersion: meta.promptVersion,
@@ -233,6 +375,7 @@ async function recordModelCall(projectId: string | undefined, operation: string,
       estimatedContextTokens: contextStats?.estimatedTokens ?? 0,
       contextTruncated: contextStats?.truncated ?? false,
       durationMs: meta.durationMs,
+      attemptsJson: JSON.stringify(attempts),
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -249,7 +392,7 @@ type StructuredRequest = {
   /** 本次结构化输出契约版本；字段或约束变化时必须递增。 */
   schemaVersion: string;
   schema: JsonSchema;
-  role?: ModelRole;
+  purpose: ModelPurpose;
   strictSchema?: boolean;
   repairInvalidOutput?: boolean;
   maxTokens?: number;
@@ -258,6 +401,8 @@ type StructuredRequest = {
   projectId?: string;
   /** 记录本次请求使用的上下文策略和组成，供成本实验分析。 */
   contextStats?: ModelContextStats;
+  /** Assessment 等少数合同的确定性字段别名归一化；必须在本地 Schema 校验前执行。 */
+  normalizeResult?: (value: unknown) => unknown;
 };
 
 export async function createStructuredResponse<T>(request: StructuredRequest): Promise<T> {
@@ -271,19 +416,21 @@ export async function createStructuredResponseWithMeta<T>({
   promptVersion,
   schemaVersion,
   schema,
-  role = "chat",
+  purpose,
   strictSchema = true,
   repairInvalidOutput = false,
   maxTokens,
   timeoutMs,
   projectId,
   contextStats,
+  normalizeResult,
 }: StructuredRequest): Promise<{ result: T; meta: ModelCallMeta }> {
   const startedAt = Date.now();
-  const config = getProviderConfig(role);
+  const config = getProviderConfig(purpose);
   const model = config.model;
   let usage: TokenUsage = { inputTokens: null, outputTokens: null };
   let strictRejected = false;
+  const attempts: ModelAttemptSnapshot[] = [];
   const finish = async (outcome: ModelCallMeta["outcome"]) => {
     const meta: ModelCallMeta = {
       model,
@@ -297,39 +444,48 @@ export async function createStructuredResponseWithMeta<T>({
       durationMs: Date.now() - startedAt,
       ...usage,
     };
-    await recordModelCall(projectId, name, role, meta, contextStats);
+    await recordModelCall(projectId, name, purpose, meta, attempts, contextStats);
     return meta;
   };
   const complete = async (options: Parameters<typeof requestCompletion>[0]) => {
-    const response = await requestCompletion(options);
-    usage = addUsage(usage, response);
-    return response.content;
+    try {
+      const response = await requestCompletion(options);
+      attempts.push({ ...response.attemptSnapshot, sequence: attempts.length + 1 });
+      usage = addUsage(usage, response);
+      return response.content;
+    } catch (error) {
+      const attempt = error && typeof error === "object" && "attemptSnapshot" in error
+        ? (error as AttemptError).attemptSnapshot
+        : undefined;
+      if (attempt) attempts.push({ ...attempt, sequence: attempts.length + 1 });
+      throw error;
+    }
   };
 
   try {
     let content: string;
     if (!strictSchema) {
-      content = await complete({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
+      content = await complete({ instructions, input, name, schema, purpose, strict: false, maxTokens, timeoutMs, phase: "primary_json" });
     } else {
       try {
-        content = await complete({ instructions, input, name, schema, role, strict: true, maxTokens, timeoutMs });
+        content = await complete({ instructions, input, name, schema, purpose, strict: true, maxTokens, timeoutMs, phase: "primary_strict" });
       } catch (error) {
         const status = error && typeof error === "object" && "status" in error ? (error as { status?: unknown }).status : null;
         if (status !== 400) throw error;
         strictRejected = true;
-        console.warn(JSON.stringify({ event: "structured_output_strict_fallback", name, role, status }));
-        content = await complete({ instructions, input, name, schema, role, strict: false, maxTokens, timeoutMs });
+        console.warn(JSON.stringify({ event: "structured_output_strict_fallback", name, purpose, status }));
+        content = await complete({ instructions, input, name, schema, purpose, strict: false, maxTokens, timeoutMs, phase: "strict_fallback" });
       }
     }
 
     try {
-      const parsed = parseJson(content);
+      const parsed = normalizeResult ? normalizeResult(parseJson(content)) : parseJson(content);
       assertSchema(parsed, schema);
-      console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: false, durationMs: Date.now() - startedAt }));
+      console.info(JSON.stringify({ event: "structured_output_success", name, purpose, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: false, durationMs: Date.now() - startedAt }));
       return { result: parsed as T, meta: await finish("success") };
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
-      console.warn(JSON.stringify({ event: "structured_output_validation_failed", name, role, strictFallback: strictRejected, repairEnabled: repairInvalidOutput, reason, durationMs: Date.now() - startedAt }));
+      console.warn(JSON.stringify({ event: "structured_output_validation_failed", name, purpose, strictFallback: strictRejected, repairEnabled: repairInvalidOutput, reason, durationMs: Date.now() - startedAt }));
       if (!repairInvalidOutput) throw new Error("模型返回的数据没有通过安全结构校验，请重试。");
     }
 
@@ -343,19 +499,20 @@ export async function createStructuredResponseWithMeta<T>({
       input: `待修复的 JSON：\n${content}`,
       name: `${name}_repair`,
       schema,
-      role,
+      purpose,
       strict: strictSchema && !strictRejected,
       maxTokens,
       timeoutMs,
+      phase: "repair",
     });
     try {
-      const repaired = parseJson(repairedContent);
+      const repaired = normalizeResult ? normalizeResult(parseJson(repairedContent)) : parseJson(repairedContent);
       assertSchema(repaired, schema);
-      console.info(JSON.stringify({ event: "structured_output_success", name, role, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: true, durationMs: Date.now() - startedAt }));
+      console.info(JSON.stringify({ event: "structured_output_success", name, purpose, strict: strictSchema && !strictRejected, strictFallback: strictRejected, repaired: true, durationMs: Date.now() - startedAt }));
       return { result: repaired as T, meta: await finish("repaired") };
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown_validation_error";
-      console.error(JSON.stringify({ event: "structured_output_repair_failed", name, role, strictFallback: strictRejected, reason, durationMs: Date.now() - startedAt }));
+      console.error(JSON.stringify({ event: "structured_output_repair_failed", name, purpose, strictFallback: strictRejected, reason, durationMs: Date.now() - startedAt }));
       throw new Error("模型两次返回的结构都不符合要求，请重试当前步骤。");
     }
   } catch (error) {
@@ -364,14 +521,34 @@ export async function createStructuredResponseWithMeta<T>({
   }
 }
 
-export const coachResponseSchema: JsonSchema = {
+export const answerSynthesisSchema: JsonSchema = {
   type: "object",
   properties: {
-    reply: { type: "string" },
-    suggestedAnswer: { type: "string" },
-    keyInsights: { type: "array", items: { type: "string" } },
-    recommendedAction: { type: "string", enum: ["continue_discussion", "confirm_answer", "review_upstream"] },
-    scopeStatus: { type: "string", enum: ["in_scope", "adjacent", "out_of_scope"] },
+    suggestedAnswer: { type: "string", maxLength: 5000 },
+    parkedInsights: {
+      type: "array",
+      maxItems: 8,
+      items: {
+        type: "object",
+        properties: {
+          content: { type: "string" },
+          suggestedQuestionId: { type: "string", enum: protocolQuestionIds },
+        },
+        required: ["content", "suggestedQuestionId"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["suggestedAnswer", "parkedInsights"],
+  additionalProperties: false,
+};
+
+export const coachAssessmentSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    ready: { type: "boolean" },
+    summary: { type: "string" },
+    missingElements: { type: "array", items: { type: "string" } },
     parkedInsights: {
       type: "array",
       items: {
@@ -385,7 +562,134 @@ export const coachResponseSchema: JsonSchema = {
       },
     },
   },
-  required: ["reply", "suggestedAnswer", "keyInsights", "recommendedAction", "scopeStatus", "parkedInsights"],
+  required: [
+    "ready",
+    "summary",
+    "missingElements",
+    "parkedInsights",
+  ],
+  additionalProperties: false,
+};
+
+export const scaffoldingReplySchema: JsonSchema = {
+  type: "object",
+  properties: {
+    reply: { type: "string", maxLength: 600 },
+  },
+  required: ["reply"],
+  additionalProperties: false,
+};
+
+export const candidateTurnReplySchema: JsonSchema = {
+  type: "object",
+  properties: {
+    reply: { type: "string", maxLength: 600 },
+    suggestedAnswer: { type: "string", maxLength: 5000 },
+  },
+  required: ["reply", "suggestedAnswer"],
+  additionalProperties: false,
+};
+
+export const coachTurnSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    ready: { type: "boolean" },
+    decisionReason: { type: "string", maxLength: 800 },
+    reply: { type: "string", maxLength: 1800 },
+    suggestedAnswer: { type: "string", maxLength: 5000 },
+    crossQuestionIssues: {
+      type: "array",
+      maxItems: 6,
+      items: {
+        type: "object",
+        properties: {
+          questionId: { type: "string", enum: protocolQuestionIds },
+          type: { type: "string", enum: ["possible_update", "conflict"] },
+          explanation: { type: "string", maxLength: 900 },
+          recommendedEditTarget: { type: "string", enum: ["current", "previous", "either"] },
+          suggestedRevision: { type: "string", maxLength: 5000 },
+        },
+        required: ["questionId", "type", "explanation", "recommendedEditTarget", "suggestedRevision"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["ready", "decisionReason", "reply", "suggestedAnswer", "crossQuestionIssues"],
+  additionalProperties: false,
+};
+
+export const preAnswerSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    coverage: { type: "string", enum: ["complete", "partial", "empty"] },
+    summary: { type: "string" },
+    missingElements: { type: "array", items: { type: "string" } },
+    reply: { type: "string", maxLength: 1800 },
+    suggestedAnswer: { type: "string", maxLength: 5000 },
+  },
+  required: ["coverage", "summary", "missingElements", "reply", "suggestedAnswer"],
+  additionalProperties: false,
+};
+
+export const workingConversationSummarySchema: JsonSchema = {
+  type: "object",
+  properties: {
+    summary: { type: "string", maxLength: 2400 },
+    userIdeas: { type: "array", maxItems: 12, items: { type: "string", maxLength: 500 } },
+    aiSuggestions: { type: "array", maxItems: 12, items: { type: "string", maxLength: 500 } },
+    acceptedSuggestions: { type: "array", maxItems: 10, items: { type: "string", maxLength: 500 } },
+    rejectedSuggestions: { type: "array", maxItems: 10, items: { type: "string", maxLength: 500 } },
+    unresolved: { type: "array", maxItems: 10, items: { type: "string", maxLength: 500 } },
+    currentFocus: { type: "string", maxLength: 800 },
+  },
+  required: ["summary", "userIdeas", "aiSuggestions", "acceptedSuggestions", "rejectedSuggestions", "unresolved", "currentFocus"],
+  additionalProperties: false,
+};
+
+export const answerRequirementReviewSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    status: { type: "string", enum: ["passed", "needs_revision"] },
+    feedback: { type: "string", maxLength: 1200 },
+    satisfiedElements: { type: "array", maxItems: 8, items: { type: "string", maxLength: 500 } },
+    missingElements: { type: "array", maxItems: 6, items: { type: "string", maxLength: 500 } },
+  },
+  required: ["status", "feedback", "satisfiedElements", "missingElements"],
+  additionalProperties: false,
+};
+
+export const answerConflictReviewSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    hasConflict: { type: "boolean" },
+    summary: { type: "string", maxLength: 1400 },
+    conflicts: {
+      type: "array",
+      maxItems: 4,
+      items: {
+        type: "object",
+        properties: {
+          questionId: { type: "string", enum: protocolQuestionIds },
+          explanation: { type: "string", maxLength: 900 },
+          recommendation: { type: "string", maxLength: 900 },
+          recommendedEditTarget: { type: "string", enum: ["current", "previous", "either"] },
+          suggestedRevision: { type: "string", maxLength: 5000 },
+        },
+        required: ["questionId", "explanation", "recommendation", "recommendedEditTarget", "suggestedRevision"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["hasConflict", "summary", "conflicts"],
+  additionalProperties: false,
+};
+
+export const questionMemorySchema: JsonSchema = {
+  type: "object",
+  properties: {
+    memoryText: { type: "string", minLength: 1, maxLength: 5000 },
+  },
+  required: ["memoryText"],
   additionalProperties: false,
 };
 
@@ -408,8 +712,22 @@ export const gddSectionSchema: JsonSchema = {
     title: { type: "string", maxLength: 240 },
     content: { type: "string", maxLength: 4000 },
     sourceQuestionIds: { type: "array", maxItems: protocolQuestionIds.length, items: { type: "string", enum: protocolQuestionIds } },
+    coverageTags: { type: "array", minItems: 1, maxItems: requiredGddCoverageTags.length, uniqueItems: true, items: { type: "string", enum: requiredGddCoverageTags } },
   },
-  required: ["key", "title", "content", "sourceQuestionIds"],
+  required: ["key", "title", "content", "sourceQuestionIds", "coverageTags"],
+  additionalProperties: false,
+};
+
+export const gddOutlineSectionSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    key: { type: "string", minLength: 2, maxLength: 40, pattern: "^[a-z][a-z0-9_]+$" },
+    title: { type: "string", minLength: 2, maxLength: 80 },
+    purpose: { type: "string", minLength: 2, maxLength: 500 },
+    coverageTags: { type: "array", minItems: 1, maxItems: requiredGddCoverageTags.length, uniqueItems: true, items: { type: "string", enum: requiredGddCoverageTags } },
+    sourceQuestionIds: { type: "array", minItems: 1, maxItems: protocolQuestionIds.length, uniqueItems: true, items: { type: "string", enum: protocolQuestionIds } },
+  },
+  required: ["key", "title", "purpose", "coverageTags", "sourceQuestionIds"],
   additionalProperties: false,
 };
 
@@ -542,6 +860,43 @@ export const gddSummarySchema: JsonSchema = {
   additionalProperties: false,
 };
 
+export const gddOutlineSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    title: { type: "string", minLength: 1, maxLength: 240 },
+    oneLinePitch: { type: "string", minLength: 1, maxLength: 1000 },
+    stageSummaries: { type: "array", minItems: 6, maxItems: 6, items: stageSummarySchema },
+    sections: { type: "array", minItems: 5, maxItems: 10, items: gddOutlineSectionSchema },
+  },
+  required: ["title", "oneLinePitch", "stageSummaries", "sections"],
+  additionalProperties: false,
+};
+
+export function gddSectionBatchSchema(sectionKeys: string[]): JsonSchema {
+  return {
+    type: "object",
+    properties: {
+      sections: {
+        type: "array",
+        minItems: sectionKeys.length,
+        maxItems: sectionKeys.length,
+        items: {
+          type: "object",
+          properties: {
+            key: { type: "string", enum: sectionKeys },
+            content: { type: "string", minLength: 1, maxLength: 4000 },
+            sourceQuestionIds: { type: "array", minItems: 1, maxItems: protocolQuestionIds.length, uniqueItems: true, items: { type: "string", enum: protocolQuestionIds } },
+          },
+          required: ["key", "content", "sourceQuestionIds"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["sections"],
+    additionalProperties: false,
+  };
+}
+
 export const gddSectionsSchema: JsonSchema = {
   type: "object",
   properties: {
@@ -573,6 +928,27 @@ export const gddFidelitySchema: JsonSchema = {
   required: ["patches"],
   additionalProperties: false,
 };
+
+export function gddFidelitySchemaForSections(sectionKeys: string[]): JsonSchema {
+  const patches = (gddFidelitySchema.properties as Record<string, JsonSchema>).patches;
+  const items = patches.items as JsonSchema;
+  const properties = items.properties as Record<string, JsonSchema>;
+  return {
+    ...gddFidelitySchema,
+    properties: {
+      patches: {
+        ...patches,
+        items: {
+          ...items,
+          properties: {
+            ...properties,
+            sectionKey: { type: "string", enum: sectionKeys },
+          },
+        },
+      },
+    },
+  };
+}
 
 export const gddIssuesSchema: JsonSchema = {
   type: "object",

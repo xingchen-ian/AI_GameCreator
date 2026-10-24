@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_PATH: /data/game-workflow.db
+    volumes:
+      - game-workflow-data:/data
+    restart: unless-stopped
+
+volumes:
+  game-workflow-data:

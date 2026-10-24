@@ -1,17 +1,19 @@
 import { and, desc, eq, gte } from "drizzle-orm";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { after } from "next/server";
+import { getAppUser } from "@/app/app-auth";
 import { getDb } from "@/db";
 import { aiSuggestions, answerRevisions, buildBriefs, designReviewChanges, designReviewIssues, designReviewRuns, gddReviewChanges, gddVersions, projects, questionAnswers, stageSummaries } from "@/db/schema";
 import { allQuestions } from "@/lib/protocol/stages";
+import { enqueueBackgroundJob, processBackgroundJobs } from "@/lib/server/background-jobs";
 import { getWorkspace, requireAnyOwnedProject, requireOwnedProject } from "@/lib/server/workspace";
 
 function unauthorized() {
-  return Response.json({ error: "请先使用 ChatGPT 账号登录。", signIn: "/signin-with-chatgpt?return_to=%2F" }, { status: 401 });
+  return Response.json({ error: "请使用参与者专属链接进入。" }, { status: 401 });
 }
 
 export async function GET(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return unauthorized();
     const projectId = new URL(request.url).searchParams.get("projectId");
     return Response.json(await getWorkspace(user, projectId));
@@ -22,8 +24,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return unauthorized();
+    if (user.accessMode === "participant") return Response.json({ error: "参与者只能使用分配给自己的项目。" }, { status: 403 });
     const body = await request.json() as { action?: "create_project"; title?: string };
     if (body.action !== "create_project") return Response.json({ error: "不支持的操作。" }, { status: 400 });
     const title = body.title?.trim().slice(0, 80) || "未命名游戏";
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return unauthorized();
     const body = await request.json() as {
       action?: "save_answer" | "set_active" | "rename_project" | "rebuild_project" | "archive_project" | "restore_project";
@@ -62,6 +65,9 @@ export async function PATCH(request: Request) {
       title?: string;
       returnProjectId?: string;
     };
+    if (user.accessMode === "participant" && ["rebuild_project", "archive_project", "restore_project"].includes(body.action ?? "")) {
+      return Response.json({ error: "参与者不能创建、归档或重建项目。" }, { status: 403 });
+    }
     if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
     const db = getDb();
     const now = new Date().toISOString();
@@ -109,6 +115,7 @@ export async function PATCH(request: Request) {
 
       const [existing] = await db.select().from(questionAnswers).where(and(eq(questionAnswers.projectId, project.id), eq(questionAnswers.questionId, questionId))).limit(1);
       const changed = existing?.answer !== answer;
+      const answerRevision = existing ? (changed ? existing.revision + 1 : existing.revision) : 1;
       const [suggestion] = body.suggestionId
         ? await db.select().from(aiSuggestions).where(and(eq(aiSuggestions.id, body.suggestionId), eq(aiSuggestions.projectId, project.id), eq(aiSuggestions.questionId, questionId))).limit(1)
         : [];
@@ -117,7 +124,7 @@ export async function PATCH(request: Request) {
           answer,
           status: "confirmed",
           structuredJson: JSON.stringify(body.structuredData ?? {}),
-          revision: changed ? existing.revision + 1 : existing.revision,
+          revision: answerRevision,
           updatedAt: now,
         }).where(eq(questionAnswers.id, existing.id));
       } else {
@@ -128,7 +135,7 @@ export async function PATCH(request: Request) {
           answer,
           status: "confirmed",
           structuredJson: JSON.stringify(body.structuredData ?? {}),
-          revision: 1,
+          revision: answerRevision,
           updatedAt: now,
         });
       }
@@ -137,7 +144,7 @@ export async function PATCH(request: Request) {
           id: crypto.randomUUID(),
           projectId: project.id,
           questionId,
-          revision: existing ? existing.revision + 1 : 1,
+          revision: answerRevision,
           answer,
           source: "user",
           suggestionId: suggestion?.id ?? null,
@@ -180,6 +187,17 @@ export async function PATCH(request: Request) {
       }
       const derivedTitle = questionId === "Q1" && project.title === "未命名游戏" ? answer.split(/[。；\n]/)[0].slice(0, 28) || project.title : project.title;
       await db.update(projects).set({ activeQuestionId: questionId, title: derivedTitle, updatedAt: now }).where(eq(projects.id, project.id));
+      await enqueueBackgroundJob({
+        projectId: project.id,
+        type: "question_memory",
+        dedupeKey: `${questionId}:r${answerRevision}:memory-v3`,
+        payload: { questionId, answerRevision },
+      });
+      after(async () => {
+        await processBackgroundJobs({ projectId: project.id, limit: 2 }).catch((error) => {
+          console.warn(JSON.stringify({ event: "background_job_drain_failed", projectId: project.id, reason: error instanceof Error ? error.message.slice(0, 240) : "unknown" }));
+        });
+      });
     } else {
       return Response.json({ error: "不支持的操作。" }, { status: 400 });
     }
@@ -192,8 +210,9 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser(request);
     if (!user) return unauthorized();
+    if (user.accessMode === "participant") return Response.json({ error: "参与者不能删除项目。" }, { status: 403 });
     const body = await request.json() as { projectId?: string; confirmTitle?: string; returnProjectId?: string };
     if (!body.projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
     const project = await requireAnyOwnedProject(body.projectId, user);

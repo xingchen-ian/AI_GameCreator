@@ -30,6 +30,26 @@ export type GddSection = {
   title: string;
   content: string;
   sourceQuestionIds: string[];
+  /** Added for dynamic-outline GDDs. Absent on legacy saved versions. */
+  coverageTags?: GddCoverageTag[];
+};
+
+export type GddCoverageTag =
+  | "concept"
+  | "player_experience"
+  | "player_situation"
+  | "core_gameplay"
+  | "rules_and_constraints"
+  | "feedback_and_consequences"
+  | "progression_and_outcomes"
+  | "prototype_validation";
+
+export type GddOutlineSection = {
+  key: string;
+  title: string;
+  purpose: string;
+  coverageTags: GddCoverageTag[];
+  sourceQuestionIds: string[];
 };
 
 export type GddIssue = {
