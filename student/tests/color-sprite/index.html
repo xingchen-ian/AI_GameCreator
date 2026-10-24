@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>采色精灵</title>
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+
+  <div id="hint" class="hidden"></div>
+  <div id="toast"></div>
+
+  <!-- 开始 -->
+  <div id="title" class="overlay">
+    <div class="panel">
+      <h1>采色精灵</h1>
+      <p class="tag">在城市公园里采集颜色，带回精灵空间，让空白长出属于你的世界。</p>
+      <ul class="howto">
+        <li><kbd>WASD</kbd> / <kbd>方向键</kbd> 或点击地面：飞行</li>
+        <li>靠近闪光的颜色，按 <kbd>空格</kbd> 或点击它：采进选中的瓶子</li>
+        <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 或点击瓶子：切换瓶子 · 同一瓶里的颜色会互相染色</li>
+        <li>走进右上角的<b>精灵之门</b>，点击发光的空白处注入颜色</li>
+      </ul>
+      <button id="btnStart" class="primary">开始采色</button>
+    </div>
+  </div>
+
+  <!-- 游玩 HUD -->
+  <div id="hud" class="hidden">
+    <div id="bottles"></div>
+    <div id="side">
+      <div id="counter"></div>
+      <div id="actions">
+        <button id="btnGo"></button>
+        <button id="btnFinish">完成画作</button>
+        <button id="btnMute" title="声音">♪</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结束 -->
+  <div id="end" class="overlay bottom hidden">
+    <div class="panel wide">
+      <div>
+        <h2>你的世界长好了</h2>
+        <p id="stats"></p>
+      </div>
+      <div class="row">
+        <button id="btnSave">保存画作</button>
+        <button id="btnRestart" class="primary">再来一局</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="game.js?v=2"></script>
+</body>
+</html>
